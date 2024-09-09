@@ -8,14 +8,16 @@
 #else
 #define ERRORS_CS_EXPORT extern
 #endif
-#include<bitset>
-namespace Cstar
-{
-    void ERROR(int);
-    void ERROREXIT();
-    void ERRORMSG();
-    void FATAL(int);
-    ERRORS_CS_EXPORT std::bitset<ERMAX> ERRS;
-    ERRORS_CS_EXPORT bool FATALERROR;
-}
-#endif //CSTAR_CS_ERRORS_H
+
+#include "cs_global.h"
+#include <bitset>
+
+namespace Cstar {
+void ERROR(int);
+void ERROREXIT();
+void ERRORMSG();
+void FATAL(int);
+ERRORS_CS_EXPORT std::bitset<ERMAX> ERRS;
+ERRORS_CS_EXPORT bool FATALERROR;
+} // namespace Cstar
+#endif // CSTAR_CS_ERRORS_H

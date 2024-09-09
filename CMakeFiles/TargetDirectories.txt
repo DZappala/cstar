@@ -1,0 +1,3 @@
+/home/dom/projects/pace/paralell/cstar/CMakeFiles/cstar.dir
+/home/dom/projects/pace/paralell/cstar/CMakeFiles/edit_cache.dir
+/home/dom/projects/pace/paralell/cstar/CMakeFiles/rebuild_cache.dir

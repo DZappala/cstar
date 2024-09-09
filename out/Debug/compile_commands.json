@@ -1,0 +1,62 @@
+[
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/lexer.cpp.o -c /home/dom/projects/pace/paralell/cstar/lexer.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/lexer.cpp",
+  "output": "CMakeFiles/cstar.dir/lexer.cpp.o"
+},
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/errors.cpp.o -c /home/dom/projects/pace/paralell/cstar/errors.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/errors.cpp",
+  "output": "CMakeFiles/cstar.dir/errors.cpp.o"
+},
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/interpret.cpp.o -c /home/dom/projects/pace/paralell/cstar/interpret.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/interpret.cpp",
+  "output": "CMakeFiles/cstar.dir/interpret.cpp.o"
+},
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/expression.cpp.o -c /home/dom/projects/pace/paralell/cstar/expression.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/expression.cpp",
+  "output": "CMakeFiles/cstar.dir/expression.cpp.o"
+},
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/block.cpp.o -c /home/dom/projects/pace/paralell/cstar/block.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/block.cpp",
+  "output": "CMakeFiles/cstar.dir/block.cpp.o"
+},
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/statement.cpp.o -c /home/dom/projects/pace/paralell/cstar/statement.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/statement.cpp",
+  "output": "CMakeFiles/cstar.dir/statement.cpp.o"
+},
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/program.cpp.o -c /home/dom/projects/pace/paralell/cstar/program.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/program.cpp",
+  "output": "CMakeFiles/cstar.dir/program.cpp.o"
+},
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/exec.cpp.o -c /home/dom/projects/pace/paralell/cstar/exec.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/exec.cpp",
+  "output": "CMakeFiles/cstar.dir/exec.cpp.o"
+},
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/execlib.cpp.o -c /home/dom/projects/pace/paralell/cstar/execlib.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/execlib.cpp",
+  "output": "CMakeFiles/cstar.dir/execlib.cpp.o"
+},
+{
+  "directory": "/home/dom/projects/pace/paralell/cstar/out/Debug",
+  "command": "/usr/bin/clang++    -DMAC -std=c++23 -g -o CMakeFiles/cstar.dir/displays.cpp.o -c /home/dom/projects/pace/paralell/cstar/displays.cpp",
+  "file": "/home/dom/projects/pace/paralell/cstar/displays.cpp",
+  "output": "CMakeFiles/cstar.dir/displays.cpp.o"
+}
+]
