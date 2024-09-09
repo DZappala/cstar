@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = 
 
-CXX_FLAGS =  -DMAC -std=c++23 -g
+CXX_FLAGS =  -DMAC -std=c++11 -g
 
