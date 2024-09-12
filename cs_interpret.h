@@ -27,31 +27,34 @@
 #define COMMAX 30
 
 namespace Cstar {
-typedef char VARTYP[NAMELEN + 1];
-typedef struct BLOCKR *BLKPNT;
-typedef struct ACTIVEPROCESS *ACTPNT;
-typedef struct PROCESSDESCRIPTOR *PROCPNT; // from interpret
-typedef struct BUSYTYPE *BUSYPNT;
-typedef struct BLOCKR {
+using VARTYP = std::string;
+using BLKPNT = struct BLOCKR *;
+using ACTPNT = struct ACTIVEPROCESS *;
+using PROCPNT = struct PROCESSDESCRIPTOR *; // from interpret
+using BUSYPNT = struct BUSYTYPE *;
+using BLOCKR = struct BLOCKR {
   int START; // range 0..STMAX
   int SIZE;  // range 0..STMAX
   BLKPNT NEXT;
-} BLOCKR;
+} __attribute__((aligned(16)));
+
 struct ACTIVEPROCESS;
-typedef struct ACTIVEPROCESS {
+using ACTIVEPROCESS = struct ACTIVEPROCESS {
   PROCPNT PDES;
   ACTPNT NEXT;
-} ACTIVEPROCESS;
-typedef struct BUSYTYPE {
+} __attribute__((aligned(16)));
+
+using BUSYTYPE = struct BUSYTYPE {
   double FIRST;
   double LAST;
   BUSYPNT NEXT;
-} BUSYTYPE;
-typedef int STYPE;
-typedef double RSTYPE;
-typedef int BUFINTTYPE;
-typedef double BUFREALTYPE;
-typedef enum COMTYP {
+} __attribute__((aligned(32)));
+
+using STYPE = int;
+using RSTYPE = double;
+using BUFINTTYPE = int;
+using BUFREALTYPE = double;
+using COMTYP = enum class COMTYP : std::uint8_t {
   RUNP,
   CONT,
   EXIT2,
@@ -83,13 +86,14 @@ typedef enum COMTYP {
   OUTPUTF,
   MPI,
   VERSION
-} COMTYP;
-typedef struct PROCESSDESCRIPTOR { // from interpret
-  int T;                           // process's stack top index
+};
+
+using PROCESSDESCRIPTOR = struct PROCESSDESCRIPTOR { // from interpret
+  int T; // process's stack top index
   int B;
   int PC;        // process's program counter (index into ORDER type CODE array)
   int STACKSIZE; // process's stack size
-  int DISPLAY[LMAX + 1];
+  std::array<int, LMAX + 1> DISPLAY;
   PROCPNT PARENT;
   int NUMCHILDREN;
   int BASE;
@@ -100,21 +104,35 @@ typedef struct PROCESSDESCRIPTOR { // from interpret
   int PROCESSOR;
   int ALTPROC;
   double WAKETIME;
-  enum STATE { READY, RUNNING, BLOCKED, DELAYED, TERMINATED, SPINNING } STATE;
+  enum class STATE : std::uint8_t {
+    READY,
+    RUNNING,
+    BLOCKED,
+    DELAYED,
+    TERMINATED,
+    SPINNING
+  } STATE;
+
   int PID;
   double VIRTUALTIME;
-  enum READSTATUS { NONE, ATCHANNEL, HASTICKET } READSTATUS;
+  enum class READSTATUS : std::uint8_t {
+    NONE,
+    ATCHANNEL,
+    HASTICKET
+  } READSTATUS;
+
   int FORKCOUNT;
   int JOINSEM;
   double MAXFORKTIME;
-  enum PRIORITY { LOW, HIGH } PRIORITY;
+  enum class PRIORITY : std::uint8_t { LOW, HIGH } PRIORITY;
   bool SEQON;
   bool GROUPREP;
-} PROCESSDESCRIPTOR;
-typedef struct InterpLocal {
+} __attribute__((aligned(128))) __attribute__((packed));
+
+using InterpLocal = struct InterpLocal {
   PROCPNT CURPR;
 
-  enum PS {
+  enum class PS : std::uint8_t {
     RUN,
     FIN,
     DIVCHK,
@@ -152,13 +170,20 @@ typedef struct InterpLocal {
   } PS; // from interpret
 
   int LNCNT, CHRCNT;
-  int FLD[4 + 1];
+  std::array<int, 4 + 1> FLD;
   STYPE *S, *SLOCATION;
   STYPE *STARTMEM;
   RSTYPE *RS;
   PROCPNT MAINPROC;
+
   struct PROCTAB {
-    enum STATUS { NEVERUSED, EMPTY, RESERVED, FULL } STATUS;
+    enum class STATUS : std::uint8_t {
+      NEVERUSED,
+      EMPTY,
+      RESERVED,
+      FULL
+    } STATUS;
+
     double VIRTIME;
     double BRKTIME;
     double PROTIME;
@@ -167,11 +192,12 @@ typedef struct InterpLocal {
     double STARTTIME;
     BUSYPNT BUSYLIST;
     float SPEED;
-  } PROCTAB[PMAX + 1];
+  } __attribute__((aligned(64))) __attribute__((packed)) PROCTAB[PMAX + 1];
 
   int CNUM, H1;
   // int I;
   int J, K, PNT, FREE;
+
   struct Channel {
     int HEAD;
     int SEM;
@@ -179,7 +205,8 @@ typedef struct InterpLocal {
     double READTIME;
     bool MOVED;
     int READER;
-  } CHAN[OPCHMAX + 1];
+  } __attribute__((aligned(32))) CHAN[OPCHMAX + 1];
+
   BUFINTTYPE *VALUE, *LINK;
   BUFREALTYPE *DATE, *RVALUE;
   double SEQTIME;
@@ -190,11 +217,11 @@ typedef struct InterpLocal {
   int TOPDELAY;
   int COUTWIDTH;
   int COUTPREC;
-  char LISTDEFNAME[FILMAX + 1];
-  char INPUTFNAME[FILMAX + 1];
-  char OUTPUTFNAME[FILMAX + 1];
-  char LISTFNAME[FILMAX + 1];
-  bool MPIINIT[PMAX + 1], MPIFIN[PMAX + 1];
+  std::string LISTDEFNAME;
+  std::string INPUTFNAME;
+  std::string OUTPUTFNAME;
+  std::string LISTFNAME;
+  std::string MPIINIT, MPIFIN;
   int MPICODE;
   int MPISEM;
   double MPITIME;
@@ -203,17 +230,17 @@ typedef struct InterpLocal {
   int MPIROOT;
   int MPIOP;
   int MPICOMM;
-  int MPIPNT[PMAX + 1];
-  int MPIRES[PMAX + 1];
-  int MPICART[CARTMAX + 1][MAXDIM + 1];
-  bool MPIPER[CARTMAX + 1][MAXDIM + 1];
-  char PROMPT[10 + 1];
+  std::array<int, PMAX + 1> MPIPNT;
+  std::array<int, PMAX + 1> MPIRES;
+  std::array<std::array<int, MAXDIM + 1>, CARTMAX + 1> MPICART;
+  std::array<std::array<int, MAXDIM + 1>, CARTMAX + 1> MPIPER;
+  std::string PROMPT;
   int MAXSTEPS;
   int INX;
-  int BRKTAB[BRKMAX + 1];
-  int BRKLINE[BRKMAX + 1];
+  std::array<int, BRKMAX + 1> BRKTAB;
+  std::array<int, BRKMAX + 1> BRKLINE;
   int REF, ADR;
-  TYPES TYP;
+  Types TYP;
   OBJECTS OBJ;
   int NUMBRK; // range 0..BRKMAX
   bool RESTART;
@@ -230,7 +257,8 @@ typedef struct InterpLocal {
   struct {
     VARTYP NAME;
     int MEMLOC; // range -1..STMAX
-  } TRCTAB[VARMAX + 1];
+  } __attribute__((aligned(32))) __attribute__((packed)) TRCTAB[VARMAX + 1];
+
   bool PROFILEON;
   float USAGE;
   double SPEED;
@@ -245,12 +273,12 @@ typedef struct InterpLocal {
   int NEXTID;
   int STKMAIN;
   int LEVEL; // range 1..LMAX
-  ALFA COMTAB[COMMAX + 1];
-  ALFA ABBREVTAB[COMMAX + 1];
-  COMTYP COMJMP[COMMAX + 1];
+  std::array<ALFA, COMMAX + 1> COMTAB;
+  std::array<ALFA, COMMAX + 1> ABBREVTAB;
+  std::array<COMTYP, COMMAX + 1> COMJMP;
   COMTYP COMMLABEL;
   int LINECNT;
-} InterpLocal;
+} __attribute__((aligned(128))) __attribute__((packed));
 
 // int HIGHESTPROCESSOR;
 

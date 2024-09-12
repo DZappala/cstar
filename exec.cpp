@@ -10,7 +10,10 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <print>
 namespace Cstar {
+using std::println;
+
 #define MAXINT 32767
 // enum PS {RUN, BREAK, FIN, DEAD, STKCHK};
 struct ACTIVEPROCESS;
@@ -66,46 +69,49 @@ void showInstTrace(bool flg) {
   else
     debug &= ~DBGINST;
 }
-void CHKVAR(InterpLocal *il, int STKLOC) {
+void CHKVAR(InterpLocal *interp_local, int STKLOC) {
   // check if the variable at the passed stack location is being traced
-  int I, J;
-  for (I = 1; I <= VARMAX; I++) {
-    if (STKLOC == il->TRCTAB[I].MEMLOC) {
-      std::cout << "Reference to Trace Variable " << il->TRCTAB[I].NAME
-                << std::endl;
+  int i = 0;
+  int j = 0;
+  for (i = 1; i <= VARMAX; i++) {
+    if (STKLOC == interp_local->TRCTAB[i].MEMLOC) {
+      std::cout << "Reference to Trace Variable "
+                << (interp_local->TRCTAB[i].NAME) << '\n';
       // CURPR* curpr = new CURPR;
-      il->BLINE = GETLNUM(il->CURPR->PC - 1);
-      fprintf(STDOUT, "Line Number%5d  In Function ", il->BLINE);
-      J = il->CURPR->B;
-      il->INX = il->S[il->CURPR->B + 4];
-      while (TAB[il->INX].NAME[0] == '*') {
-        J = il->S[J + 3];
-        il->INX = il->S[J + 4];
+      interp_local->BLINE = GETLNUM(interp_local->CURPR->PC - 1);
+      std::print(STDOUT, "Line Number{:5}  In Function ", interp_local->BLINE);
+      j = interp_local->CURPR->B;
+      interp_local->INX = interp_local->S[interp_local->CURPR->B + 4];
+      while (TAB[interp_local->INX].name[0] == '*') {
+        j = interp_local->S[j + 3];
+        interp_local->INX = interp_local->S[j + 4];
       }
-      if (J == 0) {
-        std::cout << PROGNAME << std::endl;
+      if (j == 0) {
+        std::cout << PROGNAME << '\n';
       } else {
-        std::cout << TAB[il->INX].NAME << std::endl;
+        std::cout << TAB[interp_local->INX].name << '\n';
       }
       //                std::cout << "Process Number" << il->CURPR->PID <<
       //                std::endl; std::cout << std::endl;
-      fprintf(STDOUT, "Process Number%4d\n\n", il->CURPR->PID);
-      il->STEPROC = il->CURPR;
-      il->PS = InterpLocal::PS::BREAK;
+      std::println(STDOUT, "Process Number{:4}\n", interp_local->CURPR->PID);
+      interp_local->STEPROC = interp_local->CURPR;
+      interp_local->PS = InterpLocal::PS::BREAK;
     }
   }
 }
 
-void MOVE(CommdelayLocal *cl, int lSRC, int DES, int STEP) {
-  int DIREC, I;
+void MOVE(CommdelayLocal *commdelay_local, int lSRC, int DES, int STEP) {
+  int DIREC = 0;
+  int I = 0;
   if (lSRC < DES) {
     DIREC = 1;
   } else {
     DIREC = -1;
   }
   for (I = 1; I <= abs(lSRC - DES); I++) {
-    cl->PATHLEN = cl->PATHLEN + 1;
-    cl->PATH[cl->PATHLEN] = cl->PATH[cl->PATHLEN - 1] + DIREC * STEP;
+    commdelay_local->PATHLEN = commdelay_local->PATHLEN + 1;
+    commdelay_local->PATH[commdelay_local->PATHLEN] =
+        commdelay_local->PATH[commdelay_local->PATHLEN - 1] + DIREC * STEP;
   }
 }
 
@@ -217,16 +223,16 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
   if (LEN % 3 != 0) {
     cl.NUMPACK = cl.NUMPACK + 1;
   }
-  if ((!il->CONGESTION) || (TOPOLOGY == SHAREDSY)) {
-    switch (TOPOLOGY) {
-    case SHAREDSY:
+  if ((!il->CONGESTION) || (Topology == Symbol::SHAREDSY)) {
+    switch (Topology) {
+    case Symbol::SHAREDSY:
       rtn = 0;
       break;
-    case FULLCONNSY:
-    case CLUSTERSY:
+    case Symbol::FULLCONNSY:
+    case Symbol::CLUSTERSY:
       cl.DIST = 1;
       break;
-    case HYPERCUBESY:
+    case Symbol::HYPERCUBESY:
       cl.T1 = SOURCE;
       cl.T2 = DEST;
       cl.DIST = 0;
@@ -238,16 +244,16 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
         cl.T2 = cl.T2 / 2;
       }
       break;
-    case LINESY:
+    case Symbol::LINESY:
       cl.DIST = abs(SOURCE - DEST);
       break;
-    case MESH2SY:
+    case Symbol::MESH2SY:
       cl.T1 = TOPDIM;
       cl.T2 = std::abs(SOURCE / cl.T1 - DEST / cl.T1);
       cl.T3 = std::abs(SOURCE % cl.T1 - DEST % cl.T1);
       cl.DIST = (cl.T2 + cl.T3);
       break;
-    case MESH3SY:
+    case Symbol::MESH3SY:
       cl.T2 = TOPDIM;
       cl.T1 = TOPDIM * cl.T2;
       cl.T3 = SOURCE % cl.T1;
@@ -256,7 +262,7 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
                 abs(cl.T3 % cl.T2 - cl.T4 % cl.T2) +
                 abs(SOURCE / cl.T1 - DEST / cl.T1);
       break;
-    case RINGSY:
+    case Symbol::RINGSY:
       cl.T1 = abs(SOURCE - DEST);
       cl.T2 = TOPDIM - cl.T1;
       if (cl.T1 < cl.T2) {
@@ -265,7 +271,7 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
         cl.DIST = cl.T2;
       }
       break;
-    case TORUSSY:
+    case Symbol::TORUSSY:
       cl.T1 = TOPDIM;
       cl.T3 = abs(SOURCE / cl.T1 - DEST / cl.T1);
       if (cl.T3 > cl.T1 / 2) {
@@ -280,19 +286,19 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
     default:
       break;
     }
-    if (TOPOLOGY != SHAREDSY) {
+    if (Topology != Symbol::SHAREDSY) {
       rtn = (int)std::round((cl.DIST + (cl.NUMPACK - 1) / 2.0) * il->TOPDELAY);
     }
   } else {
     cl.PATH[0] = SOURCE;
     cl.PATHLEN = 0;
-    switch (TOPOLOGY) {
-    case FULLCONNSY:
-    case CLUSTERSY:
+    switch (Topology) {
+    case Symbol::FULLCONNSY:
+    case Symbol::CLUSTERSY:
       cl.PATH[1] = DEST;
       cl.PATHLEN = 1;
       break;
-    case HYPERCUBESY:
+    case Symbol::HYPERCUBESY:
       cl.T1 = 1;
       cl.T2 = SOURCE;
       for (cl.I = 1; cl.I <= TOPDIM; cl.I++) {
@@ -310,23 +316,23 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
         cl.T1 = cl.T1 * 2;
       }
       break;
-    case LINESY:
+    case Symbol::LINESY:
       MOVE(&cl, SOURCE, DEST, 1);
       break;
-    case MESH2SY:
+    case Symbol::MESH2SY:
       MOVE(&cl, SOURCE % TOPDIM, DEST % TOPDIM, 1);
       MOVE(&cl, SOURCE / TOPDIM, DEST / TOPDIM, TOPDIM);
       break;
-    case MESH3SY:
+    case Symbol::MESH3SY:
       cl.T1 = TOPDIM * TOPDIM;
       MOVE(&cl, SOURCE % TOPDIM, DEST % TOPDIM, 1);
       MOVE(&cl, SOURCE / TOPDIM % TOPDIM, DEST / TOPDIM % TOPDIM, TOPDIM);
       MOVE(&cl, SOURCE / cl.T1, DEST / cl.T1, TOPDIM * TOPDIM);
       break;
-    case RINGSY:
+    case Symbol::RINGSY:
       RMOVE(&cl, SOURCE, DEST, 1);
       break;
-    case TORUSSY:
+    case Symbol::TORUSSY:
       RMOVE(&cl, SOURCE % TOPDIM, DEST % TOPDIM, 1);
       RMOVE(&cl, SOURCE / TOPDIM, DEST / TOPDIM, TOPDIM);
       break;
@@ -347,7 +353,7 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
       rtn = 0;
     }
   }
-  if ((SOURCE > HIGHESTPROCESSOR) || (DEST > HIGHESTPROCESSOR)) {
+  if ((SOURCE > HighestProcessor) || (DEST > HighestProcessor)) {
     il->PS = InterpLocal::PS::CPUCHK;
   }
   //        if (rtn != 0)
@@ -583,7 +589,7 @@ void EXECUTE(InterpLocal *il) {
       continue;
     }
 
-    el.IR = CODE[CURPR->PC];
+    el.IR = code[CURPR->PC];
     CURPR->PC++;
     TIMEINC(il, 1, "exe1");
 
@@ -682,14 +688,14 @@ void EXECUTE(InterpLocal *il) {
       fprintf(STDOUT, "\nBreak At %d", il->BLINE);
       el.H1 = CURPR->B;
       il->INX = il->S[CURPR->B + 4];
-      while (TAB[il->INX].NAME[0] == '*') {
+      while (TAB[il->INX].name[0] == '*') {
         el.H1 = il->S[el.H1 + 3];
         il->INX = il->S[el.H1 + 4];
       }
       if (el.H1 == 0) {
         std::cout << "  In Function " << PROGNAME << std::endl;
       } else {
-        std::cout << "  In Function " << TAB[il->INX].NAME << std::endl;
+        std::cout << "  In Function " << TAB[il->INX].name << std::endl;
       }
       std::cout << "Process Number  " << CURPR->PID << std::endl;
       il->STEPROC = CURPR;
@@ -767,7 +773,7 @@ void EXECUTE(InterpLocal *il) {
           il->PS = InterpLocal::PS::STKCHK;
         } else {
           el.H1 = CURPR->DISPLAY[el.IR.X] + el.IR.Y;
-          if (TOPOLOGY != SHAREDSY) {
+          if (Topology != Symbol::SHAREDSY) {
             TESTVAR(il, el.H1);
           }
           if (il->NUMTRACE > 0) {
@@ -791,7 +797,7 @@ void EXECUTE(InterpLocal *il) {
           il->PS = InterpLocal::PS::STKCHK;
         } else {
           el.H1 = il->S[CURPR->DISPLAY[el.IR.X] + el.IR.Y];
-          if (TOPOLOGY != SHAREDSY) {
+          if (Topology != Symbol::SHAREDSY) {
             TESTVAR(il, el.H1);
           }
           if (il->NUMTRACE > 0) {
@@ -902,7 +908,7 @@ void EXECUTE(InterpLocal *il) {
       }
       case 9: {
         if (CURPR->PID == 0) {
-          for (el.I = 1; el.I <= HIGHESTPROCESSOR; el.I++) {
+          for (el.I = 1; el.I <= HighestProcessor; el.I++) {
             proc = (PRD *)calloc(1, sizeof(PROCESSDESCRIPTOR));
             proc->PC = 0;
             proc->PID = il->NEXTID++;
@@ -995,12 +1001,12 @@ void EXECUTE(InterpLocal *il) {
         el.H2 = el.IR.Y;
         el.H3 = 0;
         do {
-          if (CODE[el.H2].F != 13) {
+          if (code[el.H2].F != 13) {
             el.H3 = 1;
             il->PS = InterpLocal::PS::CASCHK;
-          } else if (CODE[el.H2].X == -1 || CODE[el.H2].Y == el.H1) {
+          } else if (code[el.H2].X == -1 || code[el.H2].Y == el.H1) {
             el.H3 = 1;
-            CURPR->PC = CODE[el.H2 + 1].Y;
+            CURPR->PC = code[el.H2 + 1].Y;
           } else {
             el.H2 = el.H2 + 2;
           }
@@ -1055,10 +1061,10 @@ void EXECUTE(InterpLocal *il) {
       }
       case 18: { // IR.Y is index of a function in TAB[] symbol table
                  // get stack frame for block execution callblk op
-        if (TAB[el.IR.Y].ADR == 0) {
+        if (TAB[el.IR.Y].address == 0) {
           il->PS = InterpLocal::PS::FUNCCHK;
-        } else if (TAB[el.IR.Y].ADR > 0) {
-          el.H1 = BTAB[TAB[el.IR.Y].REF].VSIZE + WORKSIZE;
+        } else if (TAB[el.IR.Y].address > 0) {
+          el.H1 = BTAB[TAB[el.IR.Y].reference].VSIZE + WORKSIZE;
           el.H2 = FINDFRAME(il, el.H1);
           if (debug & DBGPROC) {
             fprintf(STDOUT, "opc %d findframe %d length %d, response %d\n",
@@ -1079,8 +1085,8 @@ void EXECUTE(InterpLocal *il) {
         break;
       }
       case 19: {
-        if (TAB[el.IR.X].ADR < 0) {
-          EXECLIB(il, &el, CURPR, -TAB[el.IR.X].ADR);
+        if (TAB[el.IR.X].address < 0) {
+          EXECLIB(il, &el, CURPR, -TAB[el.IR.X].address);
         } else {
           el.H1 = CURPR->T - el.IR.Y;        // base of frame acquired by 18
           el.H2 = il->S[el.H1 + 4];          // function TAB index
@@ -1105,7 +1111,7 @@ void EXECUTE(InterpLocal *il) {
           }
           CURPR->B = el.H1;
           CURPR->T = el.H4 - WORKSIZE;
-          CURPR->PC = TAB[el.H2].ADR; // jump to block address
+          CURPR->PC = TAB[el.H2].address; // jump to block address
           TIMEINC(il, 3, "cs19");
         }
         break;
@@ -1148,7 +1154,7 @@ void EXECUTE(InterpLocal *il) {
         } else {
           CURPR->T--;
           el.H2 = el.IR.Y + CURPR->T;
-          if (TOPOLOGY != SHAREDSY) {
+          if (Topology != Symbol::SHAREDSY) {
             TESTVAR(il, el.H1);
           }
           if (el.H2 > CURPR->STACKSIZE) {
@@ -1176,7 +1182,7 @@ void EXECUTE(InterpLocal *il) {
           il->PS = InterpLocal::PS::REFCHK;
         } else {
           el.H3 = el.H1 + el.IR.X;
-          if (TOPOLOGY != SHAREDSY) {
+          if (Topology != Symbol::SHAREDSY) {
             TESTVAR(il, el.H2);
             if (el.IR.Y == 0) {
               TESTVAR(il, el.H1);
@@ -1228,7 +1234,7 @@ void EXECUTE(InterpLocal *il) {
         errno = 0;
 #endif
         el.H1 = il->S[CURPR->T];
-        if (TOPOLOGY != SHAREDSY) {
+        if (Topology != Symbol::SHAREDSY) {
           TESTVAR(il, el.H1);
         }
         if (il->NUMTRACE > 0) {
@@ -1561,7 +1567,7 @@ void EXECUTE(InterpLocal *il) {
         if ((el.H1 <= 0) || (el.H1 >= STMAX)) {
           il->PS = InterpLocal::PS::REFCHK;
         } else {
-          if (TOPOLOGY != SHAREDSY) {
+          if (Topology != Symbol::SHAREDSY) {
             TESTVAR(il, el.H1);
           }
           if (il->NUMTRACE > 0) {
@@ -1653,7 +1659,7 @@ void EXECUTE(InterpLocal *il) {
             il->PS = InterpLocal::PS::REFCHK;
           }
           il->S[el.H1] = il->S[CURPR->T];
-          if (TOPOLOGY != SHAREDSY) {
+          if (Topology != Symbol::SHAREDSY) {
             if (el.IR.Y == 0) {
               TESTVAR(il, el.H1);
             } else if (il->CONGESTION) {
@@ -1880,7 +1886,7 @@ void EXECUTE(InterpLocal *il) {
           il->SLOCATION[el.H1] = CURPR->PROCESSOR;
           (*chan).READER = CURPR->PID;
         }
-        if (TOPOLOGY != SHAREDSY)
+        if (Topology != Symbol::SHAREDSY)
           TESTVAR(il, el.H1); // channel in stk
         if ((*chan).READTIME < il->CLOCK - TIMESTEP) {
           (*chan).READTIME = il->CLOCK - TIMESTEP;
@@ -2032,7 +2038,7 @@ void EXECUTE(InterpLocal *il) {
                   il->DATE[el.K] = il->DATE[el.I] + CHANTIME;
               }
             }
-            if (TOPOLOGY == SHAREDSY) {
+            if (Topology == Symbol::SHAREDSY) {
               CURPR->TIME = il->DATE[el.K];
               if (debug & DBGTIME)
                 procTime(CURPR, 0.0, "case 66,92");
@@ -2113,7 +2119,7 @@ void EXECUTE(InterpLocal *il) {
         proc->SEQON = true;
         proc->GROUPREP = false;
         proc->PROCESSOR = il->S[CURPR->T];
-        if (proc->PROCESSOR > HIGHESTPROCESSOR || proc->PROCESSOR < 0) {
+        if (proc->PROCESSOR > HighestProcessor || proc->PROCESSOR < 0) {
           il->PS = InterpLocal::PS::CPUCHK;
         } else {
           if (il->PROCTAB[proc->PROCESSOR].STATUS ==
@@ -2201,26 +2207,26 @@ void EXECUTE(InterpLocal *il) {
               il->S[el.J + 5] = il->S[el.J + 5] - 1;
               if (il->S[el.J + 5] == 0) {
                 if (debug & DBGRELEASE) {
-                  fprintf(STDOUT, "%d releas1 %d fm=%d ln=%d\n", el.IR.F,
+                  println(STDOUT, "{} releas1 {} fm={} ln={}", el.IR.F,
                           CURPR->PID, el.J, il->S[el.J + 6]);
                 }
                 RELEASE(il, el.J, il->S[el.J + 6]);
               } else {
                 if (debug & DBGRELEASE) {
-                  fprintf(STDOUT, "%d ref ct %d ct=%d\n", el.IR.F, CURPR->PID,
+                  println(STDOUT, "{} ref ct {} ct={}", el.IR.F, CURPR->PID,
                           il->S[el.J + 5]);
                 }
               }
             }
           }
-          if (!MPIMODE) {
+          if (!mpi_mode) {
             if (debug & DBGRELEASE) {
-              fprintf(STDOUT, "%d releas2 %d fm=%d ln=%d\n", el.IR.F,
-                      CURPR->PID, CURPR->BASE, WORKSIZE);
+              println(STDOUT, "{} releas2 {} fm={} ln={}", el.IR.F, CURPR->PID,
+                      CURPR->BASE, WORKSIZE);
             }
             RELEASE(il, CURPR->BASE, WORKSIZE);
           }
-          if (MPIMODE && il->MPIINIT[CURPR->PROCESSOR] &&
+          if (mpi_mode && il->MPIINIT[CURPR->PROCESSOR] &&
               !il->MPIFIN[CURPR->PROCESSOR]) {
             il->PS = InterpLocal::PS::MPIFINCHK;
           }
@@ -2229,12 +2235,14 @@ void EXECUTE(InterpLocal *il) {
               il->CHAN[i].READER = -1;
             }
           }
+
           CURPR->SEQON = false;
           TIMEINC(il, CREATETIME - 1, "cs69");
           el.H1 = COMMDELAY(il, CURPR->PROCESSOR, CURPR->PARENT->PROCESSOR, 1);
           il->R1 = el.H1 + CURPR->TIME;
           // with CURPR->PARENT
           proc = CURPR->PARENT;
+
           switch (el.IR.F) {
           case 70: {
             proc->NUMCHILDREN = proc->NUMCHILDREN - 1;
@@ -2247,6 +2255,7 @@ void EXECUTE(InterpLocal *il) {
             }
             break;
           }
+
           case 69: {
             proc->FORKCOUNT = proc->FORKCOUNT - 1;
             if (proc->MAXFORKTIME < il->R1) {
@@ -2260,6 +2269,7 @@ void EXECUTE(InterpLocal *il) {
                 proc->STATE = PRD::STATE::READY;
               }
             }
+
             proc->JOINSEM = proc->JOINSEM + 1;
             if (proc->FORKCOUNT == 0) {
               if (proc->MAXFORKTIME > proc->TIME) {
@@ -2269,11 +2279,13 @@ void EXECUTE(InterpLocal *il) {
                 proc->STATE = PRD::STATE::READY;
               }
             }
+
             break;
           }
           }
-          if (debug & DBGPROC) {
-            fprintf(STDOUT, "opc %d terminated pid %d\n", el.IR.F, CURPR->PID);
+
+          if ((debug & DBGPROC) != 0) {
+            println(STDOUT, "opc {} terminated pid {}", el.IR.F, CURPR->PID);
           }
           CURPR->STATE = PRD::STATE::TERMINATED;
           prtb = &il->PROCTAB[CURPR->PROCESSOR];
@@ -2396,7 +2408,7 @@ void EXECUTE(InterpLocal *il) {
               }
               break;
             }
-          } while (!el.B1 && el.I != HIGHESTPROCESSOR);
+          } while (!el.B1 && el.I != HighestProcessor);
           if (el.B1) {
             il->S[CURPR->T] = el.I;
           } else if (el.J > -1) {
@@ -2477,7 +2489,7 @@ void EXECUTE(InterpLocal *il) {
         break;
       }
       case 86: {
-        if (TOPOLOGY != SHAREDSY) {
+        if (Topology != Symbol::SHAREDSY) {
           TESTVAR(il, il->S[CURPR->T]);
         }
         break;
@@ -2523,7 +2535,7 @@ void EXECUTE(InterpLocal *il) {
         break;
       case 91: {
         el.H1 = il->S[CURPR->T - 1];
-        if (TOPOLOGY != SHAREDSY) {
+        if (Topology != Symbol::SHAREDSY) {
           if (el.IR.Y == 0) {
             TESTVAR(il, el.H1);
           } else if (il->CONGESTION) {
@@ -2581,7 +2593,7 @@ void EXECUTE(InterpLocal *il) {
           il->SLOCATION[el.H1] = CURPR->PROCESSOR;
           il->CHAN[il->CNUM].READER = CURPR->PID;
         }
-        if (TOPOLOGY != SHAREDSY) {
+        if (Topology != Symbol::SHAREDSY) {
           TESTVAR(il, el.H1);
         }
         CURPR->T = CURPR->T + 1;
@@ -2619,7 +2631,7 @@ void EXECUTE(InterpLocal *il) {
           il->PS = InterpLocal::PS::STORCHK;
         } else {
           el.H3 = el.H1 + el.IR.Y;
-          if (TOPOLOGY != SHAREDSY) {
+          if (Topology != Symbol::SHAREDSY) {
             TESTVAR(il, el.H2);
           }
           if (debug & DBGSEND) {
@@ -2669,7 +2681,7 @@ void EXECUTE(InterpLocal *il) {
         break;
       }
       case 101: { // lock
-        if (TOPOLOGY != SHAREDSY) {
+        if (Topology != Symbol::SHAREDSY) {
           il->PS = InterpLocal::PS::LOCKCHK;
         }
         if (il->NUMTRACE > 0) {
@@ -2685,7 +2697,7 @@ void EXECUTE(InterpLocal *il) {
         break;
       }
       case 102: { // unlock
-        if (TOPOLOGY != SHAREDSY) {
+        if (Topology != Symbol::SHAREDSY) {
           il->PS = InterpLocal::PS::LOCKCHK;
         }
         if (il->NUMTRACE > 0) {
@@ -2746,7 +2758,7 @@ void EXECUTE(InterpLocal *il) {
         if (el.H1 <= 0 || el.H1 >= STMAX) {
           il->PS = InterpLocal::PS::REFCHK;
         } else {
-          if (TOPOLOGY != SHAREDSY) {
+          if (Topology != Symbol::SHAREDSY) {
             TESTVAR(il, el.H1);
           }
           if (il->NUMTRACE > 0) {
@@ -2791,7 +2803,7 @@ void EXECUTE(InterpLocal *il) {
         if (el.H1 <= 0 || el.H1 >= STMAX) {
           il->PS = InterpLocal::PS::REFCHK;
         } else {
-          if (TOPOLOGY != SHAREDSY) {
+          if (Topology != Symbol::SHAREDSY) {
             TESTVAR(il, el.H1);
           }
           if (il->NUMTRACE > 0) {

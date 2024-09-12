@@ -18,6 +18,8 @@
 #define COMMAX 30
 
 namespace Cstar {
+using std::print;
+
 extern void dumpCode();
 extern void dumpSymbols();
 extern void dumpArrays();
@@ -33,11 +35,11 @@ extern void showConsoleList(bool flg);
 extern void EXECUTE(InterpLocal *il);
 extern void ENTERBLOCK();
 extern bool INCLUDEDIRECTIVE();
-extern void BLOCK(InterpLocal *, SYMSET, bool, int, int);
+extern void BLOCK(InterpLocal *, SymbolSet, bool, int, int);
 extern void NEXTCHAR();
 extern void WRMPIBUF(InterpLocal *, int PNUM);
 void QUALIFY(InterpLocal *);
-void PARTWRITE(InterpLocal *, int START, TYPES PTYP, INDEX PREF, int PADR,
+void PARTWRITE(InterpLocal *, int START, Types PTYP, Index PREF, int PADR,
                bool &DONE);
 static void READLINE();
 int NUM(InterpLocal *);
@@ -84,10 +86,14 @@ ALFA ABBREVTAB[COMMAX + 1] = {
     "NONE          ", "NONE          "};
 
 COMTYP COMJMP[COMMAX + 1] = {
-    RUNP,    CONT,     STEP,   EXIT2,   BREAKP, TRACE,  LIST,   CLEAR,
-    WRVAR,   DISPLAYP, HELP,   PROFILE, ALARM,  WRCODE, STACK,  PSTATUS,
-    PTIME,   UTIL,     CDELAY, CONGEST, VARY,   OPENF,  CLOSEF, INPUTF,
-    OUTPUTF, VIEW,     SHORT,  RESETP,  MPI,    VERSION};
+    COMTYP::RUNP,    COMTYP::CONT,     COMTYP::STEP,   COMTYP::EXIT2,
+    COMTYP::BREAKP,  COMTYP::TRACE,    COMTYP::LIST,   COMTYP::CLEAR,
+    COMTYP::WRVAR,   COMTYP::DISPLAYP, COMTYP::HELP,   COMTYP::PROFILE,
+    COMTYP::ALARM,   COMTYP::WRCODE,   COMTYP::STACK,  COMTYP::PSTATUS,
+    COMTYP::PTIME,   COMTYP::UTIL,     COMTYP::CDELAY, COMTYP::CONGEST,
+    COMTYP::VARY,    COMTYP::OPENF,    COMTYP::CLOSEF, COMTYP::INPUTF,
+    COMTYP::OUTPUTF, COMTYP::VIEW,     COMTYP::SHORT,  COMTYP::RESETP,
+    COMTYP::MPI,     COMTYP::VERSION};
 
 PreBuffer *prebuf;
 void QUALIFY(InterpLocal *il) {
@@ -96,7 +102,7 @@ L50:;
   while (CH == '[' || CH == '-' || CH == '.') {
     REMOVEBL();
     if (CH == '[') {
-      if (il->TYP != ARRAYS) {
+      if (il->TYP != Types::ARRAYS) {
         std::cout << "INDEX OF NONARRAY TYPE" << std::endl;
         il->ERR = true;
         goto L50;
@@ -104,12 +110,12 @@ L50:;
         do {
           NEXTCHAR();
           il->INX = NUM(il);
-          if (il->INX == -1 || il->TYP != ARRAYS) {
+          if (il->INX == -1 || il->TYP != Types::ARRAYS) {
             std::cout << "Error in Array Index" << std::endl;
             il->ERR = true;
             goto L50;
           }
-          if (ATAB[il->REF].INXTYP != INTS) {
+          if (ATAB[il->REF].INXTYP != Types::INTS) {
             std::cout << "Only Integer Indices Allowed" << std::endl;
             il->ERR = true;
             goto L50;
@@ -131,24 +137,24 @@ L50:;
       }
     } else if (CH == '.') {
       NEXTCHAR();
-      if (il->TYP != RECS || !INWORD()) {
+      if (il->TYP != Types::RECS || !INWORD()) {
         std::cout << "Error in Record Component" << std::endl;
         il->ERR = true;
         goto L50;
       } else {
-        A = il->REF;
-        strcpy(TAB[0].NAME, ID);
-        while (TAB[A].NAME != ID) {
-          A = TAB[A].LINK;
+        atab_index = il->REF;
+        strcpy(TAB[0].name, ID);
+        while (TAB[atab_index].name != ID) {
+          atab_index = TAB[atab_index].link;
         }
-        if (A == 0) {
+        if (atab_index == 0) {
           std::cout << "Struct Component Not Found" << std::endl;
           il->ERR = true;
           goto L50;
         } else {
-          il->ADR = il->ADR + TAB[A].ADR;
-          il->TYP = TAB[A].TYP;
-          il->REF = TAB[A].REF;
+          il->ADR = il->ADR + TAB[atab_index].address;
+          il->TYP = TAB[atab_index].types;
+          il->REF = TAB[atab_index].reference;
         }
       }
     } else if (CH == '-') {
@@ -156,7 +162,7 @@ L50:;
       if (CH != '>') {
         std::cout << "Invalid Character in Command" << std::endl;
         il->ERR = true;
-      } else if (il->TYP != PNTS) {
+      } else if (il->TYP != Types::PNTS) {
         std::cout << "Nonpointer Variable Cannot Have ->" << std::endl;
         il->ERR = true;
       } else if (il->S[il->ADR] == 0) {
@@ -196,8 +202,8 @@ bool INCRLINE(InterpLocal *il) {
 struct PartwriteLocal {
   InterpLocal *il;
   int START;
-  TYPES PTYP;
-  INDEX PREF;
+  Types PTYP;
+  Index PREF;
   int PADR;
   bool DONE;
 };
@@ -231,8 +237,8 @@ void RECORDWRITE(PartwriteLocal *pl) {
   NUMREF = 2;
   J = pl->PREF;
   SAVEREF[1] = pl->PREF;
-  while (TAB[J].LINK != 0) {
-    J = TAB[J].LINK;
+  while (TAB[J].link != 0) {
+    J = TAB[J].link;
     SAVEREF[NUMREF] = J;
     NUMREF = NUMREF + 1;
     if (NUMREF > 20) {
@@ -247,7 +253,7 @@ void RECORDWRITE(PartwriteLocal *pl) {
     for (J = 1; J <= pl->START - 5; J++) {
       std::cout << " ";
     }
-    strcpy(TNAME, TAB[SAVEREF[I]].NAME);
+    strcpy(TNAME, TAB[SAVEREF[I]].name);
     for (K = 0; K <= ALNG - 1; K++) {
       if (TNAME[ALNG] == ' ') {
         for (L = ALNG; L >= 2; L--) {
@@ -261,7 +267,7 @@ void RECORDWRITE(PartwriteLocal *pl) {
     if (pl->DONE) {
       goto L90;
     }
-    STADR = STADR + TAB[SAVEREF[I]].SIZE;
+    STADR = STADR + TAB[SAVEREF[I]].size;
   }
 L90:
   std::cout << std::endl;
@@ -291,34 +297,35 @@ void CHANNELWRITE(PartwriteLocal *pl) {
         for (I = 1; I <= pl->START - 1; I++) {
           std::cout << " ";
         }
-        if (il->DATE[PNT] <= il->CLOCK + TIMESTEP || TOPOLOGY == SHAREDSY) {
+        if (il->DATE[PNT] <= il->CLOCK + TIMESTEP ||
+            Topology == Symbol::SHAREDSY) {
           std::cout << "     >";
         } else {
           std::cout << "   **>";
         }
         switch (ATAB[pl->PREF].ELTYP) {
-        case RECS:
-        case ARRAYS:
+        case Types::RECS:
+        case Types::ARRAYS:
           PARTWRITE(il, pl->START + 7, ATAB[pl->PREF].ELTYP,
                     ATAB[pl->PREF].ELREF, il->VALUE[PNT], pl->DONE);
           break;
-        case REALS:
+        case Types::REALS:
           std::cout << il->RVALUE[PNT] << std::endl;
           break;
-        case INTS:
+        case Types::INTS:
           std::cout << il->VALUE[PNT] << std::endl;
           break;
-        case BOOLS:
+        case Types::BOOLS:
           if (il->VALUE[PNT] == 0) {
             std::cout << "FALSE" << std::endl;
           } else {
             std::cout << "TRUE" << std::endl;
           }
           break;
-        case CHARS:
+        case Types::CHARS:
           std::cout << il->VALUE[PNT] << std::endl;
           break;
-        case PNTS:
+        case Types::PNTS:
           TSADR = FINDFRAME(il, 1);
           il->S[TSADR] = il->VALUE[PNT];
           PARTWRITE(il, pl->START + 7, ATAB[pl->PREF].ELTYP,
@@ -328,8 +335,9 @@ void CHANNELWRITE(PartwriteLocal *pl) {
           break;
         }
         PNT = il->LINK[PNT];
-        TYPES typs = ATAB[pl->PREF].ELTYP;
-        if (typs == REALS || typs == INTS || typs == BOOLS || typs == CHARS) {
+        Types typs = ATAB[pl->PREF].ELTYP;
+        if (typs == Types::REALS || typs == Types::INTS ||
+            typs == Types::BOOLS || typs == Types::CHARS) {
           pl->DONE = INCRLINE(il);
         }
       }
@@ -340,27 +348,27 @@ void CHANNELWRITE(PartwriteLocal *pl) {
 void SCALARWRITE(PartwriteLocal *pl) {
   InterpLocal *il = pl->il;
   switch (pl->PTYP) {
-  case INTS:
+  case Types::INTS:
     std::cout << il->S[pl->PADR] << std::endl;
     break;
-  case REALS:
+  case Types::REALS:
     if (il->S[pl->PADR] == 0) {
       std::cout << 0 << std::endl;
     } else {
       std::cout << il->RS[pl->PADR] << std::endl;
     }
     break;
-  case BOOLS:
+  case Types::BOOLS:
     if (il->S[pl->PADR] == 0) {
       std::cout << "FALSE" << std::endl;
     } else {
       std::cout << "TRUE" << std::endl;
     }
     break;
-  case CHARS:
+  case Types::CHARS:
     std::cout << (char)il->S[pl->PADR] << std::endl;
     break;
-  case LOCKS:
+  case Types::LOCKS:
     if (il->S[pl->PADR] == 0) {
       std::cout << "UNLOCKED" << std::endl;
     } else {
@@ -390,7 +398,7 @@ void PNTWRITE(PartwriteLocal *pl) {
   }
 }
 
-void PARTWRITE(InterpLocal *il, int START, TYPES PTYP, INDEX PREF, int PADR,
+void PARTWRITE(InterpLocal *il, int START, Types PTYP, Index PREF, int PADR,
                bool &DONE) {
   struct PartwriteLocal pl;
   pl.il = il;
@@ -401,27 +409,27 @@ void PARTWRITE(InterpLocal *il, int START, TYPES PTYP, INDEX PREF, int PADR,
   pl.DONE = DONE;
   if (!DONE) {
     if (START > 70) {
-      fprintf(STDOUT, "\nData Has Too Many Levels of Structure\n");
+      print(STDOUT, "\nData Has Too Many Levels of Structure\n");
       return;
     }
     switch (PTYP) {
-    case ARRAYS:
+    case Types::ARRAYS:
       ARRAYWRITE(&pl);
       break;
-    case RECS:
+    case Types::RECS:
       RECORDWRITE(&pl);
       break;
-    case CHANS:
+    case Types::CHANS:
       CHANNELWRITE(&pl);
       break;
-    case PNTS:
+    case Types::PNTS:
       PNTWRITE(&pl);
       break;
-    case INTS:
-    case REALS:
-    case BOOLS:
-    case CHARS:
-    case LOCKS:
+    case Types::INTS:
+    case Types::REALS:
+    case Types::BOOLS:
+    case Types::CHARS:
+    case Types::LOCKS:
       SCALARWRITE(&pl);
       break;
     default:
@@ -725,7 +733,7 @@ void GETVAR(InterpLocal *il) {
   for (J = 1; J <= NAMELEN; J++) {
     I = CC + J - 1;
     if (I <= LL) {
-      il->VARNAME[J] = LINE[I];
+      il->VARNAME[J] = line[I];
     } else {
       il->VARNAME[J] = ' ';
     }
@@ -740,22 +748,22 @@ void GETVAR(InterpLocal *il) {
     il->LEVEL = il->LEVEL - 1;
   }
   I = il->LEVEL;
-  strcpy(TAB[0].NAME, &ID[1]);
+  strcpy(TAB[0].name, &ID[1]);
   do {
     if (I > 1) {
       il->VAL = KDES->DISPLAY[I];
       il->INX = il->S[il->VAL + 4];
-      J = BTAB[TAB[il->INX].REF].LAST;
+      J = BTAB[TAB[il->INX].reference].LAST;
     } else {
       J = BTAB[2].LAST;
     }
-    while (strcmp(TAB[J].NAME, &ID[1]) != 0) {
-      J = TAB[J].LINK;
+    while (strcmp(TAB[J].name, &ID[1]) != 0) {
+      J = TAB[J].link;
     }
     I = I - 1;
   } while (I >= 1 && J == 0);
   if (J == 0) {
-    if (strcmp(&ID[1], "MPI_BUFFER    ") == 0 && MPIMODE) {
+    if (strcmp(&ID[1], "MPI_BUFFER    ") == 0 && mpi_mode) {
       goto L70;
     } else {
       std::cout << "Name Not Found" << std::endl;
@@ -764,21 +772,21 @@ void GETVAR(InterpLocal *il) {
     }
   }
   il->LEVEL = I + 1;
-  il->TYP = TAB[J].TYP;
-  il->REF = TAB[J].REF;
-  il->OBJ = TAB[J].OBJ;
-  if (il->OBJ != KONSTANT && il->OBJ != VARIABLE) {
+  il->TYP = TAB[J].types;
+  il->REF = TAB[J].reference;
+  il->OBJ = TAB[J].object;
+  if (il->OBJ != OBJECTS::KONSTANT && il->OBJ != OBJECTS::VARIABLE) {
     std::cout << "Name Not Found" << std::endl;
     il->ERR = true;
     goto L70;
   }
-  if (il->OBJ != KONSTANT) {
-    il->ADR = TAB[J].ADR + KDES->DISPLAY[il->LEVEL];
-    if (!TAB[J].NORMAL) {
+  if (il->OBJ != OBJECTS::KONSTANT) {
+    il->ADR = TAB[J].address + KDES->DISPLAY[il->LEVEL];
+    if (!TAB[J].normal) {
       il->ADR = il->S[il->ADR];
     }
-    if (il->TYP == INTS || il->TYP == REALS || il->TYP == BOOLS ||
-        il->TYP == CHARS) {
+    if (il->TYP == Types::INTS || il->TYP == Types::REALS ||
+        il->TYP == Types::BOOLS || il->TYP == Types::CHARS) {
       for (I = KDES->BASE; I <= KDES->BASE + KDES->FORLEVEL - 1; I++) {
         if (il->SLOCATION[I] == il->ADR && KDES->PC >= std::lround(il->RS[I])) {
           il->ADR = I;
@@ -786,7 +794,7 @@ void GETVAR(InterpLocal *il) {
       }
     }
   } else {
-    il->ADR = TAB[J].ADR;
+    il->ADR = TAB[J].address;
   }
   QUALIFY(il);
   if (il->ERR) {
@@ -837,14 +845,14 @@ static void READLINE() {
     } else {
       CONVERT();
       LL = LL + 1;
-      LINE[LL] = CH;
+      line[LL] = CH;
     }
   }
   // READLN(STDIN);
   if (LL > 0) {
     ENDFLAG = false;
     CC = 1;
-    CH = LINE[CC];
+    CH = line[CC];
   } else {
     ENDFLAG = true;
     CH = ' ';
@@ -863,14 +871,14 @@ static void FREADLINE() {
       }
     } else {
       LL = LL + 1;
-      LINE[LL] = CH;
+      line[LL] = CH;
     }
   }
   // READLN(STDIN);
   if (LL > 0) {
     ENDFLAG = false;
     CC = 1;
-    CH = LINE[CC];
+    CH = line[CC];
   } else {
     ENDFLAG = true;
     CH = ' ';
@@ -883,7 +891,7 @@ void Freadline(PreBuffer *pbp) {
   LL = 0;
   ch = pbp->getc();
   while (ch >= 0 && ch != '\n' && ch != '\r') {
-    LINE[++LL] = (char)ch;
+    line[++LL] = (char)ch;
     ch = pbp->getc();
   }
   if (ch == '\r')
@@ -891,7 +899,7 @@ void Freadline(PreBuffer *pbp) {
   if (LL > 0) {
     ENDFLAG = false;
     CC = 1;
-    CH = LINE[CC];
+    CH = line[CC];
   } else {
     ENDFLAG = true;
     CH = ' ';
@@ -904,7 +912,7 @@ void NEXTCHAR() {
     CH = ' ';
   } else {
     CC = CC + 1;
-    CH = LINE[CC];
+    CH = line[CC];
   }
 }
 
@@ -1053,8 +1061,8 @@ void PRINTSTATS(InterpLocal *il) {
   if (il->PS != InterpLocal::PS::FIN && il->PS != InterpLocal::PS::DEAD) {
     std::cout << "*** HALT AT " << GETLNUM(il->CURPR->PC - 1) << " IN PROCESS "
               << il->CURPR->PID << " BECAUSE OF ";
-    // pascal:       fprintf(stdout, '*** HALT AT ',GETLNUM(PC-1):1,' IN PROCESS
-    // ', CURPR^.PID:1); pascal:       fprintf(stdout,  ' BECAUSE OF ');
+    // pascal:       print(stdout, '*** HALT AT ',GETLNUM(PC-1):1,' IN PROCESS
+    // ', CURPR^.PID:1); pascal:       print(stdout,  ' BECAUSE OF ');
     switch (il->PS) {
     case InterpLocal::PS::DIVCHK:
       std::cout << "DIVISION BY 0" << std::endl;
@@ -1150,25 +1158,25 @@ void PRINTSTATS(InterpLocal *il) {
     default:
       break;
     }
-    fprintf(STDOUT, "\n");
+    print(STDOUT, "\n");
   }
   if (!OUTPUTFILE) {
-    fprintf(STDOUT, "SEQUENTIAL EXECUTION TIME: %d\n", (int)il->SEQTIME);
-    fprintf(STDOUT, "PARALLEL EXECUTION TIME: %d\n", (int)il->MAINPROC->TIME);
+    print(STDOUT, "SEQUENTIAL EXECUTION TIME: %d\n", (int)il->SEQTIME);
+    print(STDOUT, "PARALLEL EXECUTION TIME: %d\n", (int)il->MAINPROC->TIME);
     if (il->MAINPROC->TIME != 0) {
       il->SPEED = il->SEQTIME / il->MAINPROC->TIME;
-      fprintf(STDOUT, "SPEEDUP:  %6.2f\n", il->SPEED);
+      print(STDOUT, "SPEEDUP:  %6.2f\n", il->SPEED);
     }
-    fprintf(STDOUT, "NUMBER OF PROCESSORS USED: %d\n", il->USEDPROCS);
+    print(STDOUT, "NUMBER OF PROCESSORS USED: %d\n", il->USEDPROCS);
   } else {
-    // fprintf(STDOUT, OUTP);
-    fprintf(OUTP, "SEQUENTIAL EXECUTION TIME: %d\n", (int)il->SEQTIME);
-    fprintf(OUTP, "PARALLEL EXECUTION TIME: %d\n", (int)il->MAINPROC->TIME);
+    // print(STDOUT, OUTP);
+    print(OUTP, "SEQUENTIAL EXECUTION TIME: %d\n", (int)il->SEQTIME);
+    print(OUTP, "PARALLEL EXECUTION TIME: %d\n", (int)il->MAINPROC->TIME);
     if (il->MAINPROC->TIME != 0) {
       il->SPEED = il->SEQTIME / il->MAINPROC->TIME;
-      fprintf(OUTP, "SPEEDUP:  %6.2f\n", il->SPEED);
+      print(OUTP, "SPEEDUP:  %6.2f\n", il->SPEED);
     }
-    fprintf(OUTP, "NUMBER OF PROCESSORS USED: %d\n", il->USEDPROCS);
+    print(OUTP, "NUMBER OF PROCESSORS USED: %d\n", il->USEDPROCS);
     // (*OUTP).close();
     fclose(OUTP);
     OUTPUTOPEN = false;
@@ -1286,11 +1294,11 @@ void RELEASE(InterpLocal *il, int BASE, int LENGTH) {
 }
 void unreleased(InterpLocal *il) {
   BLKPNT seq;
-  fprintf(STDOUT, "rel_fail %d, rel_alloc %d, rel_free %d\n", rel_fail,
-          rel_alloc, rel_free);
+  print(STDOUT, "rel_fail %d, rel_alloc %d, rel_free %d\n", rel_fail, rel_alloc,
+        rel_free);
   seq = il->STHEAD;
   while (seq != nullptr) {
-    fprintf(STDOUT, "unreleased %d len %d\n", seq->START, seq->SIZE);
+    print(STDOUT, "unreleased %d len %d\n", seq->START, seq->SIZE);
     seq = seq->NEXT;
   }
 }
@@ -1351,7 +1359,7 @@ void INITIALIZE(InterpLocal *il) {
       TBP = TBP->NEXT;
       free(SBP);
     }
-    if (TOPOLOGY != SHAREDSY) {
+    if (Topology != Symbol::SHAREDSY) {
       for (int I = 0; I <= PMAX; I++) {
         BUSYPNT TCP = il->PROCTAB[I].BUSYLIST;
         while (TCP != nullptr) {
@@ -1443,7 +1451,7 @@ void INITIALIZE(InterpLocal *il) {
   il->MAINPROC->PC = 0;
   il->MAINPROC->TIME = 0;
   il->MAINPROC->VIRTUALTIME = 0;
-  il->MAINPROC->STATE = PROCESSDESCRIPTOR::RUNNING;
+  il->MAINPROC->STATE = PROCESSDESCRIPTOR::STATE::RUNNING;
   il->MAINPROC->STACKSIZE = il->STKMAIN - 2;
   il->MAINPROC->FORLEVEL = 0;
   il->MAINPROC->PROCESSOR = 0;
@@ -1473,7 +1481,7 @@ void INITIALIZE(InterpLocal *il) {
   if (il->ALARMON) {
     il->ALARMENABLED = true;
   }
-  if (MPIMODE) {
+  if (mpi_mode) {
     for (int I = 0; I <= PMAX; I++) {
       il->MPIINIT[I] = false;
       il->MPIFIN[I] = false;
@@ -1535,26 +1543,26 @@ void INTERPRET() {
   il->RVALUE = (BUFREALTYPE *)calloc(BUFMAX + 1, sizeof(BUFREALTYPE));
   il->DATE = (BUFREALTYPE *)calloc(BUFMAX + 1, sizeof(BUFREALTYPE));
   INITCOMMANDS();
-  MPIMODE = false;
+  mpi_mode = false;
   do {
     int cct = 0;
     do {
-      // fprintf(stdout, "\n");
+      // print(stdout, "\n");
       // std::cout << std::endl;
       fputc('\n', STDOUT);
-      // fprintf(stdout, '*');
+      // print(stdout, '*');
       // std::cout << "*";
       fputc('*', STDOUT);
       //                FREADLINE();
       Freadline(prebuf);
-      //                fprintf(STDOUT, "%s\n", &LINE[1]);
+      //                print(STDOUT, "%s\n", &LINE[1]);
       if (++cct > 3) {
         printf("prompt loop may be infinite\n");
         exit(1);
       }
     } while (ENDFLAG);
     il->TEMP = INWORD();
-    il->COMMLABEL = ERRC;
+    il->COMMLABEL = COMTYP::ERRC;
     for (I = 0; I < COMMAX; I++) {
       if (strcmp(COMTAB[I], &ID[1]) == 0 ||
           (strcmp(ABBREVTAB[I], &ID[1]) == 0 &&
@@ -1563,15 +1571,15 @@ void INTERPRET() {
       }
     }
     switch (il->COMMLABEL) {
-    case RUNP:
+    case COMTYP::RUNP:
       if (!SRCOPEN) {
-        fprintf(stdout, "Must Open a Program Source File First\n");
+        print(stdout, "Must Open a Program Source File First\n");
         break;
       }
       if (TESTEND()) {
         if (INPUTFILE) {
           if (!INPUTOPEN) {
-            size_t ll = std::strlen(il->INPUTFNAME) - 1;
+            size_t ll = il->INPUTFNAME.length() - 1;
             while (ll > 0 && il->INPUTFNAME[ll] == ' ')
               ll -= 1;
             if (ll++ > 0)
@@ -1581,14 +1589,14 @@ void INTERPRET() {
           }
           // RESET(INP);
           if (INP == nullptr) {
-            fprintf(stdout, "\n");
-            fprintf(stdout, "Error In Data Input File %s\n", il->INPUTFNAME);
+            print(stdout, "\n");
+            print(stdout, "Error In Data Input File %s\n", il->INPUTFNAME);
           } else
             INPUTOPEN = true;
         }
         if (OUTPUTFILE) {
           if (!OUTPUTOPEN) {
-            size_t ll = std::strlen(il->INPUTFNAME) - 1;
+            size_t ll = il->INPUTFNAME.length() - 1;
             while (ll > 0 && il->INPUTFNAME[ll] == ' ')
               ll -= 1;
             if (ll++ > 0)
@@ -1596,10 +1604,10 @@ void INTERPRET() {
             OUTP = fopen(il->OUTPUTFNAME, "w");
             il->INPUTFNAME[ll] = ' ';
           }
-          // REfprintf(stdout, OUTP);
+          // REprint(stdout, OUTP);
           if (OUTP == nullptr) {
-            fprintf(stdout, "\n");
-            fprintf(stdout, "Error In Data Output File %s\n", il->OUTPUTFNAME);
+            print(stdout, "\n");
+            print(stdout, "Error In Data Output File %s\n", il->OUTPUTFNAME);
           } else
             OUTPUTOPEN = true;
         }
@@ -1625,7 +1633,7 @@ void INTERPRET() {
         }
       }
       break;
-    case CONT:
+    case COMTYP::CONT:
       if (TESTEND()) {
         if (il->INITFLAG && !MUSTRUN) {
           if (il->PS == InterpLocal::PS::BREAK) {
@@ -1647,14 +1655,14 @@ void INTERPRET() {
               PRINTSTATS(il);
             }
           } else {
-            fprintf(stdout, "Can Only Continue After a Breakpoint");
+            print(stdout, "Can Only Continue After a Breakpoint");
           }
         } else {
-          fprintf(stdout, "Must Run Program Before Continuing");
+          print(stdout, "Must Run Program Before Continuing");
         }
       }
       break;
-    case STEP:
+    case COMTYP::STEP:
       if (il->INITFLAG && !MUSTRUN) {
         if (il->PS == InterpLocal::PS::BREAK) {
           if (INWORD()) {
@@ -1672,19 +1680,19 @@ void INTERPRET() {
                 }
               } while (!il->TEMP && il->PTEMP != il->ACPHEAD);
               if (!il->TEMP) {
-                fprintf(stdout, "Invalid Process Number");
+                print(stdout, "Invalid Process Number");
                 goto L200;
               }
-              fprintf(stdout, "\n");
+              print(stdout, "\n");
             } else {
-              fprintf(stdout, "Error in Command");
+              print(stdout, "Error in Command");
               goto L200;
             }
           } else {
             strcpy(il->PROMPT, "Number:   ");
             K = NUM(il);
             if (K < 0) {
-              fprintf(stdout, "Error in Number");
+              print(stdout, "Error in Number");
             } else {
               il->MAXSTEPS = K;
               il->OLDSEQTIME = il->SEQTIME;
@@ -1708,15 +1716,15 @@ void INTERPRET() {
             }
           }
         } else {
-          fprintf(stdout, "Cannot Step Because Program is Terminated");
+          print(stdout, "Cannot Step Because Program is Terminated");
         }
       } else {
-        fprintf(stdout, "Must Begin with Run Command");
+        print(stdout, "Must Begin with Run Command");
       }
       break;
-    case BREAKP:
+    case COMTYP::BREAKP:
       if (!SRCOPEN) {
-        fprintf(stdout, "Must Open a Program Source File First");
+        print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
       J = 0;
@@ -1726,35 +1734,35 @@ void INTERPRET() {
         }
       }
       if (J == 0) {
-        fprintf(stdout, "Too Many Breakpoints");
+        print(stdout, "Too Many Breakpoints");
       } else {
         strcpy(il->PROMPT, "At Line:  ");
         K = NUM(il);
         if (K < 0 || K > LNUM) {
-          fprintf(stdout, "Out of Bounds");
+          print(stdout, "Out of Bounds");
         } else if (LOCATION[K + 1] == LOCATION[K] || !BREAKALLOW[K]) {
-          fprintf(stdout, "Breakpoints Must Be Set at Executable Lines");
+          print(stdout, "Breakpoints Must Be Set at Executable Lines");
         } else {
           il->BRKLINE[J] = K;
           il->BRKTAB[J] = LOCATION[K];
           il->NUMBRK++;
-          fprintf(stdout, "\n");
+          print(stdout, "\n");
         }
       }
       break;
-    case EXIT2:
-      fprintf(stdout, "TERMINATE C* SYSTEM\n");
+    case COMTYP::EXIT2:
+      print(stdout, "TERMINATE C* SYSTEM\n");
       break;
-    case VIEW:
+    case COMTYP::VIEW:
       if (!SRCOPEN) {
-        fprintf(stdout, "Must Open a Program Source File First");
+        print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
       il->FIRST = 1;
       il->LAST = LNUM;
       GETRANGE(il->FIRST, il->LAST, il->ERR);
       if (il->ERR) {
-        fprintf(stdout, "Error in Range");
+        print(stdout, "Error in Range");
         goto L200;
       }
       if (il->LAST > LNUM) {
@@ -1770,35 +1778,35 @@ void INTERPRET() {
           READLN(SRC);
         }
         for (K = il->FIRST; K <= il->LAST; K++) {
-          fprintf(stdout, "%4d", K);
-          fprintf(stdout, " ");
+          print(stdout, "%4d", K);
+          print(stdout, " ");
           while (!eoln(SRC)) {
             CH = (char)fgetc(SRC);
             fputc(CH, stdout);
           }
           // READLN(SRC);
-          fprintf(stdout, "\n");
+          print(stdout, "\n");
         }
       } else {
-        fprintf(stdout, "There is no Program Source File open");
-        fprintf(stdout, "\n");
+        print(stdout, "There is no Program Source File open");
+        print(stdout, "\n");
       }
       break;
-    case CLEAR:
+    case COMTYP::CLEAR:
       if (!SRCOPEN) {
-        fprintf(stdout, "Must Open a Program Source File First");
+        print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
       REMOVEBL();
       if (ENDFLAG) {
-        fprintf(stdout, "Break or Trace? ");
+        print(stdout, "Break or Trace? ");
         READLINE();
         if (ENDFLAG) {
           goto L200;
         }
       }
       if (!INWORD()) {
-        fprintf(stdout, "Error in Command");
+        print(stdout, "Error in Command");
         goto L200;
       }
       if (strcmp(&ID[1], "BREAK         ") == 0 ||
@@ -1806,7 +1814,7 @@ void INTERPRET() {
         strcpy(il->PROMPT, "From Line: ");
         K = NUM(il);
         if (K < 0 || K > LNUM) {
-          fprintf(stdout, "Not Valid Line Number");
+          print(stdout, "Not Valid Line Number");
         } else {
           for (I = 1; I <= BRKMAX; I++) {
             if (il->BRKLINE[I] == K) {
@@ -1815,14 +1823,14 @@ void INTERPRET() {
               il->NUMBRK--;
             }
           }
-          fprintf(stdout, "\n");
+          print(stdout, "\n");
         }
       } else if (strcmp(&ID[1], "TRACE         ") == 0 ||
                  strcmp(&ID[1], "T             ") == 0) {
         strcpy(il->PROMPT, "Memory Lc: ");
         K = NUM(il);
         if (K < 0 || K > STMAX - 1) {
-          fprintf(stdout, "Not Valid Memory Location");
+          print(stdout, "Not Valid Memory Location");
         } else {
           for (I = 1; I <= VARMAX; I++) {
             if (il->TRCTAB[I].MEMLOC == K) {
@@ -1830,16 +1838,16 @@ void INTERPRET() {
               il->NUMTRACE--;
             }
           }
-          fprintf(stdout, "\n");
+          print(stdout, "\n");
         }
       } else {
-        fprintf(stdout, "Error in Command");
+        print(stdout, "Error in Command");
         goto L200;
       }
       break;
-    case DISPLAYP: {
+    case COMTYP::DISPLAYP: {
       if (!SRCOPEN) {
-        fprintf(stdout, "Must Open a Program Source File First");
+        print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
       if (TESTEND()) {
@@ -1856,66 +1864,65 @@ void INTERPRET() {
               }
             }
           }
-          fprintf(stdout, "Breakpoints at Following Lines:\n");
+          print(stdout, "Breakpoints at Following Lines:\n");
           for (I = 1; I <= BRKMAX; I++) {
             if (il->BRKLINE[I] >= 0) {
-              fprintf(stdout, "%d\n", il->BRKLINE[I]);
+              print(stdout, "%d\n", il->BRKLINE[I]);
             }
           }
         }
         if (il->NUMTRACE > 0) {
-          fprintf(stdout, "\n");
-          fprintf(stdout, "List of Trace Variables:\n");
-          fprintf(stdout, "Variable Name             Memory Location\n");
+          print(stdout, "\n");
+          print(stdout, "List of Trace Variables:\n");
+          print(stdout, "Variable Name             Memory Location\n");
           for (I = 1; I <= VARMAX; I++) {
             if (il->TRCTAB[I].MEMLOC != -1) {
-              fprintf(stdout, "   %s%11d\n", il->TRCTAB[I].NAME,
-                      il->TRCTAB[I].MEMLOC);
+              print(stdout, "   %s%11d\n", il->TRCTAB[I].NAME,
+                    il->TRCTAB[I].MEMLOC);
             }
           }
         }
         if (il->ALARMON) {
-          fprintf(stdout, "\n");
-          fprintf(stdout, "Alarm is Set at Time %f\n", il->ALARMTIME);
+          print(stdout, "\n");
+          print(stdout, "Alarm is Set at Time %f\n", il->ALARMTIME);
         }
-        if (TOPOLOGY != SHAREDSY) {
-          fprintf(stdout, "\n");
-          fprintf(stdout, "Communication Link Delay: %d\n", il->TOPDELAY);
+        if (Topology != Symbol::SHAREDSY) {
+          print(stdout, "\n");
+          print(stdout, "Communication Link Delay: %d\n", il->TOPDELAY);
           if (il->CONGESTION) {
-            fprintf(stdout, "Congestion is On\n");
+            print(stdout, "Congestion is On\n");
           } else {
-            fprintf(stdout, "Congestion is Off\n");
+            print(stdout, "Congestion is Off\n");
           }
         }
-        if (MPIMODE) {
-          fprintf(stdout, "MPI Mode is On\n");
+        if (mpi_mode) {
+          print(stdout, "MPI Mode is On\n");
         }
-        if (strlen(il->INPUTFNAME) != 0) {
-          fprintf(stdout, "File for Program Data Input: %s\n", il->INPUTFNAME);
+        if (il->INPUTFNAME.length() != 0) {
+          print(stdout, "File for Program Data Input: %s\n", il->INPUTFNAME);
         }
-        if (strlen(il->OUTPUTFNAME) != 0) {
-          fprintf(stdout, "File for Program Data Output: %s\n",
-                  il->OUTPUTFNAME);
+        if (il->OUTPUTFNAME.length() != 0) {
+          print(stdout, "File for Program Data Output: %s\n", il->OUTPUTFNAME);
         }
-        fprintf(stdout, "Listing File for your Source Program: ");
+        print(stdout, "Listing File for your Source Program: ");
         if (LISTDEF) {
-          fprintf(stdout, "%s\n", il->LISTDEFNAME);
+          print(stdout, "%s\n", il->LISTDEFNAME);
         } else {
-          fprintf(stdout, "%s\n", il->LISTFNAME);
+          print(stdout, "%s\n", il->LISTFNAME);
         }
       }
       break;
     }
-    case PROFILE: {
+    case COMTYP::PROFILE: {
       if (!SRCOPEN) {
-        fprintf(stdout, "Must Open a Program Source File First");
+        print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
       if (INWORD()) {
         if (strcmp(&ID[1], "OFF           ") == 0) {
           il->PROFILEON = false;
         } else {
-          fprintf(stdout, "Error in Command");
+          print(stdout, "Error in Command");
           goto L200;
         }
       } else {
@@ -1924,53 +1931,53 @@ void INTERPRET() {
         do {
           REMOVEBL();
           if (ENDFLAG) {
-            fprintf(stdout, "Process Range: ");
+            print(stdout, "Process Range: ");
             READLINE();
           }
           GETRANGE(il->FIRSTPROC, il->LASTPROC, il->ERR);
         } while (il->ERR || il->FIRSTPROC == -1);
         if (il->ERR) {
-          fprintf(stdout, "Error in Range");
+          print(stdout, "Error in Range");
           goto L200;
         }
         if (il->LASTPROC - il->FIRSTPROC >= 40) {
-          fprintf(stdout, "Maximum of 40 Processes Allowed in Profile");
+          print(stdout, "Maximum of 40 Processes Allowed in Profile");
           goto L200;
         }
         strcpy(il->PROMPT, "Time Step:");
         il->PROSTEP = NUM(il);
         if (il->PROSTEP < 0) {
-          fprintf(stdout, "Not Valid Time Step");
+          print(stdout, "Not Valid Time Step");
           goto L200;
         }
         if (il->PROSTEP < 10) {
-          fprintf(stdout, "Minimum Time Step is 10");
+          print(stdout, "Minimum Time Step is 10");
           goto L200;
         }
         if (TESTEND()) {
           il->PROFILEON = true;
         }
       }
-      fprintf(stdout, "\n");
+      print(stdout, "\n");
       break;
     }
-    case ALARM: {
+    case COMTYP::ALARM: {
       if (!SRCOPEN) {
-        fprintf(stdout, "Must Open a Program Source File First");
+        print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
       if (INWORD()) {
         if (strcmp(&ID[1], "OFF           ") == 0) {
           il->ALARMON = false;
         } else {
-          fprintf(stdout, "Error in Command");
+          print(stdout, "Error in Command");
           goto L200;
         }
       } else {
         strcpy(il->PROMPT, "  Time:   ");
         il->ALARMTIME = NUM(il);
         if (il->ALARMTIME < 0) {
-          fprintf(stdout, "Not a Valid Alarm Time");
+          print(stdout, "Not a Valid Alarm Time");
           goto L200;
         }
         il->ALARMON = true;
@@ -1980,24 +1987,24 @@ void INTERPRET() {
           il->ALARMENABLED = false;
         }
       }
-      fprintf(stdout, "\n");
+      print(stdout, "\n");
       break;
     }
-    case TRACE: {
+    case COMTYP::TRACE: {
       if (!SRCOPEN) {
-        fprintf(stdout, "Must Open a Program Source File First");
+        print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
       GETVAR(il);
       if (il->ERR) {
         goto L200;
       }
-      if (il->OBJ != VARIABLE) {
-        fprintf(stdout, "Can Only Trace on Variables");
+      if (il->OBJ != OBJECTS::VARIABLE) {
+        print(stdout, "Can Only Trace on Variables");
         goto L200;
       }
-      if (il->TYP == ARRAYS || il->TYP == RECS) {
-        fprintf(stdout, "Cannot Trace a Whole Array or Structure");
+      if (il->TYP == Types::ARRAYS || il->TYP == Types::RECS) {
+        print(stdout, "Cannot Trace a Whole Array or Structure");
         goto L200;
       }
       J = 0;
@@ -2007,18 +2014,18 @@ void INTERPRET() {
         }
       }
       if (J == 0) {
-        fprintf(stdout, "Too Many Trace Variables");
+        print(stdout, "Too Many Trace Variables");
         goto L200;
       }
       strcpy(il->TRCTAB[J].NAME, &il->VARNAME[1]);
       il->TRCTAB[J].MEMLOC = il->ADR;
       il->NUMTRACE++;
-      fprintf(stdout, "\n");
+      print(stdout, "\n");
       break;
     }
-    case WRVAR: {
+    case COMTYP::WRVAR: {
       if (!SRCOPEN) {
-        fprintf(stdout, "Must Open a Program Source File First");
+        print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
       GETVAR(il);
@@ -2029,23 +2036,23 @@ void INTERPRET() {
         WRMPIBUF(il, K);
         goto L200;
       }
-      if (il->OBJ == KONSTANT) {
+      if (il->OBJ == OBJECTS::KONSTANT) {
         switch (il->TYP) {
-        case REALS:
-          fprintf(stdout, "%f\n", CONTABLE[il->ADR]);
+        case Types::REALS:
+          print(stdout, "%f\n", CONTABLE[il->ADR]);
           break;
-        case INTS:
-          fprintf(stdout, "%d\n", il->ADR);
+        case Types::INTS:
+          print(stdout, "%d\n", il->ADR);
           break;
-        case BOOLS:
+        case Types::BOOLS:
           if (il->ADR == 0) {
-            fprintf(stdout, "false");
+            print(stdout, "false");
           } else {
-            fprintf(stdout, "true");
+            print(stdout, "true");
           }
           break;
-        case CHARS:
-          fprintf(stdout, "%c\n", il->ADR);
+        case Types::CHARS:
+          print(stdout, "%c\n", il->ADR);
           break;
         default:
           break;
@@ -2054,8 +2061,8 @@ void INTERPRET() {
       }
       il->TEMP = false;
       il->LINECNT = 0;
-      if (il->TYP == ARRAYS) {
-        fprintf(stdout, "Index Range: ");
+      if (il->TYP == Types::ARRAYS) {
+        print(stdout, "Index Range: ");
         READLINE();
         if (ENDFLAG) {
           goto L200;
@@ -2064,19 +2071,19 @@ void INTERPRET() {
         il->LAST = ATAB[il->REF].HIGH;
         GETRANGE(il->FIRST, il->LAST, il->ERR);
         if (il->ERR) {
-          fprintf(stdout, "Error in Range");
+          print(stdout, "Error in Range");
           goto L200;
         }
         if (il->FIRST < ATAB[il->REF].LOW || il->LAST > ATAB[il->REF].HIGH) {
-          fprintf(stdout, "Array Bounds Exceeded");
+          print(stdout, "Array Bounds Exceeded");
           goto L200;
         }
         il->ADR =
             il->ADR + (il->FIRST - ATAB[il->REF].LOW) * ATAB[il->REF].ELSIZE;
         for (I = il->FIRST; I <= il->LAST; I++) {
           if (!il->TEMP) {
-            fprintf(stdout, "%d", I);
-            fprintf(stdout, "--> ");
+            print(stdout, "%d", I);
+            print(stdout, "--> ");
             PARTWRITE(il, 10, ATAB[il->REF].ELTYP, ATAB[il->REF].ELREF, il->ADR,
                       il->TEMP);
             il->ADR = il->ADR + ATAB[il->REF].ELSIZE;
@@ -2087,7 +2094,7 @@ void INTERPRET() {
       }
       break;
     }
-    case PSTATUS: {
+    case COMTYP::PSTATUS: {
       if (!il->INITFLAG) {
         std::cout << "Must Run Program First" << std::endl;
         goto L200;
@@ -2126,14 +2133,14 @@ void INTERPRET() {
             }
             il->H1 = il->PTEMP->PDES->DISPLAY[il->LEVEL];
             il->INX = il->S[il->H1 + 4];
-            while (TAB[il->INX].NAME[1] == '*') {
+            while (TAB[il->INX].name[1] == '*') {
               il->H1 = il->S[il->H1 + 3];
               il->INX = il->S[il->H1 + 4];
             }
             if (il->LEVEL == 1) {
               std::cout << "        " << "MAIN          ";
             } else {
-              std::cout << "        " << TAB[il->INX].NAME;
+              std::cout << "        " << TAB[il->INX].name;
             }
             if (il->PTEMP->PDES->PID == il->CURPR->PID) {
               std::cout << std::setw(7) << GETLNUM(il->PTEMP->PDES->PC);
@@ -2168,7 +2175,7 @@ void INTERPRET() {
       }
       break;
     }
-    case PTIME: {
+    case COMTYP::PTIME: {
       if (!SRCOPEN) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
@@ -2183,7 +2190,7 @@ void INTERPRET() {
           il->SPEED = il->SEQTIME / il->CLOCK;
           //                        std::cout << "     Speedup:  " << il->SPEED
           //                        << std::endl; std::cout << std::endl;
-          fprintf(STDOUT, "     Speedup:  %6.2f\n\n", il->SPEED);
+          print(STDOUT, "     Speedup:  %6.2f\n\n", il->SPEED);
         }
         if (il->OLDTIME != 0) {
           il->R1 = il->CLOCK - il->OLDTIME;
@@ -2194,13 +2201,13 @@ void INTERPRET() {
             il->SPEED = il->R2 / il->R1;
             //                            std::cout << "     Speedup:  " <<
             //                            il->SPEED << std::endl;
-            fprintf(STDOUT, "     Speedup:  %6.2f\n", il->SPEED);
+            print(STDOUT, "     Speedup:  %6.2f\n", il->SPEED);
           }
         }
       }
       break;
     }
-    case UTIL: {
+    case COMTYP::UTIL: {
       if (!SRCOPEN) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
@@ -2238,12 +2245,12 @@ void INTERPRET() {
       }
       break;
     }
-    case CDELAY: {
+    case COMTYP::CDELAY: {
       if (!SRCOPEN) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
-      if (TOPOLOGY == SHAREDSY) {
+      if (Topology == Symbol::SHAREDSY) {
         std::cout << "Not allowed in shared memory multiprocessor" << std::endl;
       } else {
         strcpy(il->PROMPT, "   Size:  ");
@@ -2256,12 +2263,12 @@ void INTERPRET() {
       }
       break;
     }
-    case CONGEST: {
+    case COMTYP::CONGEST: {
       if (!SRCOPEN) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
-      if (TOPOLOGY == SHAREDSY) {
+      if (Topology == Symbol::SHAREDSY) {
         std::cout << "Not allowed in shared memory multiprocessor" << std::endl;
       } else {
         if (INWORD()) {
@@ -2278,7 +2285,7 @@ void INTERPRET() {
       }
       break;
     }
-    case VARY: {
+    case COMTYP::VARY: {
       if (INWORD()) {
         if (strcmp(&ID[1], "ON            ") == 0) {
           il->VARIATION = true;
@@ -2292,7 +2299,7 @@ void INTERPRET() {
       }
       break;
     }
-    case HELP: {
+    case COMTYP::HELP: {
       std::cout << "The following commands are available:" << std::endl;
       std::cout << std::endl;
       std::cout << "*OPEN filename - Open and Compile your program source file"
@@ -2375,7 +2382,7 @@ void INTERPRET() {
       std::cout << "*HELP - Show a complete list of commands" << std::endl;
       break;
     }
-    case WRCODE: {
+    case COMTYP::WRCODE: {
       if (!SRCOPEN) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
@@ -2392,21 +2399,21 @@ void INTERPRET() {
       }
       //                    std::cout << "LINE NUMBER" << "  OPCODE" << "    X
       //                    " << "  Y  " << std::endl;
-      fprintf(STDOUT, "LINE NUMBER  OPCODE    X    Y  \n");
+      print(STDOUT, "LINE NUMBER  OPCODE    X    Y  \n");
       for (I = il->FIRST; I <= il->LAST; I++) {
         // std::cout << I << "    ";
-        fprintf(STDOUT, "%7d    ", I);
+        print(STDOUT, "%7d    ", I);
         if (LOCATION[I] == LOCATION[I + 1]) {
           // std::cout << std::endl;
           fputc('\n', STDOUT);
         } else {
           J = LOCATION[I];
-          fprintf(STDOUT, "%6d%6d%6d\n", CODE[J].F, CODE[J].X, CODE[J].Y);
+          print(STDOUT, "%6d%6d%6d\n", CODE[J].F, CODE[J].X, CODE[J].Y);
           for (J = LOCATION[I] + 1; J <= LOCATION[I + 1] - 1; J++) {
             // std::cout << CODE[J].F << " " << CODE[J].X << " " << CODE[J].Y <<
             // std::endl;
-            fprintf(STDOUT, "           %6d%6d%6d\n", CODE[J].F, CODE[J].X,
-                    CODE[J].Y);
+            print(STDOUT, "           %6d%6d%6d\n", CODE[J].F, CODE[J].X,
+                  CODE[J].Y);
           }
         }
       }
@@ -2414,7 +2421,7 @@ void INTERPRET() {
       fputc('\n', STDOUT);
       break;
     }
-    case STACK: {
+    case COMTYP::STACK: {
       if (!SRCOPEN) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
@@ -2433,7 +2440,7 @@ void INTERPRET() {
       std::cout << std::endl;
       break;
     }
-    case OPENF: {
+    case COMTYP::OPENF: {
       if (SRCOPEN) {
         std::cout << "You Must Close Current Source Program First" << std::endl;
         std::cout << std::endl;
@@ -2460,7 +2467,7 @@ void INTERPRET() {
         if (!inp) {
           // std::cout << "Cannot Open the Input File " << INPUTFNAME <<
           // std::endl;
-          fprintf(stdout, "Cannot Open the Input File %s\n", il->INPUTFNAME);
+          print(stdout, "Cannot Open the Input File %s\n", il->INPUTFNAME);
           fclose(SRC);
           std::cout << std::endl;
           goto L200;
@@ -2484,7 +2491,7 @@ void INTERPRET() {
       strcpy(PROGNAME, "PROGRAM       ");
       MAINFUNC = -1;
       BLOCK(il, DECLBEGSYS, false, 1, Tx);
-      if (SY != EOFSY)
+      if (SY != Symbol::EOFSY)
         ERROR(22);
       if (BTAB[2].VSIZE + WORKSIZE > STMAX)
         ERROR(49);
@@ -2494,11 +2501,11 @@ void INTERPRET() {
         if (MPIMODE) {
           EMIT(9);
           EMIT1(18, MAINFUNC);
-          EMIT1(19, BTAB[TAB[MAINFUNC].REF].PSIZE - 1);
+          EMIT1(19, BTAB[TAB[MAINFUNC].reference].PSIZE - 1);
           EMIT(69);
         }
         EMIT1(18, MAINFUNC);
-        EMIT1(19, BTAB[TAB[MAINFUNC].REF].PSIZE - 1);
+        EMIT1(19, BTAB[TAB[MAINFUNC].reference].PSIZE - 1);
       }
       EMIT(31);
       il->ENDLOC = LC;
@@ -2508,7 +2515,7 @@ void INTERPRET() {
       if (ERRS.none()) {
         // std::cout << std::endl;
         // std::cout << "Program Successfully Compiled" << std::endl;
-        fprintf(STDOUT, "\n%s Successfully Compiled\n", FNAME);
+        print(STDOUT, "\n%s Successfully Compiled\n", FNAME);
         SRCOPEN = true;
         if (code_list)
           dumpCode();
@@ -2533,13 +2540,13 @@ void INTERPRET() {
       fclose(LIS);
       break;
     }
-    case CLOSEF: {
+    case COMTYP::CLOSEF: {
       if (SRCOPEN) {
         SRCOPEN = false;
         // std::cout << std::endl;
         // std::cout << "You can now modify your Program Source File" <<
         // std::endl;
-        fprintf(STDOUT, "\nYou can now modify your Program Source File\n");
+        print(STDOUT, "\nYou can now modify your Program Source File\n");
         for (I = 1; I <= BRKMAX; ++I) {
           il->BRKTAB[I] = -1;
           il->BRKLINE[I] = -1;
@@ -2563,7 +2570,7 @@ void INTERPRET() {
       std::cout << std::endl;
       break;
     }
-    case INPUTF: {
+    case COMTYP::INPUTF: {
       EQINFNAME();
       if (INPUTOPEN) {
         fclose(INP);
@@ -2586,7 +2593,7 @@ void INTERPRET() {
       }
       break;
     }
-    case OUTPUTF: {
+    case COMTYP::OUTPUTF: {
       EQINFNAME();
       if (OUTPUTOPEN) {
         fclose(OUTP);
@@ -2609,7 +2616,7 @@ void INTERPRET() {
       }
       break;
     }
-    case LIST: {
+    case COMTYP::LIST: {
       EQINFNAME();
       if (0 == strlen(FNAME)) {
         LISTDEF = true;
@@ -2634,7 +2641,7 @@ void INTERPRET() {
       }
       break;
     }
-    case RESETP: {
+    case COMTYP::RESETP: {
       INITINTERP(il);
       if (!SRCOPEN) {
         MPIMODE = false;
@@ -2643,11 +2650,11 @@ void INTERPRET() {
                 << std::endl;
       break;
     }
-    case ERRC: {
+    case COMTYP::ERRC: {
       std::cout << "INVALID COMMAND" << ":" << &ID[1] << ":" << std::endl;
       break;
     }
-    case SHORT: {
+    case COMTYP::SHORT: {
       std::cout << std::endl;
       std::cout << "The following Command Keywords may be abbreviated using "
                    "only the first letter:"
@@ -2670,7 +2677,7 @@ void INTERPRET() {
       std::cout << std::endl;
       break;
     }
-    case MPI: {
+    case COMTYP::MPI: {
       if (SRCOPEN) {
         std::cout
             << "You Must Close Your Source Program before changing MPI Mode"
@@ -2678,9 +2685,9 @@ void INTERPRET() {
       } else {
         if (INWORD()) {
           if (strcmp(&ID[1], "ON            ") == 0) {
-            MPIMODE = true;
+            mpi_mode = true;
           } else if (strcmp(&ID[1], "OFF           ") == 0) {
-            MPIMODE = false;
+            mpi_mode = false;
           } else {
             std::cout << R"("ON" or "OFF" Missing)" << std::endl;
           }
@@ -2690,7 +2697,7 @@ void INTERPRET() {
       }
       break;
     }
-    case VERSION: {
+    case COMTYP::VERSION: {
       std::cout << std::endl;
       std::cout << "  C* COMPILER AND PARALLEL COMPUTER SIMULATION SYSTEM"
                 << std::endl;
@@ -2726,7 +2733,7 @@ void INTERPRET() {
       break;
     }
   L200:;
-  } while (il->COMMLABEL != EXIT2);
+  } while (il->COMMLABEL != COMTYP::EXIT2);
   free(il->S);
   free(il->SLOCATION);
   free(il->STARTMEM);

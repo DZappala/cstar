@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <print>
 #include <string>
 
 #include "cs_compile.h"
@@ -9,178 +10,208 @@
 #include "cs_global.h"
 
 namespace Cstar {
-//    void FATAL(int);
-//    void ERROR(int);
-//    void ERRORMSG();
-//    void ERROREXIT();
-//    extern bool FATALERROR;
+using std::println;
+using std::string;
+
+//    void fatal(int);
+//    void error(int);
+//    void errorMSG();
+//    void errorEXIT();
+//    extern bool fatalerror;
+
 extern void INTERPRET();
 extern void dumpInst(int);
+
 // extern bool eoln(FILE *);
 //  double RNUM; // source local ?
 //  int SLENG;  // source local ?
-//  int EOFCOUNT = 0;  // source local ?
+//  int eof_count = 0;  // source local ?
+
 void NEXTCH();
-std::string FILENAME;
+string FILENAME;
+
 struct IncludeStack {
-  FILE *inc;
-  std::string fname;
-};
+  FILE *inc{};
+  string fname;
+} __attribute__((aligned(32)));
+
 struct InsymbolLocal {
   int I, J, K, E;
   bool ISDEC;
-};
+} __attribute__((aligned(32))) __attribute__((packed));
+
 static const int maxiStack = 10;
-static struct IncludeStack iStack[maxiStack];
-static int iStackIndex = -1;
-bool inCLUDEFLAG() { return iStackIndex >= 0; }
-static int lookAhead = -2;
+static struct std::array<IncludeStack, maxiStack> iStack;
+static int i_stack_index = -1;
+
+auto inCLUDEFLAG() -> bool { return i_stack_index >= 0; }
+
+static int look_ahead = -2;
 static bool console_list = false;
 static bool code_list = false;
+
 void showConsoleList(bool flg) { console_list = flg; }
+
 static void showCodeList(bool flg) { code_list = flg; }
-bool is_eoln(FILE *inf) { return (lookAhead == '\r' || lookAhead == '\n'); }
+
+auto is_eoln(FILE *inf) -> bool {
+  return (look_ahead == '\r' || look_ahead == '\n');
+}
+
 void do_eoln(FILE *inf) {
-  if (lookAhead == '\r') {
-    lookAhead = fgetc(inf);
+  if (look_ahead == '\r') {
+    look_ahead = fgetc(inf);
   }
-  if (lookAhead == '\n') {
-    lookAhead = fgetc(inf);
+  if (look_ahead == '\n') {
+    look_ahead = fgetc(inf);
   }
 }
-static bool is_eof(FILE *inf) {
-  if (lookAhead == -2)
-    lookAhead = fgetc(inf);
-  return lookAhead < 0;
+static auto is_eof(FILE *inf) -> bool {
+  if (look_ahead == -2) {
+    look_ahead = fgetc(inf);
+  }
+
+  return look_ahead < 0;
 }
-static char readc(FILE *inf) {
-  char ch;
-  ch = (char)lookAhead;
-  lookAhead = fgetc(inf);
-  return ch;
+static auto readc(FILE *inf) -> char {
+  char ltr = 0;
+  ltr = static_cast<char>(look_ahead);
+  look_ahead = fgetc(inf);
+  return ltr;
 }
-static bool eoln(FILE *inf) {
-  int ch;
+static auto eoln(FILE *inf) -> bool {
+  int ltr = 0;
   bool eln = false;
   // //        if ((*SRC).eof())
   // //            return true;
   //        ch = (*SRC).peek();
-  ch = fgetc(inf);
-  if (ch >= 0) {
-    if (ch == '\r') {
+  ltr = fgetc(inf);
+  if (ltr >= 0) {
+    if (ltr == '\r') {
       // (*SRC).ignore();
-      ch = fgetc(inf);
+      ltr = fgetc(inf);
       eln = true;
     }
-    if (ch == '\n') {
+    if (ltr == '\n') {
       // (*SRC).ignore(2);
-      ch = fgetc(inf);
+      ltr = fgetc(inf);
       eln = true;
     }
-    if (ch >= 0)
-      ungetc(ch, inf);
-    else
+    if (ltr >= 0) {
+      auto unget = ungetc(ltr, inf);
+    } else {
       eln = true;
-  } else
+    }
+  } else {
     eln = true;
+  }
   return eln;
 }
+
 void EMIT(int FCT) {
-  if (LC == CMAX) {
-    FATAL(6);
+  if (line_count == CMAX) {
+    fatal(6);
   } else {
-    CODE[LC].F = FCT;
-    CODE[LC].X = 0;
-    CODE[LC].Y = 0;
-    // std::cout << "Code0:" << CODE[LC].F << " " << CODE[LC].X << "," <<
-    // CODE[LC].Y << std::endl;
-    if (code_list)
-      dumpInst(LC);
-    LC++;
+    code.at(line_count).F = FCT;
+    code.at(line_count).X = 0;
+    code.at(line_count).Y = 0;
+    // std::cout << "Code0:" << CODE[line_count].F << " " << CODE[line_count].X
+    // << "," << CODE[line_count].Y << std::endl;
+
+    if (code_list) {
+      dumpInst(line_count);
+    }
+
+    line_count++;
   }
 }
 
 void EMIT1(int FCT, int lB) {
-  if (LC == CMAX) {
-    FATAL(6);
+  if (line_count == CMAX) {
+    fatal(6);
   } else {
-    CODE[LC].F = FCT;
-    CODE[LC].Y = lB;
-    CODE[LC].X = 0;
-    // std::cout << "Code1:" << CODE[LC].F << " " << CODE[LC].X << "," <<
-    // CODE[LC].Y << std::endl;
-    if (code_list)
-      dumpInst(LC);
-    LC++;
+    code.at(line_count).F = FCT;
+    code.at(line_count).Y = lB;
+    code.at(line_count).X = 0;
+    // std::cout << "Code1:" << CODE[line_count].F << " " << CODE[line_count].X
+    // << "," << CODE[line_count].Y << std::endl;
+
+    if (code_list) {
+      dumpInst(line_count);
+    }
+
+    line_count++;
   }
 }
 
 void EMIT2(int FCT, int lA, int lB) {
-  if (LC == CMAX) {
-    FATAL(6);
+  if (line_count == CMAX) {
+    fatal(6);
   } else {
-    CODE[LC].F = FCT;
-    CODE[LC].X = lA;
-    CODE[LC].Y = lB;
-    // std::cout << "Code2:" << CODE[LC].F << " " << CODE[LC].X << "," <<
-    // CODE[LC].Y << std::endl;
-    if (code_list)
-      dumpInst(LC);
-    LC++;
+    code.at(line_count).F = FCT;
+    code.at(line_count).X = lA;
+    code.at(line_count).Y = lB;
+    // std::cout << "Code2:" << CODE[line_count].F << " " << CODE[line_count].X
+    // << "," << CODE[line_count].Y << std::endl;
+
+    if (code_list) {
+      dumpInst(line_count);
+    }
+    line_count++;
   }
 }
 
 void INCLUDEDIRECTIVE() {
   // int CHVAL;
-  int LENG;
+  int len = 0;
   INSYMBOL();
-  if (SY == LSS) {
+  if (symbol == Symbol::LSS) {
     FILENAME = "";
-    LENG = 0;
+    len = 0;
     // while (((CH >= 'a' && CH <= 'z') || (CH >= 'A' && CH <= 'Z') || (CH >=
     // '0' && CH <= '9') ||
     //         (CH == '\\' || CH == '.' || CH == '_' || CH == ':')) && (LENG <=
     //         FILMAX))
-    while ((std::isalnum(CH) || CH == '/' || CH == '\\' || CH == '.' ||
+    while (((std::isalnum(CH) != 0) || CH == '/' || CH == '\\' || CH == '.' ||
             CH == '_' || CH == ':') &&
-           (LENG <= FILMAX)) {
+           (len <= FILMAX)) {
       // if (CH >= 'a' && CH <= 'z') CH = CH - 32;  // DE
       FILENAME += CH;
-      LENG = LENG + 1;
+      len++;
       NEXTCH();
     }
     INSYMBOL();
-    if (SY == GTR || SY == GRSEMI) {
+    if (symbol == Symbol::GTR || symbol == Symbol::GRSEMI) {
       // #I-
       // needs fixup
       // ASSIGN(INSRC, FILENAME.c_str());
       // RESET(INSRC);
       // #I-
-      if (++iStackIndex == maxiStack) {
-        ERROR(149);
+      if (++i_stack_index == maxiStack) {
+        error(149);
       }
       //                if (INSRC != nullptr) // || IOResult() != 0)
-      //                    ERROR(149);
+      //                    error(149);
       else {
         INSRC = fopen(FILENAME.c_str(), "r");
-        if (!INSRC) {
-          ERROR(150);
+        if (INSRC == nullptr) {
+          error(150);
         } else {
-          iStack[iStackIndex].fname = FILENAME;
-          iStack[iStackIndex].inc = INSRC;
+          iStack.at(i_stack_index).fname = FILENAME;
+          iStack.at(i_stack_index).inc = INSRC;
           INCLUDEFLAG = true;
-          if (iStackIndex == 0) {
-            SAVESYMCNT = SYMCNT;
-            SAVEXECNT = EXECNT;
+          if (i_stack_index == 0) {
+            save_symbol_count = symbol_count;
+            save_execution_count = execution_count;
             // SAVELC = LC;  // DE
           }
           INSYMBOL();
         }
       }
     } else
-      ERROR(6);
+      error(6);
   } else
-    ERROR(6);
+    error(6);
 }
 void MAINNEXTCH() {
   if (CC == LL) {
@@ -191,27 +222,27 @@ void MAINNEXTCH() {
       CH = (char)(28);
       goto label37;
     }
-    if (ERRPOS != 0) {
+    if (error_position != 0) {
       // std::cout << std::endl;
       if (console_list)
         fputc('\n', STDOUT);
       // (*LIS) << std::endl;
       fputc('\n', LIS);
-      ERRPOS = 0;
+      error_position = 0;
     }
     if (LNUM > 0) {
-      if (LOCATION[LNUM] == LC && EXECNT > 0) {
+      if (LOCATION[LNUM] == line_count && execution_count > 0) {
         EMIT(6);
       }
     }
     LNUM++;
-    SYMCNT = 0;
-    EXECNT = 0;
+    symbol_count = 0;
+    execution_count = 0;
     // std::cout << LNUM << "     ";
     if (console_list)
       fprintf(STDOUT, "%5d ", LNUM);
     fprintf(LIS, "%5d ", LNUM);
-    LOCATION[LNUM] = LC;
+    LOCATION[LNUM] = line_count;
     BREAKALLOW[LNUM] = OKBREAK;
     LL = 0;
     CC = 0;
@@ -226,7 +257,7 @@ void MAINNEXTCH() {
       if (CH == 9) {
         CH = ' ';
       }
-      LINE[LL] = CH;
+      line[LL] = CH;
     }
     if (console_list)
       fputc('\n', STDOUT);
@@ -234,10 +265,10 @@ void MAINNEXTCH() {
     fputc('\n', LIS);
     LL++;
     // do_eoln(SRC);
-    LINE[LL] = ' ';
+    line[LL] = ' ';
   }
   CC++;
-  CH = LINE[CC];
+  CH = line[CC];
 label37:;
 }
 
@@ -247,17 +278,17 @@ void ALTNEXTCH() {
     if (feof(INSRC)) {
       //(*INSRC).close();
       fclose(INSRC);
-      if (--iStackIndex < 0) {
+      if (--i_stack_index < 0) {
         INCLUDEFLAG = false;
         INSRC = nullptr;
-        EXECNT = SAVEXECNT;
-        SYMCNT = SAVESYMCNT;
-        // LC = SAVELC;  // DE
+        execution_count = save_execution_count;
+        symbol_count = save_symbol_count;
+        // line_count = SAVELC;  // DE
         MAINNEXTCH();
         return;
       }
-      INSRC = iStack[iStackIndex].inc;
-      FILENAME = iStack[iStackIndex].fname;
+      INSRC = iStack[i_stack_index].inc;
+      FILENAME = iStack[i_stack_index].fname;
     }
     LL2 = 0;
     CC2 = 0;
@@ -268,14 +299,14 @@ void ALTNEXTCH() {
       if (CH == '\x09') {
         CH = ' ';
       }
-      LINE2[LL2] = CH;
+      line2[LL2] = CH;
     }
     LL2++;
     //(*INSRC).ignore();
-    LINE2[LL2] = ' ';
+    line2[LL2] = ' ';
   }
   CC2++;
-  CH = LINE2[CC2];
+  CH = line2[CC2];
 }
 
 void NEXTCH() {
@@ -290,7 +321,7 @@ void ADJUSTSCALE(struct InsymbolLocal *nl) {
   int S;
   float D, T;
   if (nl->K + nl->E > EMAX)
-    ERROR(21);
+    error(21);
   else if (nl->K + nl->E < EMIN)
     RNUM = 0.0;
   else {
@@ -331,7 +362,7 @@ void READSCALE(struct InsymbolLocal *nl) {
 }
 
 void FRACTION(struct InsymbolLocal *nl) {
-  SY = REALCON;
+  symbol = Symbol::REALCON;
   RNUM = INUM;
   nl->E = 0;
   while (isdigit(CH)) {
@@ -374,7 +405,7 @@ void ESCAPECHAR() {
   case '"':
     break;
   default:
-    ERROR(132);
+    error(132);
     break;
   }
 }
@@ -395,9 +426,9 @@ void ESCAPECHAR2() {
       if (CH == '\'')
         NEXTCH();
       else
-        ERROR(130);
+        error(130);
     } else {
-      ERROR(24);
+      error(24);
       if (CH == '\'')
         NEXTCH();
     }
@@ -410,9 +441,9 @@ void ESCAPECHAR2() {
     if (CH == '\'')
       NEXTCH();
     else
-      ERROR(130);
+      error(130);
   }
-  SY = CHARCON;
+  symbol = Symbol::CHARCON;
 }
 
 void INSYMBOL() {
@@ -441,26 +472,26 @@ label1:
     nl.J = NKW;
     do {
       nl.K = (nl.I + nl.J) / 2;
-      if (strcmp(ID, KEY[nl.K]) <= 0) {
+      if (strcmp(ID, key[nl.K]) <= 0) {
         nl.J = nl.K - 1;
       }
-      if (strcmp(ID, KEY[nl.K]) >= 0) {
+      if (strcmp(ID, key[nl.K]) >= 0) {
         nl.I = nl.K + 1;
       }
     } while (nl.I <= nl.J);
     if (nl.I - 1 > nl.J) {
-      SY = KSY[nl.K];
+      symbol = ksy[nl.K];
     } else {
-      SY = IDENT;
+      symbol = Symbol::IDENT;
     }
-    if (MPIMODE && (NONMPISYS[SY] == 1)) {
-      ERROR(145);
+    if (mpi_mode && (NONMPISYS[SY] == 1)) {
+      error(145);
     }
   } else if (isdigit(CH)) {
     nl.K = 0;
     INUM = 0;
     nl.ISDEC = true;
-    SY = INTCON;
+    symbol = Symbol::INTCON;
     if (CH == '0') {
       nl.ISDEC = false;
       NEXTCH();
@@ -499,7 +530,7 @@ label1:
       } while (isdigit(CH));
     }
     if (nl.K > KMAX || abs(INUM) > NMAX) {
-      ERROR(21);
+      error(21);
       INUM = 0;
       nl.K = 0;
     }
@@ -512,7 +543,7 @@ label1:
           FRACTION(&nl);
         }
       } else if (CH == 'E') {
-        SY = REALCON;
+        symbol = Symbol::REALCON;
         RNUM = INUM;
         nl.E = 0;
         READSCALE(&nl);
@@ -524,124 +555,124 @@ label1:
   } else if (CH == '<') {
     NEXTCH();
     if (CH == '=') {
-      SY = LEQ;
+      symbol = Symbol::LEQ;
       NEXTCH();
     } else if (CH == '>') {
-      SY = NEQ;
+      symbol = Symbol::NEQ;
       NEXTCH();
     } else if (CH == '<') {
-      SY = OUTSTR;
+      symbol = Symbol::OUTSTR;
       NEXTCH();
     } else {
-      SY = LSS;
+      symbol = Symbol::LSS;
     }
   } else if (CH == '=') {
     NEXTCH();
     if (CH == '=') {
-      SY = EQL;
+      symbol = Symbol::EQL;
       NEXTCH();
     } else {
-      SY = BECOMES;
+      symbol = Symbol::BECOMES;
     }
   } else if (CH == '!') {
     NEXTCH();
     if (CH == '=') {
-      SY = NEQ;
+      symbol = Symbol::NEQ;
       NEXTCH();
     } else {
-      SY = NOTSY;
+      symbol = Symbol::NOTSY;
     }
   } else if (CH == '&') {
     NEXTCH();
     if (CH == '&') {
-      SY = ANDSY;
+      SY = Symbol::ANDSY;
       NEXTCH();
     } else if (CH == ' ') {
-      SY = BITANDSY;
+      SY = Symbol::BITANDSY;
     } else {
-      SY = ADDRSY;
+      SY = Symbol::ADDRSY;
     }
   } else if (CH == '|') {
     NEXTCH();
     if (CH == '|') {
-      SY = ORSY;
+      SY = Symbol::ORSY;
       NEXTCH();
     } else {
-      SY = BITINCLSY;
+      SY = Symbol::BITINCLSY;
     }
   } else if (CH == '>') {
     NEXTCH();
     if (CH == '=') {
-      SY = GEQ;
+      SY = Symbol::GEQ;
       NEXTCH();
     } else if (CH == '>') {
-      SY = INSTR;
+      SY = Symbol::INSTR;
       NEXTCH();
     } else if (CH == ';') {
-      SY = GRSEMI;
+      SY = Symbol::GRSEMI;
       NEXTCH();
     } else {
-      SY = GTR;
+      SY = Symbol::GTR;
     }
   } else if (CH == '+') {
     NEXTCH();
     if (CH == '+') {
-      SY = INCREMENT;
+      SY = Symbol::INCREMENT;
       NEXTCH();
     } else if (CH == '=') {
-      SY = PLUSEQ;
+      SY = Symbol::PLUSEQ;
       NEXTCH();
     } else {
-      SY = PLUS;
+      SY = Symbol::PLUS;
     }
   } else if (CH == '-') {
     NEXTCH();
     if (CH == '-') {
-      SY = DECREMENT;
+      SY = Symbol::DECREMENT;
       NEXTCH();
     } else if (CH == '>') {
-      SY = RARROW;
+      SY = Symbol::RARROW;
       NEXTCH();
     } else if (CH == '=') {
-      SY = MINUSEQ;
+      SY = Symbol::MINUSEQ;
       NEXTCH();
     } else {
-      SY = MINUS;
+      SY = Symbol::MINUS;
     }
   } else if (CH == '.') {
     NEXTCH();
     if (CH == '.') {
-      SY = COLON;
+      SY = Symbol::COLON;
       NEXTCH();
     } else if (isdigit(CH)) {
       INUM = 0;
       nl.K = 0;
       FRACTION(&nl);
     } else {
-      SY = PERIOD;
+      SY = Symbol::PERIOD;
     }
   } else if (CH == '\'') {
     NEXTCH();
     if (CH == '\'') {
-      ERROR(38);
-      SY = CHARCON;
+      error(38);
+      SY = Symbol::CHARCON;
       INUM = 0;
     } else {
       if (SX + 1 == SMAX) {
-        FATAL(3);
+        fatal(3);
       }
       if (CH == '\\') {
         ESCAPECHAR2();
       } else {
         STAB[SX] = CH;
-        SY = CHARCON;
+        SY = Symbol::CHARCON;
         INUM = (unsigned char)STAB[SX];
         SX++;
         NEXTCH();
         if (CH == '\'') {
           NEXTCH();
         } else {
-          ERROR(130);
+          error(130);
         }
       }
     }
@@ -656,7 +687,7 @@ label1:
       }
     }
     if (SX + nl.K == SMAX) {
-      FATAL(3);
+      fatal(3);
     }
     if (CH == '\\') {
       NEXTCH();
@@ -671,11 +702,11 @@ label1:
     }
   label5:
     if (nl.K == 0) {
-      ERROR(38);
-      SY = CHARCON;
+      error(38);
+      SY = Symbol::CHARCON;
       INUM = 0;
     } else {
-      SY = STRNG;
+      SY = Symbol::STRNG;
       INUM = SX;
       SLENG = nl.K;
       SX += nl.K;
@@ -695,108 +726,111 @@ label1:
         //                    std::cout << std::endl;
         //                    std::cout << " FAILURE TO END A COMMENT" <<
         //                    std::endl;
-        if (console_list)
-          fprintf(STDOUT, "\n\n FAILURE TO END A COMMENT\n");
-        fprintf(LIS, "\n\n FAILURE TO END A COMMENT\n");
-        ERRORMSG();
-        FATALERROR = true;
-        ERROREXIT();
+        if (console_list) {
+          println(STDOUT, "\n\n FAILURE TO END A COMMENT");
+        }
+        println(LIS, "\n\n FAILURE TO END A COMMENT");
+        error_message();
+        fatal_error = true;
+        error_exit();
       }
       NEXTCH();
       goto label1;
     } else if (CH == '=') {
-      SY = RDIVEQ;
+      SY = Symbol::RDIVEQ;
       NEXTCH();
     } else {
-      SY = RDIV;
+      SY = Symbol::RDIV;
     }
   } else if (CH == '?') {
     NEXTCH();
     if (CH == '?') {
-      SY = DBLQUEST;
+      SY = Symbol::DBLQUEST;
       NEXTCH();
     } else {
-      SY = QUEST;
+      SY = Symbol::QUEST;
     }
   } else if (CH == '*') {
     NEXTCH();
     if (CH == '=') {
-      SY = TIMESEQ;
+      SY = Symbol::TIMESEQ;
       NEXTCH();
     } else {
-      SY = TIMES;
+      SY = Symbol::TIMES;
     }
   } else if (CH == '%') {
     NEXTCH();
     if (CH == '=') {
-      SY = IMODEQ;
+      SY = Symbol::IMODEQ;
       NEXTCH();
     } else {
-      SY = IMOD;
+      SY = Symbol::IMOD;
     }
   } else if (CH == '(' || CH == ')' || CH == ':' || CH == ',' || CH == '[' ||
              CH == ']' || CH == ';' || CH == '@' || CH == '{' || CH == '}' ||
              CH == '~' || CH == '^') {
-    SY = SPS[CH];
+    symbol = SPS[CH];
     NEXTCH();
-  } else if (CH == char(28)) {
-    SY = EOFSY;
-    EOFCOUNT++;
-    if (EOFCOUNT > 5) {
+  } else if (CH == static_cast<char>(28)) {
+    SY = Symbol::EOFSY;
+    eof_count++;
+    if (eof_count > 5) {
       //                std::cout << std::endl;
       //                std::cout << std::endl;
       //                std::cout << " PROGRAM INCOMPLETE" << std::endl;
-      if (console_list)
-        fprintf(STDOUT, "\n\n PROGRAM INCOMPLETE\n");
-      fprintf(LIS, "\n\n PROGRAM INCOMPLETE\n");
-      ERRORMSG();
-      FATALERROR = true;
-      ERROREXIT();
+      if (console_list) {
+        println(STDOUT, "\n\n PROGRAM INCOMPLETE");
+      }
+      println(LIS, "\n\n PROGRAM INCOMPLETE");
+      error_message();
+      fatal_error = true;
+      error_exit();
     }
   } else {
-    ERROR(24);
+    error(24);
     NEXTCH();
     goto label1;
   }
-  SYMCNT++;
+  symbol_count++;
   if (EXECSYS[SY] == 1) {
-    EXECNT++;
+    execution_count++;
   }
-  if (SY == UNIONSY) {
-    ERROR(154);
+  if (SY == Symbol::UNIONSY) {
+    error(154);
   }
-  if (SY == ENUMSY) {
-    ERROR(155);
+  if (SY == Symbol::ENUMSY) {
+    error(155);
   }
-  if (SY == BITCOMPSY || SY == BITANDSY || SY == BITXORSY || SY == BITINCLSY) {
-    ERROR(156);
+  if (SY == Symbol::BITCOMPSY || SY == Symbol::BITANDSY ||
+      SY == Symbol::BITXORSY || SY == Symbol::BITINCLSY) {
+    error(156);
   }
-  if (SY == QUEST) {
-    ERROR(157);
+  if (SY == Symbol::QUEST) {
+    error(157);
   }
 }
 
-void ENTERARRAY(TYPES TP, int L, int H) {
+void ENTERARRAY(Types TP, int L, int H) {
   if (abs(L) > XMAX || abs(H) > XMAX) {
-    ERROR(27);
+    error(27);
     L = 0;
     H = 0;
   }
-  if (A == AMAX) {
-    FATAL(4);
+  if (atab_index == AMAX) {
+    fatal(4);
   } else {
-    A++;
-    ATAB[A].INXTYP = TP;
-    ATAB[A].LOW = L;
-    ATAB[A].HIGH = H;
+    atab_index++;
+    ATAB[atab_index].INXTYP = TP;
+    ATAB[atab_index].LOW = L;
+    ATAB[atab_index].HIGH = H;
   }
 }
 
 void ENTERCHANNEL() {
-  if (C == CMAX) {
-    FATAL(9);
+  if (ctab_index == CMAX) {
+    fatal(9);
   } else {
-    C++;
+    ctab_index++;
   }
 }
 } // namespace Cstar

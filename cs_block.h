@@ -9,24 +9,24 @@
 #include "cs_interpret.h"
 
 namespace Cstar {
-typedef struct BlockLocal {
-  SYMSET FSYS;
-  bool ISFUN;
-  int LEVEL;
-  int PRT;
+using BlockLocal = struct BlockLocal {
+  SymbolSet FSYS;
+  bool ISFUN{};
+  int LEVEL{};
+  int PRT{};
   /* parameters above */
-  int DX;
-  int RDX;
-  INDEX RLAST;
-  int PRB;
-  int PCNT;
-  int X, V;
-  int FLEVEL;
-  int NUMWITH, MAXNUMWITH;
-  bool CREATEFLAG;
-  bool ISDECLARATION;
-  bool UNDEFMSGFLAG;
-  InterpLocal *blkil;
-} BlockLocal;
+  int DX{};
+  int RDX{};
+  Index RLAST{};
+  int PRB{};
+  int PCNT{};
+  int X{}, V{};
+  int FLEVEL{};
+  int NUMWITH{}, MAXNUMWITH{};
+  bool CREATEFLAG{};
+  bool ISDECLARATION{};
+  bool UNDEFMSGFLAG{};
+  InterpLocal *blkil{};
+} __attribute__((aligned(128))) __attribute__((packed));
 } // namespace Cstar
 #endif // CSTAR_CS_BLOCK_H

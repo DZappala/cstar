@@ -8,16 +8,16 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/dom/projects/pace/paralell/cstar/block.cpp" "CMakeFiles/cstar.dir/block.cpp.o" "gcc" "CMakeFiles/cstar.dir/block.cpp.o.d"
-  "/home/dom/projects/pace/paralell/cstar/displays.cpp" "CMakeFiles/cstar.dir/displays.cpp.o" "gcc" "CMakeFiles/cstar.dir/displays.cpp.o.d"
-  "/home/dom/projects/pace/paralell/cstar/errors.cpp" "CMakeFiles/cstar.dir/errors.cpp.o" "gcc" "CMakeFiles/cstar.dir/errors.cpp.o.d"
-  "/home/dom/projects/pace/paralell/cstar/exec.cpp" "CMakeFiles/cstar.dir/exec.cpp.o" "gcc" "CMakeFiles/cstar.dir/exec.cpp.o.d"
-  "/home/dom/projects/pace/paralell/cstar/execlib.cpp" "CMakeFiles/cstar.dir/execlib.cpp.o" "gcc" "CMakeFiles/cstar.dir/execlib.cpp.o.d"
-  "/home/dom/projects/pace/paralell/cstar/expression.cpp" "CMakeFiles/cstar.dir/expression.cpp.o" "gcc" "CMakeFiles/cstar.dir/expression.cpp.o.d"
-  "/home/dom/projects/pace/paralell/cstar/interpret.cpp" "CMakeFiles/cstar.dir/interpret.cpp.o" "gcc" "CMakeFiles/cstar.dir/interpret.cpp.o.d"
-  "/home/dom/projects/pace/paralell/cstar/lexer.cpp" "CMakeFiles/cstar.dir/lexer.cpp.o" "gcc" "CMakeFiles/cstar.dir/lexer.cpp.o.d"
-  "/home/dom/projects/pace/paralell/cstar/program.cpp" "CMakeFiles/cstar.dir/program.cpp.o" "gcc" "CMakeFiles/cstar.dir/program.cpp.o.d"
-  "/home/dom/projects/pace/paralell/cstar/statement.cpp" "CMakeFiles/cstar.dir/statement.cpp.o" "gcc" "CMakeFiles/cstar.dir/statement.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/block.cpp" "CMakeFiles/cstar.dir/block.cpp.o" "gcc" "CMakeFiles/cstar.dir/block.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/displays.cpp" "CMakeFiles/cstar.dir/displays.cpp.o" "gcc" "CMakeFiles/cstar.dir/displays.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/errors.cpp" "CMakeFiles/cstar.dir/errors.cpp.o" "gcc" "CMakeFiles/cstar.dir/errors.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/exec.cpp" "CMakeFiles/cstar.dir/exec.cpp.o" "gcc" "CMakeFiles/cstar.dir/exec.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/execlib.cpp" "CMakeFiles/cstar.dir/execlib.cpp.o" "gcc" "CMakeFiles/cstar.dir/execlib.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/expression.cpp" "CMakeFiles/cstar.dir/expression.cpp.o" "gcc" "CMakeFiles/cstar.dir/expression.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/interpret.cpp" "CMakeFiles/cstar.dir/interpret.cpp.o" "gcc" "CMakeFiles/cstar.dir/interpret.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/lexer.cpp" "CMakeFiles/cstar.dir/lexer.cpp.o" "gcc" "CMakeFiles/cstar.dir/lexer.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/program.cpp" "CMakeFiles/cstar.dir/program.cpp.o" "gcc" "CMakeFiles/cstar.dir/program.cpp.o.d"
+  "/home/dom/projects/pace/parallel/cstar/statement.cpp" "CMakeFiles/cstar.dir/statement.cpp.o" "gcc" "CMakeFiles/cstar.dir/statement.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

@@ -2,14 +2,26 @@
 // Created by Dan Evans on 1/27/24.
 //
 #include <cstdio>
+#include <expected>
 #include <iostream>
+#include <memory>
+#include <print>
+#include <string>
 #include <unistd.h>
+
+#include "ftxui/components/screen_interactive.hpp"
+
 #define EXPORT_CS_GLOBAL
 #include "cs_errors.h"
 #include "cs_global.h"
 #define EXPORT_CS_COMPILE
 #include "cs_PreBuffer.h"
 #include "cs_compile.h"
+
+using Cstar::PreBuffer, Cstar::STDIN;
+using std::make_unique, std::snprintf, std::string, std::cout, std::expected,
+    std::unexpected;
+
 namespace Cstar {
 extern void INTERPRET();
 extern void showCodeList(bool);
@@ -19,188 +31,189 @@ extern void showConsoleList(bool);
 extern void showArrayList(bool);
 extern void showRealList(bool);
 extern void showInstTrace(bool);
-extern PreBuffer *prebuf;
+extern std::unique_ptr<PreBuffer> pre_buf;
 bool interactive = false;
-static void ENTER(const char *X0, OBJECTS X1, TYPES X2, int X3) {
-  Tx++;
-  if (Tx == TMAX) {
-    FATAL(1);
+
+static void enter(const char *X0, OBJECTS X1, Types X2, int X3) {
+  tab_index++;
+  if (tab_index == TMAX) {
+    fatal(1);
   } else {
-    strcpy(TAB[Tx].NAME, X0);
-    TAB[Tx].LINK = Tx - 1;
-    TAB[Tx].OBJ = X1;
-    TAB[Tx].TYP = X2;
-    TAB[Tx].REF = 0;
-    TAB[Tx].NORMAL = true;
-    TAB[Tx].LEV = 0;
-    TAB[Tx].ADR = X3;
-    TAB[Tx].FORLEV = 0;
-    TAB[Tx].PNTPARAM = false;
+    strcpy(TAB[tab_index].NAME, X0);
+    TAB[tab_index].LINK = tab_index - 1;
+    TAB[tab_index].OBJ = X1;
+    TAB[tab_index].TYP = X2;
+    TAB[tab_index].REF = 0;
+    TAB[tab_index].NORMAL = true;
+    TAB[tab_index].LEV = 0;
+    TAB[tab_index].ADR = X3;
+    TAB[tab_index].FORLEV = 0;
+    TAB[tab_index].PNTPARAM = false;
   }
 }
 void LIBFINIT(int index, const char *name, int idnum) {
   strcpy(LIBFUNC[index].NAME, name);
   LIBFUNC[index].IDNUM = idnum;
 }
-void INITCOMPILER() {
-  KSY[0] = DEFINESY;
-  KSY[1] = DEFINESY;
-  KSY[2] = INCLUDESY;
-  KSY[3] = BREAKSY;
-  KSY[4] = CASESY;
-  KSY[5] = CINSY;
-  KSY[6] = CONSTSY;
-  KSY[7] = CONTSY;
-  KSY[8] = COUTSY;
-  KSY[9] = DEFAULTSY;
-  KSY[10] = DOSY;
-  KSY[11] = ELSESY;
-  KSY[12] = ENDLSY;
-  KSY[13] = ENUMSY;
-  KSY[14] = FORSY;
-  KSY[15] = FORALLSY;
-  KSY[16] = FORKSY;
-  KSY[17] = FUNCTIONSY;
-  KSY[18] = GROUPINGSY;
-  KSY[19] = IFSY;
-  KSY[20] = JOINSY;
-  KSY[21] = LONGSY;
-  KSY[22] = MOVESY;
-  KSY[23] = NEWSY;
-  KSY[24] = RETURNSY;
-  KSY[25] = SHORTSY;
-  KSY[26] = CHANSY;
-  KSY[27] = STRUCTSY;
-  KSY[28] = SWITCHSY;
-  KSY[29] = THENSY;
-  KSY[30] = TOSY;
-  KSY[31] = TYPESY;
-  KSY[32] = UNIONSY;
-  KSY[33] = UNSIGNEDSY;
-  KSY[34] = VALUESY;
-  KSY[35] = WHILESY;
-  SPS['('] = LPARENT;
-  SPS[')'] = RPARENT;
-  SPS[','] = COMMA;
-  SPS['['] = LBRACK;
-  SPS[']'] = RBRACK;
-  SPS[';'] = SEMICOLON;
-  SPS['~'] = BITCOMPSY;
-  SPS['{'] = LSETBRACK;
-  SPS['^'] = BITXORSY;
-  SPS['@'] = ATSY;
-  SPS['}'] = RSETBRACK;
-  SPS[28] = EOFSY;
-  SPS[':'] = COLON;
+void initialize_compiler() {
+  ksy[0] = Symbol::DEFINESY;
+  ksy[1] = Symbol::DEFINESY;
+  ksy[2] = Symbol::INCLUDESY;
+  ksy[3] = Symbol::BREAKSY;
+  ksy[4] = Symbol::CASESY;
+  ksy[5] = Symbol::CINSY;
+  ksy[6] = Symbol::CONSTSY;
+  ksy[7] = Symbol::CONTSY;
+  ksy[8] = Symbol::COUTSY;
+  ksy[9] = Symbol::DEFAULTSY;
+  ksy[10] = Symbol::DOSY;
+  ksy[11] = Symbol::ELSESY;
+  ksy[12] = Symbol::ENDLSY;
+  ksy[13] = Symbol::ENUMSY;
+  ksy[14] = Symbol::FORSY;
+  ksy[15] = Symbol::FORALLSY;
+  ksy[16] = Symbol::FORKSY;
+  ksy[17] = Symbol::FUNCTIONSY;
+  ksy[18] = Symbol::GROUPINGSY;
+  ksy[19] = Symbol::IFSY;
+  ksy[20] = Symbol::JOINSY;
+  ksy[21] = Symbol::LONGSY;
+  ksy[22] = Symbol::MOVESY;
+  ksy[23] = Symbol::NEWSY;
+  ksy[24] = Symbol::RETURNSY;
+  ksy[25] = Symbol::SHORTSY;
+  ksy[26] = Symbol::CHANSY;
+  ksy[27] = Symbol::STRUCTSY;
+  ksy[28] = Symbol::SWITCHSY;
+  ksy[29] = Symbol::THENSY;
+  ksy[30] = Symbol::TOSY;
+  ksy[31] = Symbol::TYPESY;
+  ksy[32] = Symbol::UNIONSY;
+  ksy[33] = Symbol::UNSIGNEDSY;
+  ksy[34] = Symbol::VALUESY;
+  ksy[35] = Symbol::WHILESY;
+  SPS['('] = Symbol::LPARENT;
+  SPS[')'] = Symbol::RPARENT;
+  SPS[','] = Symbol::COMMA;
+  SPS['['] = Symbol::LBRACK;
+  SPS[']'] = Symbol::RBRACK;
+  SPS[';'] = Symbol::SEMICOLON;
+  SPS['~'] = Symbol::BITCOMPSY;
+  SPS['{'] = Symbol::LSETBRACK;
+  SPS['^'] = Symbol::BITXORSY;
+  SPS['@'] = Symbol::ATSY;
+  SPS['}'] = Symbol::RSETBRACK;
+  SPS[28] = Symbol::EOFSY;
+  SPS[':'] = Symbol::COLON;
   // CONSTBEGSYS = {PLUS, MINUS, INTCON, CHARCON, REALCON, IDENT};
-  CONSTBEGSYS[PLUS] = true;
-  CONSTBEGSYS[MINUS] = true;
-  CONSTBEGSYS[INTCON] = true;
-  CONSTBEGSYS[CHARCON] = true;
-  CONSTBEGSYS[REALCON] = true;
-  CONSTBEGSYS[IDENT] = true;
+  CONSTBEGSYS[Symbol::PLUS] = true;
+  CONSTBEGSYS[Symbol::MINUS] = true;
+  CONSTBEGSYS[Symbol::INTCON] = true;
+  CONSTBEGSYS[Symbol::CHARCON] = true;
+  CONSTBEGSYS[Symbol::REALCON] = true;
+  CONSTBEGSYS[Symbol::IDENT] = true;
   // TYPEBEGSYS  = {IDENT, STRUCTSY, CONSTSY, SHORTSY, LONGSY, UNSIGNEDSY};
-  TYPEBEGSYS[IDENT] = true;
-  TYPEBEGSYS[STRUCTSY] = true;
-  TYPEBEGSYS[CONSTSY] = true;
-  TYPEBEGSYS[SHORTSY] = true;
-  TYPEBEGSYS[LONGSY] = true;
-  TYPEBEGSYS[UNSIGNEDSY] = true;
+  TYPEBEGSYS[Symbol::IDENT] = true;
+  TYPEBEGSYS[Symbol::STRUCTSY] = true;
+  TYPEBEGSYS[Symbol::CONSTSY] = true;
+  TYPEBEGSYS[Symbol::SHORTSY] = true;
+  TYPEBEGSYS[Symbol::LONGSY] = true;
+  TYPEBEGSYS[Symbol::UNSIGNEDSY] = true;
   // DECLBEGSYS  = {IDENT, STRUCTSY, CONSTSY, SHORTSY, LONGSY, UNSIGNEDSY,
   // TYPESY, DEFINESY, INCLUDESY}; //+ TYPEBEGSYS;
   DECLBEGSYS = TYPEBEGSYS;
-  DECLBEGSYS[TYPESY] = true;
-  DECLBEGSYS[DEFINESY] = true;
-  DECLBEGSYS[INCLUDESY] = true;
+  DECLBEGSYS[Symbol::TYPESY] = true;
+  DECLBEGSYS[Symbol::DEFINESY] = true;
+  DECLBEGSYS[Symbol::INCLUDESY] = true;
   // BLOCKBEGSYS = {IDENT, STRUCTSY, CONSTSY, SHORTSY, LONGSY, UNSIGNEDSY,
   // TYPESY, DEFINESY}; // + TYPEBEGSYS;
   BLOCKBEGSYS = DECLBEGSYS;
-  BLOCKBEGSYS[INCLUDESY] = false;
+  BLOCKBEGSYS[Symbol::INCLUDESY] = false;
   // FACBEGSYS = {INTCON, CHARCON, REALCON, IDENT, LPARENT, NOTSY, DECREMENT,
   // INCREMENT, PLUS, MINUS, TIMES, STRNG};
-  FACBEGSYS[INTCON] = true;
-  FACBEGSYS[CHARCON] = true;
-  FACBEGSYS[REALCON] = true;
-  FACBEGSYS[IDENT] = true;
-  FACBEGSYS[LPARENT] = true;
-  FACBEGSYS[NOTSY] = true;
-  FACBEGSYS[DECREMENT] = true;
-  FACBEGSYS[INCREMENT] = true;
-  FACBEGSYS[PLUS] = true;
-  FACBEGSYS[MINUS] = true;
-  FACBEGSYS[TIMES] = true;
-  FACBEGSYS[STRNG] = true;
+  FACBEGSYS[Symbol::INTCON] = true;
+  FACBEGSYS[Symbol::CHARCON] = true;
+  FACBEGSYS[Symbol::REALCON] = true;
+  FACBEGSYS[Symbol::IDENT] = true;
+  FACBEGSYS[Symbol::LPARENT] = true;
+  FACBEGSYS[Symbol::NOTSY] = true;
+  FACBEGSYS[Symbol::DECREMENT] = true;
+  FACBEGSYS[Symbol::INCREMENT] = true;
+  FACBEGSYS[Symbol::PLUS] = true;
+  FACBEGSYS[Symbol::MINUS] = true;
+  FACBEGSYS[Symbol::TIMES] = true;
+  FACBEGSYS[Symbol::STRNG] = true;
   //        STATBEGSYS = {IFSY, WHILESY, DOSY, FORSY, FORALLSY, SEMICOLON,
   //        FORKSY, JOINSY, SWITCHSY, LSETBRACK, RETURNSY,
   //                      BREAKSY, CONTSY, MOVESY, CINSY, COUTSY};
-  STATBEGSYS[IFSY] = true;
-  STATBEGSYS[WHILESY] = true;
-  STATBEGSYS[DOSY] = true;
-  STATBEGSYS[FORSY] = true;
-  STATBEGSYS[FORALLSY] = true;
-  STATBEGSYS[SEMICOLON] = true;
-  STATBEGSYS[FORKSY] = true;
-  STATBEGSYS[JOINSY] = true;
-  STATBEGSYS[SWITCHSY] = true;
-  STATBEGSYS[LSETBRACK] = true;
-  STATBEGSYS[RETURNSY] = true;
-  STATBEGSYS[BREAKSY] = true;
-  STATBEGSYS[CONTSY] = true;
-  STATBEGSYS[MOVESY] = true;
-  STATBEGSYS[CINSY] = true;
-  STATBEGSYS[COUTSY] = true;
+  STATBEGSYS[Symbol::IFSY] = true;
+  STATBEGSYS[Symbol::WHILESY] = true;
+  STATBEGSYS[Symbol::DOSY] = true;
+  STATBEGSYS[Symbol::FORSY] = true;
+  STATBEGSYS[Symbol::FORALLSY] = true;
+  STATBEGSYS[Symbol::SEMICOLON] = true;
+  STATBEGSYS[Symbol::FORKSY] = true;
+  STATBEGSYS[Symbol::JOINSY] = true;
+  STATBEGSYS[Symbol::SWITCHSY] = true;
+  STATBEGSYS[Symbol::LSETBRACK] = true;
+  STATBEGSYS[Symbol::RETURNSY] = true;
+  STATBEGSYS[Symbol::BREAKSY] = true;
+  STATBEGSYS[Symbol::CONTSY] = true;
+  STATBEGSYS[Symbol::MOVESY] = true;
+  STATBEGSYS[Symbol::CINSY] = true;
+  STATBEGSYS[Symbol::COUTSY] = true;
   // ASSIGNBEGSYS = {IDENT, LPARENT, DECREMENT, INCREMENT, TIMES};
-  ASSIGNBEGSYS[IDENT] = true;
-  ASSIGNBEGSYS[LPARENT] = true;
-  ASSIGNBEGSYS[DECREMENT] = true;
-  ASSIGNBEGSYS[INCREMENT] = true;
-  ASSIGNBEGSYS[TIMES] = true;
+  ASSIGNBEGSYS[Symbol::IDENT] = true;
+  ASSIGNBEGSYS[Symbol::LPARENT] = true;
+  ASSIGNBEGSYS[Symbol::DECREMENT] = true;
+  ASSIGNBEGSYS[Symbol::INCREMENT] = true;
+  ASSIGNBEGSYS[Symbol::TIMES] = true;
   // COMPASGNSYS = {PLUSEQ, MINUSEQ, TIMESEQ, RDIVEQ, IMODEQ};
-  COMPASGNSYS[PLUSEQ] = true;
-  COMPASGNSYS[MINUSEQ] = true;
-  COMPASGNSYS[TIMESEQ] = true;
-  COMPASGNSYS[RDIVEQ] = true;
-  COMPASGNSYS[IMODEQ] = true;
+  COMPASGNSYS[Symbol::PLUSEQ] = true;
+  COMPASGNSYS[Symbol::MINUSEQ] = true;
+  COMPASGNSYS[Symbol::TIMESEQ] = true;
+  COMPASGNSYS[Symbol::RDIVEQ] = true;
+  COMPASGNSYS[Symbol::IMODEQ] = true;
   // SELECTSYS = {LBRACK, PERIOD, RARROW};
-  SELECTSYS[LBRACK] = true;
-  SELECTSYS[PERIOD] = true;
-  SELECTSYS[RARROW] = true;
+  SELECTSYS[Symbol::LBRACK] = true;
+  SELECTSYS[Symbol::PERIOD] = true;
+  SELECTSYS[Symbol::RARROW] = true;
   // EXECSYS = {IFSY, WHILESY, DOSY, FORSY, FORALLSY, SEMICOLON, FORKSY, JOINSY,
   // SWITCHSY, LSETBRACK, RETURNSY,
   //            BREAKSY, CONTSY, MOVESY, CINSY, COUTSY, ELSESY, TOSY, DOSY,
   //            CASESY, DEFAULTSY};
-  EXECSYS[IFSY] = true;
-  EXECSYS[WHILESY] = true;
-  EXECSYS[DOSY] = true;
-  EXECSYS[FORSY] = true;
-  EXECSYS[FORALLSY] = true;
-  EXECSYS[SEMICOLON] = true;
-  EXECSYS[FORKSY] = true;
-  EXECSYS[JOINSY] = true;
-  EXECSYS[SWITCHSY] = true;
-  EXECSYS[LSETBRACK] = true;
-  EXECSYS[RETURNSY] = true;
-  EXECSYS[BREAKSY] = true;
-  EXECSYS[CONTSY] = true;
-  EXECSYS[MOVESY] = true;
-  EXECSYS[CINSY] = true;
-  EXECSYS[COUTSY] = true;
-  EXECSYS[ELSESY] = true;
-  EXECSYS[TOSY] = true;
-  EXECSYS[CASESY] = true;
-  EXECSYS[DEFAULTSY] = true;
+  EXECSYS[Symbol::IFSY] = true;
+  EXECSYS[Symbol::WHILESY] = true;
+  EXECSYS[Symbol::DOSY] = true;
+  EXECSYS[Symbol::FORSY] = true;
+  EXECSYS[Symbol::FORALLSY] = true;
+  EXECSYS[Symbol::SEMICOLON] = true;
+  EXECSYS[Symbol::FORKSY] = true;
+  EXECSYS[Symbol::JOINSY] = true;
+  EXECSYS[Symbol::SWITCHSY] = true;
+  EXECSYS[Symbol::LSETBRACK] = true;
+  EXECSYS[Symbol::RETURNSY] = true;
+  EXECSYS[Symbol::BREAKSY] = true;
+  EXECSYS[Symbol::CONTSY] = true;
+  EXECSYS[Symbol::MOVESY] = true;
+  EXECSYS[Symbol::CINSY] = true;
+  EXECSYS[Symbol::COUTSY] = true;
+  EXECSYS[Symbol::ELSESY] = true;
+  EXECSYS[Symbol::TOSY] = true;
+  EXECSYS[Symbol::CASESY] = true;
+  EXECSYS[Symbol::DEFAULTSY] = true;
   // NONMPISYS = {CHANSY, FORKSY, JOINSY, FORALLSY};
-  NONMPISYS[CHANSY] = true;
-  NONMPISYS[FORKSY] = true;
-  NONMPISYS[JOINSY] = true;
-  NONMPISYS[FORALLSY] = true;
+  NONMPISYS[Symbol::CHANSY] = true;
+  NONMPISYS[Symbol::FORKSY] = true;
+  NONMPISYS[Symbol::JOINSY] = true;
+  NONMPISYS[Symbol::FORALLSY] = true;
   // STANTYPS = {NOTYP, REALS, INTS, BOOLS, CHARS};
-  STANTYPS[NOTYP] = true;
-  STANTYPS[REALS] = true;
-  STANTYPS[INTS] = true;
-  STANTYPS[BOOLS] = true;
-  STANTYPS[CHARS] = true;
-  LC = 0;
+  STANTYPS[Types::NOTYP] = true;
+  STANTYPS[Types::REALS] = true;
+  STANTYPS[Types::INTS] = true;
+  STANTYPS[Types::BOOLS] = true;
+  STANTYPS[Types::CHARS] = true;
+  line_count = 0;
   LL = 0;
   LL2 = 0;
   CC = 0;
@@ -208,53 +221,53 @@ void INITCOMPILER() {
   CH = ' ';
   CPNT = 1;
   LNUM = 0;
-  ERRPOS = 0;
-  ERRS = 0;
+  error_position = 0;
+  errors = 0;
   INSYMBOL();
-  EXECNT = 0;
-  EOFCOUNT = 0;
-  Tx = -1;
-  A = 0;
-  B = 1; // index to BTAB
+  execution_count = 0;
+  eof_count = 0;
+  tab_index = -1;
+  atab_index = 0;
+  btab_index = 1; // index to BTAB
   SX = 0;
   C2 = 0;
-  C = 0;
-  ERRORCOUNT = 0;
+  ctab_index = 0;
+  error_count = 0;
   OKBREAK = false;
   BREAKPNT = 0;
   ITPNT = 1;
   DISPLAY[0] = 1;
   strcpy(DUMMYNAME, "************00");
   INCLUDEFLAG = false;
-  FATALERROR = false;
+  fatal_error = false;
   PROTOINDEX = -1;
-  ENTER("              ", VARIABLE, NOTYP, 0);
-  ENTER("FALSE         ", KONSTANT, BOOLS, 0);
-  ENTER("TRUE          ", KONSTANT, BOOLS, 1);
-  ENTER("NULL          ", KONSTANT, PNTS, 0);
-  ENTER("CHAR          ", TYPE1, CHARS, 1);
-  ENTER("BOOLEAN       ", TYPE1, BOOLS, 1);
-  ENTER("INT           ", TYPE1, INTS, 1);
-  ENTER("FLOAT         ", TYPE1, REALS, 1);
-  ENTER("DOUBLE        ", TYPE1, REALS, 1);
-  ENTER("VOID          ", TYPE1, VOIDS, 1);
-  ENTER("SPINLOCK      ", TYPE1, LOCKS, 1);
-  ENTER("SELF          ", FUNKTION, INTS, 19);
-  ENTER("CLOCK         ", FUNKTION, REALS, 20);
-  ENTER("SEQTIME       ", FUNKTION, REALS, 21);
-  ENTER("MYID          ", FUNKTION, INTS, 22);
-  ENTER("SIZEOF        ", FUNKTION, INTS, 24);
-  ENTER("SEND          ", PROZEDURE, NOTYP, 3);
-  ENTER("RECV          ", PROZEDURE, NOTYP, 4);
-  ENTER("NEW           ", PROZEDURE, NOTYP, 5);
-  ENTER("DELETE        ", PROZEDURE, NOTYP, 6);
-  ENTER("LOCK          ", PROZEDURE, NOTYP, 7);
-  ENTER("UNLOCK        ", PROZEDURE, NOTYP, 8);
-  ENTER("DURATION      ", PROZEDURE, NOTYP, 9);
-  ENTER("SEQOFF        ", PROZEDURE, NOTYP, 10);
-  ENTER("SEQON         ", PROZEDURE, NOTYP, 11);
-  ENTER("              ", PROZEDURE, NOTYP, 0);
-  BTAB[1].LAST = Tx;
+  enter("              ", OBJECTS::VARIABLE, Types::NOTYP, 0);
+  enter("FALSE         ", OBJECTS::KONSTANT, Types::BOOLS, 0);
+  enter("TRUE          ", OBJECTS::KONSTANT, Types::BOOLS, 1);
+  enter("NULL          ", OBJECTS::KONSTANT, Types::PNTS, 0);
+  enter("CHAR          ", OBJECTS::TYPE1, Types::CHARS, 1);
+  enter("BOOLEAN       ", OBJECTS::TYPE1, Types::BOOLS, 1);
+  enter("INT           ", OBJECTS::TYPE1, Types::INTS, 1);
+  enter("FLOAT         ", OBJECTS::TYPE1, Types::REALS, 1);
+  enter("DOUBLE        ", OBJECTS::TYPE1, Types::REALS, 1);
+  enter("VOID          ", OBJECTS::TYPE1, Types::VOIDS, 1);
+  enter("SPINLOCK      ", OBJECTS::TYPE1, Types::LOCKS, 1);
+  enter("SELF          ", OBJECTS::FUNKTION, Types::INTS, 19);
+  enter("CLOCK         ", OBJECTS::FUNKTION, Types::REALS, 20);
+  enter("SEQTIME       ", OBJECTS::FUNKTION, Types::REALS, 21);
+  enter("MYID          ", OBJECTS::FUNKTION, Types::INTS, 22);
+  enter("SIZEOF        ", OBJECTS::FUNKTION, Types::INTS, 24);
+  enter("SEND          ", OBJECTS::PROZEDURE, Types::NOTYP, 3);
+  enter("RECV          ", OBJECTS::PROZEDURE, Types::NOTYP, 4);
+  enter("NEW           ", OBJECTS::PROZEDURE, Types::NOTYP, 5);
+  enter("DELETE        ", OBJECTS::PROZEDURE, Types::NOTYP, 6);
+  enter("LOCK          ", OBJECTS::PROZEDURE, Types::NOTYP, 7);
+  enter("UNLOCK        ", OBJECTS::PROZEDURE, Types::NOTYP, 8);
+  enter("DURATION      ", OBJECTS::PROZEDURE, Types::NOTYP, 9);
+  enter("SEQOFF        ", OBJECTS::PROZEDURE, Types::NOTYP, 10);
+  enter("SEQON         ", OBJECTS::PROZEDURE, Types::NOTYP, 11);
+  enter("              ", OBJECTS::PROZEDURE, Types::NOTYP, 0);
+  BTAB[1].LAST = tab_index;
   BTAB[1].LASTPAR = 1;
   BTAB[1].PSIZE = 0;
   BTAB[1].VSIZE = 0;
@@ -318,8 +331,15 @@ void INITCOMPILER() {
   LIBFINIT(58, "DIV           ", 42);
   LIBFINIT(59, "RAND          ", 43);
 }
-void PROGRAM() {
+
+enum class ProgramError { GeneralError };
+
+auto program() -> std::expected<void, ProgramError> {
   if (interactive) {
+    string welcome{
+
+    };
+
     std::cout << std::endl;
     std::cout << "                          C* COMPILER AND" << std::endl;
     std::cout << "                 PARALLEL COMPUTER SIMULATION SYSTEM "
@@ -349,7 +369,7 @@ void PROGRAM() {
   }
   INTERPRET();
   std::cout << std::endl;
-  if (FATALERROR && interactive) {
+  if (fatal_error && interactive) {
     fclose(SRC);
     // std::cout << "PROGRAM SOURCE FILE IS NOW CLOSED TO ALLOW EDITING" <<
     // std::endl;
@@ -373,7 +393,7 @@ void PROGRAM() {
 static const char cfile[] = {'.', 'C', 's', 't', 'a', 'r',
                              '.', 'c', 'm', 'd', '\0'};
 static bool mpi = false;
-static void usage(const char *pgm) {
+static void usage(string pgm) {
   printf("usage: %s [-i] [-h] [-l] [-m] [-Xabcrst] [file]\n", pgm);
   printf("     no operands implies -i\n");
   printf("  i  interactive - if file is specified, it will be OPEN'ed\n");
@@ -435,18 +455,24 @@ static void doOption(const char *opt, const char *pgm) {
     break;
   }
 }
+
 static void cs_error(const char *p, int ern = 0, const char *p2 = "") {
   // std::cerr << p << " " << p2 << "\n";
   fprintf(stderr, "cs%03d %s %s\n", ern, p, p2);
   std::exit(1);
 }
+
 int main(int argc, const char *argv[]) {
+  auto screen = ScreenInteractive::Fullscreen();
   FILE *from = nullptr, *to = nullptr, *cmds = nullptr;
   const char *from_file = nullptr;
   char *tbuf;
   int ix, jx;
-  const int PREOVHD = 25; // overhead for longest prebuf command sequences
+
+  // overhead for longest prebuf command sequences
+  const int prebuffer_overhead = 25;
   int return_code = 0;
+
 #if defined(__APPLE__)
   __sFILE *stdin_save = nullptr;
   Cstar::STDOUT = __stdoutp;
@@ -454,8 +480,10 @@ int main(int argc, const char *argv[]) {
   FILE *stdin_save = nullptr;
   Cstar::STDOUT = stdout;
 #endif
+
   if (argc == 1)
     Cstar::interactive = true;
+
   for (ix = 1; ix < argc; ++ix) {
     if (argv[ix][0] == '-') {
       doOption(&argv[ix][1], argv[0]);
@@ -464,12 +492,14 @@ int main(int argc, const char *argv[]) {
     } else
       usage(argv[0]);
   }
+
 #if defined(__APPLE__)
   Cstar::STDIN = __stdinp;
 #elif defined(__linux__) || defined(_WIN32)
   Cstar::STDIN = stdin;
 #endif
-  Cstar::prebuf = new Cstar::PreBuffer(Cstar::STDIN);
+
+  Cstar::pre_buf = make_unique<PreBuffer>(PreBuffer(STDIN));
   if (from_file != nullptr) {
     // if file present, open it to see if it exists, error out otherwise
     // close it because the interpreter will open it again
@@ -482,13 +512,13 @@ int main(int argc, const char *argv[]) {
     // interactive - enter an OPEN command if a file is present
     if (from_file != nullptr) {
       // fprintf(Cstar::STDIN, "OPEN %s\n", from_file);
-      ix = (int)std::strlen(from_file) + PREOVHD;
-      tbuf = (char *)malloc(ix);
-      jx = std::snprintf(tbuf, ix, "%sOPEN %s\n", (mpi) ? "MPI ON\n" : "",
-                         from_file);
+      ix = static_cast<int>(strlen(from_file)) + prebuffer_overhead;
+      tbuf = static_cast<char *>(malloc(ix));
+      jx =
+          snprintf(tbuf, ix, "%sOPEN %s\n", (mpi) ? "MPI ON\n" : "", from_file);
       if (jx > ix)
         cs_error("command buffer length issue");
-      Cstar::prebuf->setBuffer(tbuf, jx);
+      Cstar::pre_buf->setBuffer(tbuf, jx);
       free(tbuf);
     }
   } else {
@@ -496,14 +526,14 @@ int main(int argc, const char *argv[]) {
     //        cmds = fopen(cfile, "w");
     //        if (!cmds)
     //            error("cannot open command file", cfile);
-    ix = (int)std::strlen(from_file) + PREOVHD;
+    ix = static_cast<int>(std::strlen(from_file)) + prebuffer_overhead;
     tbuf = (char *)malloc(ix);
     // fprintf(cmds, "OPEN %s\nRUN\nEXIT\n", from_file);
     jx = std::snprintf(tbuf, ix, "%sOPEN %s\nRUN\nEXIT\n",
                        (mpi) ? "MPI ON\n" : "", from_file);
     if (jx > ix)
       cs_error("command buffer length issue");
-    Cstar::prebuf->setBuffer(tbuf, jx);
+    Cstar::pre_buf->setBuffer(tbuf, jx);
     free(tbuf);
     //        fclose(cmds);
     //        cmds = fopen(cfile, "r");
@@ -513,7 +543,7 @@ int main(int argc, const char *argv[]) {
     //        Cstar::STDIN = cmds;
   }
   try {
-    Cstar::PROGRAM();
+    Cstar::program();
   } catch (std::exception &exc) {
     cs_error(exc.what());
     return_code = 2;
@@ -525,11 +555,12 @@ int main(int argc, const char *argv[]) {
     unlink(cfile);
   }
   if (stdin_save != nullptr)
+
 #if defined(__APPLE__)
     __stdinp = stdin_save;
 #elif defined(__linux__) || defined(_WIN32)
   // stdin = stdin_save;
 #endif
-  delete Cstar::prebuf;
+
   return return_code;
 }

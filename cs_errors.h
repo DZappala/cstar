@@ -13,11 +13,11 @@
 #include <bitset>
 
 namespace Cstar {
-void ERROR(int);
-void ERROREXIT();
-void ERRORMSG();
-void FATAL(int);
-ERRORS_CS_EXPORT std::bitset<ERMAX> ERRS;
-ERRORS_CS_EXPORT bool FATALERROR;
+void error(int);
+void error_exit();
+void error_message();
+void fatal(int);
+ERRORS_CS_EXPORT std::bitset<ERMAX> errors;
+ERRORS_CS_EXPORT bool fatal_error;
 } // namespace Cstar
 #endif // CSTAR_CS_ERRORS_H

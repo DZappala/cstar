@@ -294,7 +294,7 @@ void ERRORMSG() {
   // WRITELN; WRITELN(' ERROR CODES');
   fprintf(stdout, "\n COMPILATION ERRORS\n");
   fprintf(stdout, "\n ERROR CODES\n");
-  for (K = 0; K < ERRS.size(); ++K) {
+  for (K = 0; K < SYMBOL::ERRS.size(); ++K) {
     if (!ERRS[K])
       continue;
     // WRITE(LIS, K);

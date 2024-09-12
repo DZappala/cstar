@@ -12,29 +12,38 @@
 #define COMPILE_CS_EXPORT extern
 #endif
 #include "cs_defines.h"
+
 namespace Cstar {
-COMPILE_CS_EXPORT int SYMCNT;
-COMPILE_CS_EXPORT int EXECNT;
-COMPILE_CS_EXPORT int EOFCOUNT;
-COMPILE_CS_EXPORT int SAVESYMCNT, SAVEXECNT, SAVELC;
-COMPILE_CS_EXPORT bool MPIMODE; // global ?
-COMPILE_CS_EXPORT char LINE[LLNG + 1], LINE2[LLNG + 1];
+COMPILE_CS_EXPORT int symbol_count;
+COMPILE_CS_EXPORT int execution_count;
+COMPILE_CS_EXPORT int eof_count;
+COMPILE_CS_EXPORT int save_symbol_count, save_execution_count, save_line_count;
+
+// nb: Message Passing Interface, see https://www.mpi-forum.org
+COMPILE_CS_EXPORT bool mpi_mode; // global ?
+
+COMPILE_CS_EXPORT char line[LLNG + 1], line2[LLNG + 1];
 COMPILE_CS_EXPORT int SX, CC, C1, C2, CC2;
-COMPILE_CS_EXPORT int LC;
+COMPILE_CS_EXPORT int line_count;
 COMPILE_CS_EXPORT int LL, LL2;
-COMPILE_CS_EXPORT int A;  // index to ATAB source local?
-COMPILE_CS_EXPORT int B;  // index to BTAB source local?
-COMPILE_CS_EXPORT int C;  // index to CTAB source local?
-COMPILE_CS_EXPORT int Tx; // index to TAB source local?
-COMPILE_CS_EXPORT int ERRPOS;
-COMPILE_CS_EXPORT int ERRORCOUNT;
+COMPILE_CS_EXPORT int atab_index; // index to ATAB source local?
+COMPILE_CS_EXPORT int btab_index; // index to BTAB source local?
+COMPILE_CS_EXPORT int ctab_index; // index to CTAB source local?
+COMPILE_CS_EXPORT int tab_index;  // index to TAB source local?
+COMPILE_CS_EXPORT int error_position;
+COMPILE_CS_EXPORT int error_count;
 COMPILE_CS_EXPORT int CPNT;
 COMPILE_CS_EXPORT char STAB[SMAX];
 
 // COMPILE_CS_EXPORT int ERRS;   // range 0..ERMAX
 COMPILE_CS_EXPORT int ITPNT; // range 0 ..INITMAX
 COMPILE_CS_EXPORT void INSYMBOL();
-enum SYMBOL {
+
+using SymbolSet = std::bitset<95>;
+using Index = int; // range from -XMAX to +XMAX
+using TypeSet = std::bitset<127>;
+
+enum class Symbol : uint8_t {
   INTCON,
   CHARCON,
   REALCON,
@@ -131,7 +140,8 @@ enum SYMBOL {
   LONGSY,
   UNSIGNEDSY
 };
-enum TYPES {
+
+enum class Types : uint8_t {
   NOTYP,
   REALS,
   INTS,
@@ -145,29 +155,32 @@ enum TYPES {
   LOCKS,
   VOIDS
 };
+
 // typedef int TYPSET[EMAX];
-typedef std::bitset<EMAX> TYPSET;
+
 struct TABREC {
-  ALFA NAME;
-  INDEX LINK;
-  OBJECTS OBJ;
-  TYPES TYP;
-  INDEX REF;
-  bool NORMAL;
+  ALFA name;
+  Index link;
+  OBJECTS object;
+  Types types;
+  Index reference;
+  bool normal;
   int LEV; // range 0..LMAX;
-  int ADR;
-  long SIZE;
-  INDEX FREF;
+  int address;
+  int64_t size;
+  Index FREF;
   int FORLEV;
   bool PNTPARAM;
-};
+} __attribute__((aligned(64))) __attribute__((packed));
+
 struct INITPAIR {
   int IVAL;
   double RVAL;
 };
+
 struct ATABREC {
-  TYPES INXTYP;
-  TYPES ELTYP;
+  Types INXTYP;
+  Types ELTYP;
   int ELREF, LOW, HIGH, ELSIZE, SIZE;
 };
 
@@ -176,25 +189,26 @@ struct BTABREC {
 };
 
 struct CTABREC {
-  TYPES ELTYP;
+  Types ELTYP;
   int ELREF, ELSIZE;
 };
-struct ITEM {
-  enum TYPES TYP;
-  int REF;
-  long SIZE;
-  bool ISADDR;
+
+struct Item {
+  enum Types types;
+  int reference;
+  int64_t size;
+  bool is_address;
 };
+
 struct LIBREC {
   ALFA NAME;
   int IDNUM;
 };
+
 struct CONREC {
-  TYPES TP;
-  long I;
+  Types TP;
+  int64_t I;
 };
-typedef std::bitset<SYMBOLCNT> SYMSET;
-typedef int INDEX; // range from -XMAX to +XMAX
 
 // typedef SYMBOL SYMSET[EMAX];
 //    std::string KEY[] = {
@@ -235,7 +249,7 @@ typedef int INDEX; // range from -XMAX to +XMAX
 //            "WHILE",
 //    } ;
 //    KEY: ARRAY[1..NKW] OF ALFA;
-COMPILE_CS_EXPORT SYMBOL SY;
+COMPILE_CS_EXPORT Symbol symbol;
 #ifdef EXPORT_CS_COMPILE
 COMPILE_CS_EXPORT char KEY[][NKW + 1] = {
     "              ", "#DEFINE       ", "#INCLUDE      ", "BREAK         ",
@@ -249,17 +263,17 @@ COMPILE_CS_EXPORT char KEY[][NKW + 1] = {
     "UNION         ", "UNSIGNED      ", "VALUE         ", "WHILE         ",
 };
 #else
-COMPILE_CS_EXPORT char KEY[][NKW + 1];
+COMPILE_CS_EXPORT char key[][NKW + 1];
 #endif
-COMPILE_CS_EXPORT enum SYMBOL KSY[NKW + 1];
-COMPILE_CS_EXPORT ALFA DUMMYNAME;
-COMPILE_CS_EXPORT INDEX PROTOINDEX;
+COMPILE_CS_EXPORT enum Symbol ksy[NKW + 1];
+COMPILE_CS_EXPORT ALFA dummy_name;
+COMPILE_CS_EXPORT Index proto_index;
 //  SPS: ARRAY [CHAR] OF SYMBOL;
-COMPILE_CS_EXPORT enum SYMBOL SPS[128];
-COMPILE_CS_EXPORT SYMSET CONSTBEGSYS, TYPEBEGSYS, BLOCKBEGSYS, FACBEGSYS,
+COMPILE_CS_EXPORT enum Symbol SPS[128];
+COMPILE_CS_EXPORT SymbolSet CONSTBEGSYS, TYPEBEGSYS, BLOCKBEGSYS, FACBEGSYS,
     DECLBEGSYS, STATBEGSYS, ASSIGNBEGSYS, EXECSYS, SELECTSYS, NONMPISYS,
     COMPASGNSYS;
-COMPILE_CS_EXPORT TYPSET STANTYPS;
+COMPILE_CS_EXPORT TypeSet STANTYPS;
 COMPILE_CS_EXPORT struct LIBREC LIBFUNC[LIBMAX + 1];
 #ifdef EXPORT_CS_COMPILE
 COMPILE_CS_EXPORT std::vector<TABREC> TAB(TMAX + 1);
@@ -287,12 +301,12 @@ COMPILE_CS_EXPORT std::vector<INITPAIR> INITABLE(INITMAX + 1);
 #else
 COMPILE_CS_EXPORT std::vector<INITPAIR> INITABLE;
 #endif
-COMPILE_CS_EXPORT void INITCOMPILER();
-COMPILE_CS_EXPORT int WRITEBLOCK;
-COMPILE_CS_EXPORT int HIGHESTPROCESSOR;
-COMPILE_CS_EXPORT SYMBOL TOPOLOGY;
-COMPILE_CS_EXPORT INDEX TOPDIM;
-COMPILE_CS_EXPORT INDEX PROTOREF;
-COMPILE_CS_EXPORT ITEM RETURNTYPE;
+COMPILE_CS_EXPORT void initialize_compiler();
+COMPILE_CS_EXPORT int write_block;
+COMPILE_CS_EXPORT int highest_processor;
+COMPILE_CS_EXPORT Symbol topology;
+COMPILE_CS_EXPORT Index TOPDIM;
+COMPILE_CS_EXPORT Index proto_ref;
+COMPILE_CS_EXPORT Item return_type;
 } // namespace Cstar
 #endif // CSTAR_CS_COMPILE_H

@@ -7,7 +7,7 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 # The top level Makefile was generated from the following files:
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
-  "/home/dom/projects/pace/paralell/cstar/CMakeLists.txt"
+  "/home/dom/projects/pace/parallel/cstar/CMakeLists.txt"
   "CMakeFiles/3.28.3/CMakeCCompiler.cmake"
   "CMakeFiles/3.28.3/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.28.3/CMakeSystem.cmake"
@@ -24,6 +24,8 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/usr/share/cmake-3.28/Modules/Compiler/Clang-CXX.cmake"
   "/usr/share/cmake-3.28/Modules/Compiler/Clang.cmake"
   "/usr/share/cmake-3.28/Modules/Compiler/GNU.cmake"
+  "/usr/share/cmake-3.28/Modules/ExternalProject/shared_internal_commands.cmake"
+  "/usr/share/cmake-3.28/Modules/FetchContent.cmake"
   "/usr/share/cmake-3.28/Modules/Platform/Linux-Clang-C.cmake"
   "/usr/share/cmake-3.28/Modules/Platform/Linux-Clang-CXX.cmake"
   "/usr/share/cmake-3.28/Modules/Platform/Linux-GNU-C.cmake"

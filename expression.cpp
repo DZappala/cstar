@@ -8,114 +8,122 @@
 
 namespace Cstar {
 struct TypLocal {
-  SYMSET FSYS;
-  TYPES TP;
-  long RF;
-  long SZ;
+  SymbolSet FSYS;
+  Types TP;
+  int64_t RF;
+  int64_t SZ;
   /* parms above */
-  long X, I;
-  // long J;
+  int64_t X, I;
+  // int64_t J;
   // TYPES ELTP;
-  // long ELRF;
-  // long ELSZ;
-  long TS;
+  // int64_t ELRF;
+  // int64_t ELSZ;
+  int64_t TS;
   ALFA TID;
   BlockLocal *bl;
-};
-void TEST(SYMSET &, SYMSET &, int);
-extern bool inCLUDEFLAG();
-extern void C_PNTCHANTYP(BlockLocal *, TYPES &, long &, long &);
-extern void BASICEXPRESSION(BlockLocal *, SYMSET, ITEM &);
+} __attribute__((aligned(128))) __attribute__((packed));
+
+void TEST(SymbolSet &, SymbolSet &, int);
+extern auto inCLUDEFLAG() -> bool;
+extern void C_PNTCHANTYP(BlockLocal * /*bl*/, Types & /*TP*/, int64_t & /*RF*/,
+                         int64_t & /*SZ*/);
+extern void BASICEXPRESSION(BlockLocal *, SymbolSet, Item &);
 void ENTERCHANNEL();
 void ENTERVARIABLE(BlockLocal *, OBJECTS);
-void EXPRESSION(BlockLocal *bl, SYMSET FSYS, ITEM &X);
-void LOADVAL(ITEM &);
-void TYPF(BlockLocal *, SYMSET FSYS, TYPES &TP, long &RF, long &SZ);
-void CONSTANT(BlockLocal *, SYMSET &, CONREC &);
-void ENTERARRAY(TYPES TP, int L, int H);
-extern void ENTER(BlockLocal *bl, ALFA, OBJECTS);
-int LOC(BlockLocal *, ALFA);
-bool TYPE_COMPATIBLE(ITEM, ITEM);
-extern void BLOCK(InterpLocal *il, SYMSET fsys, bool ISFUN, int LEVEL, int PRT);
-void SKIP(SYMSET, int);
+void EXPRESSION(BlockLocal *block_local, SymbolSet FSYS, Item &X);
+void LOADVAL(Item &);
+void TYPF(BlockLocal * /*bl*/, SymbolSet FSYS, Types &TP, int64_t &RF,
+          int64_t &SZ);
+void CONSTANT(BlockLocal *, SymbolSet &, CONREC &);
+void ENTERARRAY(Types TP, int L, int H);
+extern void ENTER(BlockLocal *block_local, ALFA, OBJECTS);
+auto LOC(BlockLocal *, ALFA) -> int;
+auto TYPE_COMPATIBLE(Item /*X*/, Item /*Y*/) -> bool;
+extern void BLOCK(InterpLocal *il, SymbolSet fsys, bool ISFUN, int LEVEL,
+                  int PRT);
+void SKIP(SymbolSet, int);
 void TESTSEMICOLON(BlockLocal *);
 extern int MAINFUNC;
-extern void CALL(BlockLocal *, SYMSET &, int I);
-void SELECTOR(BlockLocal *, SYMSET FSYS, ITEM &V);
-void PNTSELECT(ITEM &);
-bool PNT_COMPATIBLE(ITEM V, ITEM W);
-bool ARRAY_COMPATIBLE(ITEM V, ITEM W);
-void RSELECT(ITEM &V) {
-  int A;
-  if (SY == PERIOD)
+extern void CALL(BlockLocal *, SymbolSet &, int I);
+void SELECTOR(BlockLocal * /*bl*/, SymbolSet FSYS, Item &V);
+void PNTSELECT(Item & /*V*/);
+auto PNT_COMPATIBLE(Item V, Item W) -> bool;
+auto ARRAY_COMPATIBLE(Item V, Item W) -> bool;
+
+void RSELECT(Item &V) {
+  int A = 0;
+  if (symbol == Symbol::PERIOD)
     INSYMBOL();
-  if (SY != IDENT) {
-    ERROR(2);
-  } else if (V.TYP != RECS) {
-    ERROR(31);
+  if (symbol != Symbol::IDENT) {
+    error(2);
+  } else if (V.types != Types::RECS) {
+    error(31);
   } else {
     A = V.REF;
-    strcpy(TAB[0].NAME, ID);
-    while (strcmp(TAB[A].NAME, ID) != 0)
-      A = TAB[A].LINK;
+    TAB[0].name = ID;
+    while (strcmp(TAB[A].name.c_str(), ID.c_str()) != 0) {
+      A = TAB[A].link;
+    }
     if (A == 0)
-      ERROR(0);
+      error(0);
     else {
-      EMIT1(24, TAB[A].ADR);
+      EMIT1(24, TAB[A].address);
       EMIT(15);
-      V.TYP = TAB[A].TYP;
-      V.REF = TAB[A].REF;
-      V.SIZE = TAB[A].SIZE;
+      V.types = TAB[A].types;
+      V.REF = TAB[A].reference;
+      V.size = TAB[A].size;
     }
     INSYMBOL();
   }
 }
-void PNTSELECT(ITEM &V) {
+void PNTSELECT(Item &V) {
   int A;
   INSYMBOL();
-  if (V.TYP != PNTS) {
-    ERROR(13);
+  if (V.types != Types::PNTS) {
+    error(13);
   } else {
     A = V.REF;
-    V.TYP = CTAB[A].ELTYP;
+    V.types = CTAB[A].ELTYP;
     V.REF = CTAB[A].ELREF;
-    V.SIZE = CTAB[A].ELSIZE;
+    V.size = CTAB[A].ELSIZE;
     EMIT(34);
     RSELECT(V);
   }
 }
 
-void SELECTOR(BlockLocal *bl, SYMSET FSYS, ITEM &V) {
-  ITEM X;
-  int A;
-  SYMSET su;
-  if (V.TYP == CHANS)
-    ERROR(11);
-  su[COMMA] = true;
-  su[RBRACK] = true;
+void SELECTOR(BlockLocal *bl, SymbolSet FSYS, Item &V) {
+  Item X{};
+  int A = 0;
+  SymbolSet su;
+  if (V.types == Types::CHANS) {
+    error(11);
+  }
+
+  su[symbol::COMMA] = true;
+  su[symbol::RBRACK] = true;
   while (SELECTSYS[SY]) {
-    if (SY == LBRACK) {
+    if (SY == Symbol::LBRACK) {
       do {
         INSYMBOL();
         EXPRESSION(bl, FSYS | su, X);
-        if (V.TYP != ARRAYS)
-          ERROR(28);
+        if (V.types != Types::ARRAYS)
+          error(28);
         else {
           A = V.REF;
-          if (ATAB[A].INXTYP != X.TYP)
-            ERROR(26);
+          if (ATAB[A].INXTYP != X.types)
+            error(26);
           else
             EMIT1(21, A);
-          V.TYP = ATAB[A].ELTYP;
+          V.types = ATAB[A].ELTYP;
           V.REF = ATAB[A].ELREF;
           V.SIZE = ATAB[A].ELSIZE;
         }
-      } while (SY == COMMA);
-      if (SY == RBRACK)
+      } while (SY == Symbol::COMMA);
+      if (SY == Symbol::RBRACK)
         INSYMBOL();
       else
-        ERROR(12);
-    } else if (SY == PERIOD)
+        error(12);
+    } else if (SY == Symbol::PERIOD)
       RSELECT(V);
     else
       PNTSELECT(V);
@@ -124,208 +132,232 @@ void SELECTOR(BlockLocal *bl, SYMSET FSYS, ITEM &V) {
   TEST(FSYS, su, 6);
 }
 
-bool COMPATIBLE(ITEM V, ITEM W) {
+auto COMPATIBLE(Item V, Item W) -> bool {
   // ITEM Z;
   bool rtn = true;
-  if (V.TYP == W.TYP) {
-    switch (V.TYP) {
-    case INTS:
-    case REALS:
-    case CHARS:
-    case BOOLS:
-    case LOCKS:
+  if (V.types == W.types) {
+    switch (V.types) {
+    case Types::INTS:
+    case Types::REALS:
+    case Types::CHARS:
+    case Types::BOOLS:
+    case Types::LOCKS:
       rtn = true;
       break;
-    case RECS:
-      if (CTAB[V.REF].ELREF == CTAB[W.REF].ELREF)
-        rtn = true;
-      else
-        rtn = false;
+    case Types::RECS:
+      rtn = CTAB[V.REF].ELREF == CTAB[W.REF].ELREF;
       break;
-    case CHANS:
-      V.TYP = CTAB[V.REF].ELTYP;
-      W.TYP = CTAB[W.REF].ELTYP;
+    case Types::CHANS:
+      V.types = CTAB[V.REF].ELTYP;
+      W.types = CTAB[W.REF].ELTYP;
       V.REF = CTAB[V.REF].ELREF;
       W.REF = CTAB[W.REF].ELREF;
       rtn = COMPATIBLE(V, W);
       break;
-    case PNTS:
+    case Types::PNTS:
       if (W.REF != 0) {
-        V.TYP = CTAB[V.REF].ELTYP;
-        W.TYP = CTAB[W.REF].ELTYP;
-        if (V.TYP != VOIDS && W.TYP != VOIDS) {
+        V.types = CTAB[V.REF].ELTYP;
+        W.types = CTAB[W.REF].ELTYP;
+        if (V.types != Types::VOIDS && W.types != Types::VOIDS) {
           V.REF = CTAB[V.REF].ELREF;
           W.REF = CTAB[W.REF].ELREF;
           rtn = PNT_COMPATIBLE(V, W);
         }
       }
       break;
-    case ARRAYS:
+    case Types::ARRAYS:
       ARRAY_COMPATIBLE(V, W);
       break;
     default:
       break;
     }
-  } else
+  } else {
     rtn = false;
+  }
   return rtn;
 }
 
-bool ARRAY_COMPATIBLE(ITEM V, ITEM W) {
+auto ARRAY_COMPATIBLE(Item V, Item W) -> bool {
   bool DIM_OK = true;
-  while (V.TYP == ARRAYS && W.TYP == ARRAYS) {
+  while (V.types == Types::ARRAYS && W.types == Types::ARRAYS) {
     if (ATAB[V.REF].HIGH != ATAB[W.REF].HIGH ||
-        ATAB[V.REF].ELTYP != ATAB[W.REF].ELTYP)
+        ATAB[V.REF].ELTYP != ATAB[W.REF].ELTYP) {
       DIM_OK = false;
-    V.TYP = ATAB[V.REF].ELTYP;
+    }
+    V.types = ATAB[V.REF].ELTYP;
     V.REF = ATAB[V.REF].ELREF;
-    W.TYP = ATAB[W.REF].ELTYP;
+    W.types = ATAB[W.REF].ELTYP;
     W.REF = ATAB[W.REF].ELREF;
   }
-  if (DIM_OK)
+  if (DIM_OK) {
     return COMPATIBLE(V, W);
-  else
-    return false;
+  }
+  return false;
 }
 
-bool PNT_COMPATIBLE(ITEM V, ITEM W) {
-  while (V.TYP == ARRAYS) {
-    V.TYP = ATAB[V.REF].ELTYP;
+auto PNT_COMPATIBLE(Item V, Item W) -> bool {
+  while (V.types == Types::ARRAYS) {
+    V.types = ATAB[V.REF].ELTYP;
     V.REF = ATAB[V.REF].ELREF;
   }
-  while (W.TYP == ARRAYS) {
-    W.TYP = ATAB[W.REF].ELTYP;
+  while (W.types == Types::ARRAYS) {
+    W.types = ATAB[W.REF].ELTYP;
     W.REF = ATAB[W.REF].ELREF;
   }
   return COMPATIBLE(V, W);
 }
 
-bool TYPE_COMPATIBLE(ITEM X, ITEM Y) {
+auto TYPE_COMPATIBLE(Item X, Item Y) -> bool {
   // ITEM W;
   // if ((inset(X.TYP, STANTYPS + LOCKS)) && (inset(Y.TYP, STANTYPS + LOCKS)))
-  if ((STANTYPS[X.TYP] || X.TYP == LOCKS) &&
-      (STANTYPS[Y.TYP] || Y.TYP == LOCKS)) {
-    if (X.TYP == Y.TYP || (X.TYP == REALS && Y.TYP == INTS) ||
-        (X.TYP == INTS && Y.TYP == CHARS) || (X.TYP == CHARS && Y.TYP == INTS))
-      return true;
-    else
-      return false;
-  } else if (X.TYP == RECS && Y.TYP == RECS) {
-    if (X.REF == Y.REF)
-      return true;
-    else
-      return false;
-  } else if (X.TYP == ARRAYS && Y.TYP == ARRAYS)
+  if ((STANTYPS[X.TYP] || X.TYP == Types::LOCKS) &&
+      (STANTYPS[Y.TYP] || Y.TYP == Types::LOCKS)) {
+    return X.types == Y.types ||
+           (X.types == Types::REALS && Y.types == Types::INTS) ||
+           (X.types == Types::INTS && Y.types == Types::CHARS) ||
+           (X.types == Types::CHARS && Y.types == Types::INTS);
+  }
+
+  if (X.types == Types::RECS && Y.types == Types::RECS) {
+    return X.REF == Y.REF;
+  }
+
+  if (X.types == Types::ARRAYS && Y.types == Types::ARRAYS) {
     return ARRAY_COMPATIBLE(X, Y);
-  else if (X.TYP == PNTS && Y.TYP == PNTS)
+  }
+
+  if (X.types == Types::PNTS && Y.types == Types::PNTS) {
     return PNT_COMPATIBLE(X, Y);
-  else if (X.TYP == PNTS && Y.TYP == ARRAYS) {
-    X.TYP = CTAB[X.REF].ELTYP;
+  }
+
+  if (X.types == Types::PNTS && Y.types == Types::ARRAYS) {
+    X.types = CTAB[X.REF].ELTYP;
     X.REF = CTAB[X.REF].ELREF;
     return PNT_COMPATIBLE(X, Y);
-  } else
-    return false;
-  if (X.TYP == NOTYP || Y.TYP == NOTYP) // dead code
+  }
+
+  return false;
+
+  if (X.types == Types::NOTYP || Y.types == Types::NOTYP) { // dead code
     return true;
+  }
 }
 
-void CHANELEMENT(ITEM &V) {
+void CHANELEMENT(Item &V) {
   int vref = V.REF;
-  V.TYP = CTAB[vref].ELTYP;
-  V.SIZE = CTAB[vref].ELSIZE;
+  V.types = CTAB[vref].ELTYP;
+  V.size = CTAB[vref].ELSIZE;
   V.REF = CTAB[vref].ELREF;
 }
 
-TYPES RESULTTYPE(TYPES A, TYPES B) {
-  if ((A == INTS && B == CHARS) || (A == CHARS && B == INTS))
-    return CHARS;
-  else if (A > INTS || B > INTS) {
-    ERROR(33);
-    return NOTYP;
-  } else if (A == NOTYP || B == NOTYP)
-    return NOTYP;
-  else if (A == REALS || B == REALS)
-    return REALS;
-  else
-    return INTS;
+auto RESULTTYPE(Types A, Types B) -> Types {
+  if ((A == Types::INTS && B == Types::CHARS) ||
+      (A == Types::CHARS && B == Types::INTS)) {
+    return Types::CHARS;
+  }
+  if (A > Types::INTS || B > Types::INTS) {
+    error(33);
+    return Types::NOTYP;
+  }
+  if (A == Types::NOTYP || B == Types::NOTYP) {
+    return Types::NOTYP;
+  }
+  if (A == Types::REALS || B == Types::REALS) {
+    return Types::REALS;
+  }
+  return Types::INTS;
 }
 
-TYPES SUMRESULTTYPE(TYPES A, TYPES B) {
-  if ((A == INTS && B == CHARS) || (A == CHARS && B == INTS))
-    return CHARS;
-  else if ((A == INTS && B == PNTS) || (A == PNTS && B == INTS))
-    return PNTS;
-  else if (A > INTS || B > INTS) {
-    ERROR(33);
-    return NOTYP;
-  } else if (A == NOTYP || B == NOTYP)
-    return NOTYP;
-  else if (A == REALS || B == REALS)
-    return REALS;
-  else
-    return INTS;
+auto SUMRESULTTYPE(Types A, Types B) -> Types {
+  if ((A == Types::INTS && B == Types::CHARS) ||
+      (A == Types::CHARS && B == Types::INTS)) {
+    return Types::CHARS;
+  }
+  if ((A == Types::INTS && B == Types::PNTS) ||
+      (A == Types::PNTS && B == Types::INTS)) {
+    return Types::PNTS;
+  }
+  if (A > Types::INTS || B > Types::INTS) {
+    error(33);
+    return Types::NOTYP;
+  }
+  if (A == Types::NOTYP || B == Types::NOTYP) {
+    return Types::NOTYP;
+  }
+  if (A == Types::REALS || B == Types::REALS) {
+    return Types::REALS;
+  }
+  return Types::INTS;
 }
 
-void FACTOR(BasicLocal *bx, SYMSET &FSYS, ITEM &X) {
-  int A, I;
-  SYMBOL OP;
-  TYPES TYPCAST;
-  SYMSET su, sv;
+auto FACTOR(BasicLocal *bx, SymbolSet &FSYS, Item &X) -> void {
+  int A = 0;
+  int I = 0;
+  Symbol OP;
+  Types TYPCAST;
+  SymbolSet su;
+  SymbolSet sv;
   su = 0;
-  su[DBLQUEST] = true;
-  X.TYP = NOTYP;
+  su[symbol::DBLQUEST] = true;
+  X.types = Types::NOTYP;
   X.REF = 0;
-  X.ISADDR = true;
+  X.is_address = true;
+
   TEST(FACBEGSYS, FSYS, 8);
-  if (SY == IDENT) {
+  if (SY == Symbol::IDENT) {
     I = LOC(bx->bl, ID);
     INSYMBOL();
     switch (TAB[I].OBJ) {
-    case KONSTANT:
-      X.TYP = TAB[I].TYP;
+    case OBJECTS::KONSTANT:
+      X.types = TAB[I].TYP;
       X.REF = 0;
-      X.ISADDR = false;
-      if (TAB[I].TYP == REALS) {
+      X.is_address = false;
+      if (TAB[I].TYP == Types::REALS) {
         EMIT1(87, TAB[I].ADR);
       } else {
         EMIT1(24, TAB[I].ADR);
       }
       break;
-    case VARIABLE:
-      X.TYP = TAB[I].TYP;
+    case OBJECTS::VARIABLE:
+      X.types = TAB[I].TYP;
       X.REF = TAB[I].REF;
-      X.SIZE = TAB[I].SIZE;
+      X.Size = TAB[I].SIZE;
       if (SELECTSYS[SY]) {
         bx->F = (TAB[I].NORMAL) ? 0 : 1;
         EMIT2(bx->F, TAB[I].LEV, TAB[I].ADR);
         SELECTOR(bx->bl, FSYS | su, X);
-        if (X.TYP == CHANS && SY == DBLQUEST) {
+        if (X.types == Types::CHANS && SY == DBLQUEST) {
           INSYMBOL();
           EMIT(94);
-          X.TYP = BOOLS;
-          X.ISADDR = false;
+          X.types = Types::BOOLS;
+          X.is_address = false;
         }
       } else {
         if (TAB[I].FORLEV == 0) {
-          if (X.TYP == CHANS && SY == DBLQUEST) {
+          if (X.types == Types::CHANS && SY == DBLQUEST) {
             INSYMBOL();
-            X.TYP = BOOLS;
-            X.ISADDR = false;
-            if (TAB[I].NORMAL)
+            X.types = Types::BOOLS;
+            X.is_address = false;
+            if (TAB[I].NORMAL) {
               bx->F = 95;
-            else
+            } else {
               bx->F = 96;
+            }
           } else {
-            if (TAB[I].NORMAL)
+            if (TAB[I].NORMAL) {
               bx->F = 0;
-            else
+            } else {
               bx->F = 1;
+            }
           }
+
           EMIT2(bx->F, TAB[I].LEV, TAB[I].ADR);
-          if (bx->F == 0 && TAB[I].PNTPARAM)
+
+          if (bx->F == 0 && TAB[I].PNTPARAM) {
             bx->F = 1;
+          }
         } else {
-          X.ISADDR = false;
+          X.is_address = false;
           if (TAB[I].FORLEV > 0) {
             EMIT2(73, TAB[I].LEV, TAB[I].ADR);
           } else {
@@ -334,66 +366,71 @@ void FACTOR(BasicLocal *bx, SYMSET &FSYS, ITEM &X) {
         }
       }
       break;
-    case TYPE1:
-    case PROZEDURE:
-    case COMPONENT:
-      ERROR(44);
+    case OBJECTS::TYPE1:
+    case OBJECTS::PROZEDURE:
+    case OBJECTS::COMPONENT:
+      error(44);
       break;
-    case FUNKTION:
-      X.TYP = TAB[I].TYP;
+    case OBJECTS::FUNKTION:
+      X.types = TAB[I].TYP;
       X.REF = TAB[I].FREF;
-      X.SIZE = TAB[I].SIZE;
-      X.ISADDR = false;
+      X.Size = TAB[I].SIZE;
+      X.is_address = false;
       if (TAB[I].LEV != 0) {
         CALL(bx->bl, FSYS, I);
       } else if (TAB[I].ADR == 24) {
-        if (SY == LPARENT)
+        if (SY == Symbol::LPARENT) {
           INSYMBOL();
-        else
-          ERROR(9);
+        } else {
+          error(9);
+        }
+
         su = 0;
-        su[IDENT] = true;
-        su[STRUCTSY] = true;
+        su[symbol::IDENT] = true;
+        su[symbol::STRUCTSY] = true;
         sv = FSYS;
-        sv[RPARENT] = true;
+        sv[symbol::RPARENT] = true;
         TEST(su, sv, 6);
-        if (SY == IDENT) {
+        if (SY == Symbol::IDENT) {
           int I = LOC(bx->bl, ID);
-          if (TAB[I].OBJ == VARIABLE) {
+          if (TAB[I].OBJ == OBJECTS::VARIABLE) {
             EMIT1(24, TAB[I].SIZE);
-          } else if (TAB[I].OBJ == TYPE1) {
+          } else if (TAB[I].OBJ == OBJECTS::TYPE1) {
             EMIT1(24, TAB[I].ADR);
           } else {
-            ERROR(6);
+            error(6);
           }
-        } else if (SY == STRUCTSY) {
+        } else if (SY == Symbol::STRUCTSY) {
           INSYMBOL();
-          if (SY == IDENT) {
+          if (SY == Symbol::IDENT) {
             int I = LOC(bx->bl, ID);
             if (I != 0) {
-              if (TAB[I].OBJ != STRUCTAG)
-                ERROR(108);
-              else
+              if (TAB[I].OBJ != OBJECTS::STRUCTAG) {
+                error(108);
+              } else {
                 EMIT1(24, TAB[I].ADR);
+              }
             }
           } else {
-            ERROR(6);
+            error(6);
           }
         } else {
-          ERROR(6);
+          error(6);
         }
         INSYMBOL();
-        if (SY == RPARENT)
+        if (SY == Symbol::RPARENT) {
           INSYMBOL();
-        else
-          ERROR(4);
+        } else {
+          error(4);
+        }
       } else {
-        if (SY == LPARENT) {
+        if (SY == Symbol::LPARENT) {
           INSYMBOL();
-          if (SY == RPARENT)
+          if (SY == Symbol::RPARENT) {
             INSYMBOL();
-          else
-            ERROR(4);
+          } else {
+            error(4);
+          }
         }
         EMIT1(8, TAB[I].ADR);
       }
@@ -401,229 +438,232 @@ void FACTOR(BasicLocal *bx, SYMSET &FSYS, ITEM &X) {
     default:
       break;
     }
-  } else if (SY == CHARCON || SY == INTCON) {
-    if (SY == CHARCON) {
-      X.TYP = CHARS;
+  } else if (SY == Symbol::CHARCON || SY == Symbol::INTCON) {
+    if (SY == Symbol::CHARCON) {
+      X.types = Types::CHARS;
     } else {
-      X.TYP = INTS;
+      X.types = Types::INTS;
     }
     EMIT1(24, INUM);
     X.REF = 0;
-    X.ISADDR = false;
+    X.is_address = false;
     INSYMBOL();
-  } else if (SY == STRNG) {
-    X.TYP = PNTS;
+  } else if (SY == Symbol::STRNG) {
+    X.types = Types::PNTS;
     ENTERCHANNEL();
-    CTAB[C].ELTYP = CHARS;
-    CTAB[C].ELREF = 0;
-    CTAB[C].ELSIZE = 1;
-    X.REF = C;
-    X.ISADDR = false;
+    CTAB[ctab_index].ELTYP = Types::CHARS;
+    CTAB[ctab_index].ELREF = 0;
+    CTAB[ctab_index].ELSIZE = 1;
+    X.REF = ctab_index;
+    X.is_address = false;
     EMIT2(13, INUM, SLENG);
     INSYMBOL();
-  } else if (SY == REALCON) {
-    X.TYP = REALS;
-    CONTABLE[CPNT] = RNUM;
+  } else if (SY == Symbol::REALCON) {
+    X.types = Types::REALS;
+    CONTABLE.at(CPNT) = RNUM;
     EMIT1(87, CPNT);
     if (CPNT >= RCMAX) {
-      FATAL(9);
+      fatal(9);
     } else {
       CPNT = CPNT + 1;
     }
     X.REF = 0;
-    X.ISADDR = false;
+    X.is_address = false;
     INSYMBOL();
-  } else if (SY == LPARENT) {
+  } else if (SY == Symbol::LPARENT) {
     INSYMBOL();
-    TYPCAST = NOTYP;
-    if (SY == IDENT) {
+    TYPCAST = Types::NOTYP;
+    if (SY == Symbol::IDENT) {
       int I = LOC(bx->bl, ID);
-      if (TAB[I].OBJ == TYPE1) {
+      if (TAB[I].OBJ == OBJECTS::TYPE1) {
         TYPCAST = TAB[I].TYP;
         INSYMBOL();
-        if (SY == TIMES) {
-          TYPCAST = PNTS;
+        if (SY == Symbol::TIMES) {
+          TYPCAST = Types::PNTS;
           INSYMBOL();
         }
-        if (SY != RPARENT) {
-          ERROR(121);
+        if (SY != Symbol::RPARENT) {
+          error(121);
         } else {
           INSYMBOL();
         }
-        if (!(STANTYPS[TYPCAST] || TYPCAST == PNTS)) {
-          ERROR(121);
+        if (!STANTYPS[TYPCAST] && TYPCAST != TYPES::PNTS) {
+          error(121);
         }
         FACTOR(bx, FSYS, X);
-        if (X.ISADDR) {
+        if (X.is_address) {
           LOADVAL(X);
         }
-        if (TYPCAST == INTS) {
-          if (X.TYP == REALS) {
+        if (TYPCAST == Types::INTS) {
+          if (X.types == Types::REALS) {
             EMIT1(8, 10);
           }
-        } else if (TYPCAST == BOOLS) {
-          if (X.TYP == REALS) {
+        } else if (TYPCAST == Types::BOOLS) {
+          if (X.types == Types::REALS) {
             EMIT1(8, 10);
           }
           EMIT(114);
-        } else if (TYPCAST == CHARS) {
-          if (X.TYP == REALS) {
+        } else if (TYPCAST == Types::CHARS) {
+          if (X.types == Types::REALS) {
             EMIT1(8, 10);
           }
           EMIT1(8, 5);
-        } else if (TYPCAST == REALS) {
+        } else if (TYPCAST == Types::REALS) {
           EMIT(26);
-        } else if (TYPCAST == PNTS) {
-          if (X.TYP != PNTS || CTAB[X.REF].ELTYP != VOIDS) {
-            ERROR(121);
+        } else if (TYPCAST == Types::PNTS) {
+          if (X.types != Types::PNTS || CTAB[X.REF].ELTYP != Types::VOIDS) {
+            error(121);
           }
         } else {
-          ERROR(121);
+          error(121);
         }
-        X.TYP = TYPCAST;
+        X.types = TYPCAST;
       }
     }
-    if (TYPCAST == NOTYP) {
+    if (TYPCAST == Types::NOTYP) {
       sv = FSYS;
-      sv[RPARENT] = true;
+      sv[symbol::RPARENT] = true;
       BASICEXPRESSION(bx->bl, sv, X);
-      if (SY == RPARENT) {
+      if (SY == Symbol::RPARENT) {
         INSYMBOL();
       } else {
-        ERROR(4);
+        error(4);
       }
     }
-  } else if (SY == NOTSY) {
+  } else if (SY == Symbol::NOTSY) {
     INSYMBOL();
     FACTOR(bx, FSYS, X);
-    if (X.ISADDR) {
+    if (X.is_address) {
       LOADVAL(X);
     }
-    if (X.TYP == BOOLS) {
+    if (X.types == Types::BOOLS) {
       EMIT(35);
-    } else if (X.TYP != NOTYP) {
-      ERROR(32);
+    } else if (X.types != Types::NOTYP) {
+      error(32);
     }
-  } else if (SY == TIMES) {
+  } else if (SY == Symbol::TIMES) {
     INSYMBOL();
     FACTOR(bx, FSYS, X);
-    if (X.ISADDR) {
+    if (X.is_address) {
       LOADVAL(X);
     }
-    if (X.TYP == PNTS) {
+    if (X.types == Types::PNTS) {
       int A = X.REF;
-      X.TYP = CTAB[A].ELTYP;
+      X.types = CTAB[A].ELTYP;
       X.REF = CTAB[A].ELREF;
-      X.SIZE = CTAB[A].ELSIZE;
-      X.ISADDR = true;
-    } else if (X.TYP != NOTYP) {
-      ERROR(13);
+      X.Size = CTAB[A].ELSIZE;
+      X.is_address = true;
+    } else if (X.types != Types::NOTYP) {
+      error(13);
     }
-  } else if (SY == PLUS || SY == MINUS) {
-    int OP = SY;
+  } else if (SY == Symbol::PLUS || SY == Symbol::MINUS) {
+    int OP = symbol;
     INSYMBOL();
     FACTOR(bx, FSYS, X);
-    if (X.ISADDR) {
+    if (X.is_address) {
       LOADVAL(X);
     }
-    if (X.TYP == INTS || X.TYP == REALS || X.TYP == CHARS || X.TYP == PNTS) {
-      if (OP == MINUS) {
+    if (X.types == Types::INTS || X.types == Types::REALS ||
+        X.types == Types::CHARS || X.types == Types::PNTS) {
+      if (OP == Symbol::MINUS) {
         EMIT(36);
       }
     } else {
-      ERROR(33);
+      error(33);
     }
-  } else if (SY == INCREMENT) {
+  } else if (SY == Symbol::INCREMENT) {
     INSYMBOL();
     FACTOR(bx, FSYS, X);
-    if (!(X.TYP == NOTYP || X.TYP == INTS || X.TYP == REALS || X.TYP == CHARS ||
-          X.TYP == PNTS)) {
-      ERROR(110);
+    if (X.types != Types::NOTYP && X.types != Types::INTS &&
+        X.types != Types::REALS && X.types != Types::CHARS &&
+        X.types != Types::PNTS) {
+      error(110);
     } else {
-      if ((X.TYP == NOTYP || X.TYP == INTS || X.TYP == REALS ||
-           X.TYP == CHARS) &&
+      if ((X.types == Types::NOTYP || X.types == Types::INTS ||
+           X.types == Types::REALS || X.types == Types::CHARS) &&
           !X.ISADDR) {
-        ERROR(110);
+        error(110);
       }
       int A = 1;
-      if (X.TYP == PNTS) {
+      if (X.types == Types::PNTS) {
         A = CTAB[X.REF].ELSIZE;
       }
-      if (X.TYP != NOTYP) {
+      if (X.types != Types::NOTYP) {
         EMIT2(108, A, 0);
       }
-      X.ISADDR = false;
+      X.is_address = false;
     }
-  } else if (SY == DECREMENT) {
+  } else if (SY == Symbol::DECREMENT) {
     INSYMBOL();
     FACTOR(bx, FSYS, X);
-    if (!(X.TYP == NOTYP || X.TYP == INTS || X.TYP == REALS || X.TYP == CHARS ||
-          X.TYP == PNTS)) {
-      ERROR(111);
+    if (X.types != Types::NOTYP && X.types != Types::INTS &&
+        X.types != Types::REALS && X.types != Types::CHARS &&
+        X.types != Types::PNTS) {
+      error(111);
     } else {
-      if ((X.TYP == NOTYP || X.TYP == INTS || X.TYP == REALS ||
-           X.TYP == CHARS) &&
+      if ((X.types == Types::NOTYP || X.types == Types::INTS ||
+           X.types == Types::REALS || X.types == Types::CHARS) &&
           !X.ISADDR) {
-        ERROR(111);
+        error(111);
       }
       A = 1;
-      if (X.TYP == PNTS) {
+      if (X.types == Types::PNTS) {
         A = CTAB[X.REF].ELSIZE;
       }
-      if (X.TYP != NOTYP) {
+      if (X.types != Types::NOTYP) {
         EMIT2(109, A, 0);
       }
-      X.ISADDR = false;
+      X.is_address = false;
     }
   }
   if (SELECTSYS[SY] && X.ISADDR) {
     su = FSYS;
-    su[DBLQUEST] = true;
+    su[Symbol::DBLQUEST] = true;
     SELECTOR(bx->bl, su, X);
   }
-  switch (SY) {
-  case DBLQUEST:
-    if (X.TYP == CHANS) {
+  switch (symbol) {
+  case Symbol::DBLQUEST:
+    if (X.types == Types::CHANS) {
       INSYMBOL();
       EMIT(94);
-      X.TYP = BOOLS;
-      X.ISADDR = false;
+      X.types = Types::BOOLS;
+      X.is_address = false;
     } else
-      ERROR(103);
+      error(103);
     break;
-  case INCREMENT:
-    if (!(X.TYP == NOTYP || X.TYP == INTS || X.TYP == REALS || X.TYP == CHARS ||
-          X.TYP == PNTS)) {
-      ERROR(110);
+  case Symbol::INCREMENT:
+    if (X.types != Types::NOTYP && X.types != Types::INTS &&
+        X.types != Types::REALS && X.types != Types::CHARS &&
+        X.types != Types::PNTS) {
+      error(110);
     } else {
-      if (!(X.TYP == NOTYP || X.TYP == INTS || X.TYP == REALS ||
-            X.TYP == CHARS) &&
-          !X.ISADDR)
-        ERROR(110);
+      if (X.types != Types::NOTYP && X.types != Types::INTS &&
+          X.types != Types::REALS && X.types != Types::CHARS && !X.ISADDR)
+        error(110);
       A = 1;
-      if (X.TYP == PNTS)
+      if (X.types == Types::PNTS)
         A = CTAB[X.REF].ELSIZE;
-      if (X.TYP != NOTYP)
+      if (X.types != Types::NOTYP)
         EMIT2(108, A, 1);
-      X.ISADDR = false;
+      X.is_address = false;
     }
     INSYMBOL();
     break;
-  case DECREMENT:
-    if (!(X.TYP == NOTYP || X.TYP == INTS || X.TYP == REALS || X.TYP == CHARS ||
-          X.TYP == PNTS)) {
-      ERROR(111);
+  case symbol::DECREMENT:
+    if (X.types != Types::NOTYP && X.types != Types::INTS &&
+        X.types != Types::REALS && X.types != Types::CHARS &&
+        X.types != Types::PNTS) {
+      error(111);
     } else {
-      if (!(X.TYP == NOTYP || X.TYP == INTS || X.TYP == REALS ||
-            X.TYP == CHARS) &&
-          !X.ISADDR)
-        ERROR(111);
+      if (X.types != Types::NOTYP && X.types != Types::INTS &&
+          X.types != Types::REALS && X.types != Types::CHARS && !X.ISADDR)
+        error(111);
       A = 1;
-      if (X.TYP == PNTS)
+      if (X.types == Types::PNTS)
         A = CTAB[X.REF].ELSIZE;
-      if (X.TYP != NOTYP)
+      if (X.types != Types::NOTYP)
         EMIT2(109, A, 1);
-      X.ISADDR = false;
+      X.is_address = false;
     }
     INSYMBOL();
     break;
@@ -632,90 +672,95 @@ void FACTOR(BasicLocal *bx, SYMSET &FSYS, ITEM &X) {
   }
   TEST(FSYS, FACBEGSYS, 6);
 }
-void EXPRESSION(BlockLocal *bl, SYMSET FSYS, ITEM &X) {
+void EXPRESSION(BlockLocal *bl, SymbolSet FSYS, Item &X) {
   // ITEM Y;
   // SYMBOL OP;
-  bool ADDR_REQUIRED;
-  long RF, SZ;
-  TYPES TP;
-  SYMSET su, sv;
-  if (SY == ADDRSY) {
+  bool ADDR_REQUIRED = false;
+  int64_t RF = 0;
+  int64_t SZ = 0;
+  Types TP;
+  SymbolSet su;
+  SymbolSet sv;
+
+  if (SY == Symbol::ADDRSY) {
     ADDR_REQUIRED = true;
     INSYMBOL();
   } else {
     ADDR_REQUIRED = false;
   }
   su = FSYS;
-  su[TIMES] = true;
-  su[CHANSY] = true;
-  su[LBRACK] = true;
-  if (SY == NEWSY) {
+  su[symbol::TIMES] = true;
+  su[symbol::CHANSY] = true;
+  su[symbol::LBRACK] = true;
+  if (SY == Symbol::NEWSY) {
     INSYMBOL();
     TYPF(bl, su, TP, RF, SZ);
     C_PNTCHANTYP(bl, TP, RF, SZ);
     ENTERCHANNEL();
-    CTAB[C].ELTYP = TP;
-    CTAB[C].ELREF = RF;
-    CTAB[C].ELSIZE = SZ;
-    X.TYP = PNTS;
-    X.SIZE = 1;
-    X.REF = C;
+    CTAB[ctab_index].ELTYP = TP;
+    CTAB[ctab_index].ELREF = RF;
+    CTAB[ctab_index].ELSIZE = SZ;
+    X.types = Types::PNTS;
+    X.Size = 1;
+    X.REF = ctab_index;
     EMIT1(99, SZ);
   } else {
     BASICEXPRESSION(bl, FSYS, X);
     if (ADDR_REQUIRED) {
-      if (!X.ISADDR) {
-        ERROR(115);
+      if (!X.is_address) {
+        error(115);
       } else {
         ENTERCHANNEL();
-        CTAB[C].ELTYP = X.TYP;
-        CTAB[C].ELREF = X.REF;
-        CTAB[C].ELSIZE = X.SIZE;
-        X.TYP = PNTS;
-        X.SIZE = 1;
-        X.REF = C;
+        CTAB[ctab_index].ELTYP = X.types;
+        CTAB[ctab_index].ELREF = X.REF;
+        CTAB[ctab_index].ELSIZE = X.Size;
+        X.types = Types::PNTS;
+        X.Size = 1;
+        X.REF = ctab_index;
       }
     } else {
-      if (X.ISADDR) {
+      if (X.is_address) {
         LOADVAL(X);
       }
     }
   }
-  X.ISADDR = false;
+  X.is_address = false;
 }
 
-void C_ARRAYTYP(BlockLocal *bl, long &AREF, long &ARSZ, bool FIRSTINDEX,
-                TYPES ELTP, long ELRF, long ELSZ) {
-  CONREC HIGH = {NOTYP, 0l};
-  long RF, SZ;
-  TYPES TP;
-  SYMSET su;
-  if ((SY == RBRACK) && FIRSTINDEX) {
-    HIGH.TP = INTS;
+void C_ARRAYTYP(BlockLocal *block_local, int64_t &AREF, int64_t &ARSZ,
+                bool FIRSTINDEX, Types ELTP, int64_t ELRF, int64_t ELSZ) {
+  CONREC HIGH = {Types::NOTYP, 0l};
+  int64_t RF = 0;
+  int64_t SZ = 0;
+  Types TP;
+  SymbolSet su;
+
+  if ((SY == Symbol::RBRACK) && FIRSTINDEX) {
+    HIGH.TP = Types::INTS;
     HIGH.I = 0;
   } else {
-    su = bl->FSYS;
-    su[RBRACK] = true;
-    CONSTANT(bl, su, HIGH);
-    if ((HIGH.TP != INTS) || (HIGH.I < 1)) {
-      ERROR(27);
-      HIGH.TP = INTS;
+    su = block_local->FSYS;
+    su[symbol::RBRACK] = true;
+    CONSTANT(block_local, su, HIGH);
+    if ((HIGH.TP != Types::INTS) || (HIGH.I < 1)) {
+      error(27);
+      HIGH.TP = Types::INTS;
       HIGH.I = 0;
     }
   }
 
-  ENTERARRAY(INTS, 0, HIGH.I - 1);
-  AREF = A;
-  if (SY == RBRACK) {
+  ENTERARRAY(Types::INTS, 0, HIGH.I - 1);
+  AREF = atab_index;
+  if (SY == Symbol::RBRACK) {
     INSYMBOL();
   } else {
-    ERROR(12);
+    error(12);
   }
 
-  if (SY == LBRACK) {
+  if (SY == Symbol::LBRACK) {
     INSYMBOL();
-    TP = ARRAYS;
-    C_ARRAYTYP(bl, RF, SZ, false, ELTP, ELRF, ELSZ);
+    TP = Types::ARRAYS;
+    C_ARRAYTYP(block_local, RF, SZ, false, ELTP, ELRF, ELSZ);
   } else {
     RF = ELRF;
     SZ = ELSZ;
@@ -729,34 +774,34 @@ void C_ARRAYTYP(BlockLocal *bl, long &AREF, long &ARSZ, bool FIRSTINDEX,
   ATAB[AREF].ELSIZE = SZ;
 }
 
-void C_PNTCHANTYP(BlockLocal *bl, TYPES &TP, long &RF, long &SZ) {
+void C_PNTCHANTYP(BlockLocal *bl, Types &TP, int64_t &RF, int64_t &SZ) {
   bool CHANFOUND;
-  long ARF, ASZ;
+  int64_t ARF, ASZ;
   CHANFOUND = false;
-  while (SY == TIMES || SY == CHANSY || SY == LBRACK) {
-    switch (SY) {
-    case LBRACK:
+  while (SY == Symbol::TIMES || SY == Symbol::CHANSY || SY == Symbol::LBRACK) {
+    switch (symbol) {
+    case Symbol::LBRACK:
       INSYMBOL();
       C_ARRAYTYP(bl, ARF, ASZ, true, TP, RF, SZ);
-      TP = ARRAYS;
+      TP = Types::ARRAYS;
       RF = ARF;
       SZ = ASZ;
       break;
-    case TIMES:
-    case CHANSY:
+    case Symbol::TIMES:
+    case Symbol::CHANSY:
       ENTERCHANNEL();
-      CTAB[C].ELTYP = TP;
-      CTAB[C].ELREF = RF;
-      CTAB[C].ELSIZE = SZ;
+      CTAB[ctab_index].ELTYP = TP;
+      CTAB[ctab_index].ELREF = RF;
+      CTAB[ctab_index].ELSIZE = SZ;
       SZ = 1;
-      RF = C;
-      if (SY == TIMES) {
-        TP = PNTS;
+      RF = ctab_index;
+      if (SY == Symbol::TIMES) {
+        TP = Types::PNTS;
       }
-      if (SY == CHANSY) {
-        TP = CHANS;
+      if (SY == Symbol::CHANSY) {
+        TP = Types::CHANS;
         if (CHANFOUND) {
-          ERROR(11);
+          error(11);
         }
         CHANFOUND = true;
       }
@@ -768,46 +813,46 @@ void C_PNTCHANTYP(BlockLocal *bl, TYPES &TP, long &RF, long &SZ) {
   }
 }
 void C_COMPONENTDECLARATION(TypLocal *tl) {
-  long T0;
-  // long T1;
-  long RF, SZ;
-  long ARF, ASZ, ORF, OSZ;
-  TYPES TP, OTP;
+  int64_t T0;
+  // int64_t T1;
+  int64_t RF, SZ;
+  int64_t ARF, ASZ, ORF, OSZ;
+  Types TP, OTP;
   bool DONE;
-  BlockLocal *bl = tl->bl;
-  SYMSET su;
-  SYMSET TSYS; // {SEMICOLON, COMMA, IDENT, TIMES, CHANSY, LBRACK};
+  BlockLocal *block_local = tl->bl;
+  SymbolSet su;
+  SymbolSet TSYS; // {SEMICOLON, COMMA, IDENT, TIMES, CHANSY, LBRACK};
   // TSYS = FSYS;
   TSYS = 0;
-  TSYS[SEMICOLON] = true;
-  TSYS[COMMA] = true;
-  TSYS[IDENT] = true;
-  TSYS[TIMES] = true;
-  TSYS[CHANSY] = true;
-  TSYS[LBRACK] = true;
+  TSYS[symbol::SEMICOLON] = true;
+  TSYS[symbol::COMMA] = true;
+  TSYS[symbol::IDENT] = true;
+  TSYS[symbol::TIMES] = true;
+  TSYS[symbol::CHANSY] = true;
+  TSYS[symbol::LBRACK] = true;
 
   TEST(TYPEBEGSYS, tl->FSYS, 109);
 
   while (TYPEBEGSYS[SY]) {
-    TYPF(bl, TSYS, TP, RF, SZ);
+    TYPF(block_local, TSYS, TP, RF, SZ);
     OTP = TP;
     ORF = RF;
     OSZ = SZ;
     DONE = false;
 
     do {
-      C_PNTCHANTYP(bl, TP, RF, SZ);
-      if (SY != IDENT) {
-        ERROR(2);
-        strcpy(ID, "              ");
+      C_PNTCHANTYP(block_local, TP, RF, SZ);
+      if (SY != Symbol::IDENT) {
+        error(2);
+        ID = "              ";
       }
-      T0 = Tx;
-      ENTERVARIABLE(bl, COMPONENT);
+      T0 = tab_index;
+      ENTERVARIABLE(block_local, OBJECTS::COMPONENT);
 
-      if (SY == LBRACK) {
+      if (SY == Symbol::LBRACK) {
         INSYMBOL();
-        C_ARRAYTYP(bl, ARF, ASZ, true, TP, RF, SZ);
-        TP = ARRAYS;
+        C_ARRAYTYP(block_local, ARF, ASZ, true, TP, RF, SZ);
+        TP = Types::ARRAYS;
         RF = ARF;
         SZ = ASZ;
       }
@@ -815,14 +860,14 @@ void C_COMPONENTDECLARATION(TypLocal *tl) {
       T0 = T0 + 1;
       TAB[T0].TYP = TP;
       TAB[T0].REF = RF;
-      TAB[T0].LEV = bl->LEVEL;
-      TAB[T0].ADR = bl->RDX;
+      TAB[T0].LEV = block_local->LEVEL;
+      TAB[T0].ADR = block_local->RDX;
       TAB[T0].NORMAL = true;
-      bl->RDX = bl->RDX + SZ;
+      block_local->RDX = block_local->RDX + SZ;
       TAB[T0].SIZE = SZ;
       TAB[T0].PNTPARAM = false;
 
-      if (SY == COMMA) {
+      if (SY == Symbol::COMMA) {
         INSYMBOL();
       } else {
         DONE = true;
@@ -833,128 +878,130 @@ void C_COMPONENTDECLARATION(TypLocal *tl) {
       SZ = OSZ;
     } while (!DONE);
 
-    if (SY == SEMICOLON) {
+    if (SY == Symbol::SEMICOLON) {
       INSYMBOL();
     } else {
-      ERROR(14);
+      error(14);
     }
     su = TYPEBEGSYS;
-    su[RSETBRACK] = true;
+    su[symbol::RSETBRACK] = true;
     TEST(su, tl->FSYS, 108);
   }
 }
 
-void STRUCTTYP(TypLocal *tl, long &RREF, long &RSZ) {
-  SYMSET su;
-  BlockLocal *bl = tl->bl;
-  if (SY == LSETBRACK) {
+void STRUCTTYP(TypLocal *type_local, int64_t &RREF, int64_t &RSZ) {
+  SymbolSet su;
+  BlockLocal *block_local = type_local->bl;
+  if (SY == Symbol::LSETBRACK) {
     INSYMBOL();
   } else {
-    ERROR(106);
+    error(106);
   }
 
-  long SAVEDX = bl->RDX;
-  bl->RDX = 0;
-  long SAVELAST = bl->RLAST;
-  bl->RLAST = 0;
-  C_COMPONENTDECLARATION(tl);
+  int64_t SAVEDX = block_local->RDX;
+  block_local->RDX = 0;
+  int64_t SAVELAST = block_local->RLAST;
+  block_local->RLAST = 0;
+  C_COMPONENTDECLARATION(type_local);
 
-  if (SY == RSETBRACK) {
+  if (SY == Symbol::RSETBRACK) {
     INSYMBOL();
   } else {
-    ERROR(104);
+    error(104);
   }
   su = 0;
-  su[IDENT] = true;
-  su[SEMICOLON] = true;
-  su[CHANSY] = true;
-  su[TIMES] = true;
-  TEST(su, tl->FSYS, 6);
+  su[symbol::IDENT] = true;
+  su[symbol::SEMICOLON] = true;
+  su[symbol::CHANSY] = true;
+  su[symbol::TIMES] = true;
+  TEST(su, type_local->FSYS, 6);
 
-  RREF = bl->RLAST;
-  bl->RLAST = SAVELAST;
-  RSZ = bl->RDX;
-  bl->RDX = SAVEDX;
+  RREF = block_local->RLAST;
+  block_local->RLAST = SAVELAST;
+  RSZ = block_local->RDX;
+  block_local->RDX = SAVEDX;
 }
 
-void TYPF(BlockLocal *bl, SYMSET FSYS, TYPES &TP, long &RF, long &SZ) {
-  //    long X, I, J;
+void TYPF(BlockLocal *bl, SymbolSet FSYS, Types &TP, int64_t &RF, int64_t &SZ) {
+  //    int64_t X, I, J;
   //    TYPES ELTP;
-  //    long ELRF, ELSZ, TS;
+  //    int64_t ELRF, ELSZ, TS;
   //    ALFA TID;
   struct TypLocal tl = {0};
-  SYMSET su;
+  SymbolSet su;
   tl.bl = bl;
-  tl.TP = NOTYP;
+  tl.TP = Types::NOTYP;
   tl.RF = 0;
   tl.SZ = 0;
   TEST(TYPEBEGSYS, FSYS, 10);
 
-  if (SY == CONSTSY) {
+  if (SY == Symbol::CONSTSY) {
     INSYMBOL();
   }
 
   if (TYPEBEGSYS[SY]) {
-    if (SY == SHORTSY || SY == LONGSY || SY == UNSIGNEDSY) {
+    if (SY == Symbol::SHORTSY || SY == Symbol::LONGSY ||
+        SY == Symbol::UNSIGNEDSY) {
       INSYMBOL();
-      if (SY == SHORTSY || SY == LONGSY || SY == UNSIGNEDSY) {
+      if (SY == Symbol::SHORTSY || SY == Symbol::LONGSY ||
+          SY == Symbol::UNSIGNEDSY) {
         INSYMBOL();
       }
       TEST(TYPEBEGSYS, FSYS, 10);
     }
 
-    if (SY == IDENT) {
+    if (SY == Symbol::IDENT) {
       tl.X = LOC(bl, ID);
       if (tl.X != 0) {
-        if (TAB[tl.X].OBJ != TYPE1) {
-          ERROR(29);
+        if (TAB[tl.X].object != OBJECTS::TYPE1) {
+          error(29);
         } else {
-          tl.TP = TAB[tl.X].TYP;
-          tl.RF = TAB[tl.X].REF;
-          tl.SZ = TAB[tl.X].ADR;
-          if (tl.TP == NOTYP) {
-            ERROR(30);
+          tl.TP = TAB[tl.X].types;
+          tl.RF = TAB[tl.X].reference;
+          tl.SZ = TAB[tl.X].address;
+          if (tl.TP == Types::NOTYP) {
+            error(30);
           }
         }
       }
       INSYMBOL();
-      if (SY == CONSTSY) {
+      if (SY == Symbol::CONSTSY) {
         INSYMBOL();
       }
-    } else if (SY == STRUCTSY) {
+    } else if (SY == Symbol::STRUCTSY) {
       INSYMBOL();
-      if (SY == IDENT) {
-        strcpy(tl.TID, ID);
+      if (SY == Symbol::IDENT) {
+        tl.TID = ID;
         INSYMBOL();
-        if (SY == LSETBRACK) {
-          ENTER(bl, tl.TID, STRUCTAG);
-          tl.TS = Tx;
-          TAB[tl.TS].TYP = RECS;
-          tl.TP = RECS;
-          TAB[tl.TS].REF = -(int)tl.TS;
+        if (SY == Symbol::LSETBRACK) {
+          ENTER(bl, tl.TID, OBJECTS::STRUCTAG);
+          tl.TS = tab_index;
+          TAB[tl.TS].types = Types::RECS;
+          tl.TP = Types::RECS;
+          TAB[tl.TS].reference = -static_cast<int>(tl.TS);
           STRUCTTYP(&tl, tl.RF, tl.SZ);
-          TAB[tl.TS].REF = (int)tl.RF;
-          TAB[tl.TS].ADR = (int)tl.SZ;
-          for (tl.I = 1; tl.I <= C; tl.I++) {
+          TAB[tl.TS].reference = static_cast<int>(tl.RF);
+          TAB[tl.TS].address = static_cast<int>(tl.SZ);
+          for (tl.I = 1; tl.I <= ctab_index; tl.I++) {
             if (CTAB[tl.I].ELREF == -tl.TS) {
-              CTAB[tl.I].ELREF = (int)tl.RF;
-              CTAB[tl.I].ELSIZE = (int)tl.SZ;
+              CTAB[tl.I].ELREF = static_cast<int>(tl.RF);
+              CTAB[tl.I].ELSIZE = static_cast<int>(tl.SZ);
             }
           }
         } else {
           tl.X = LOC(bl, tl.TID);
           if (tl.X != 0) {
-            if (TAB[tl.X].OBJ != STRUCTAG) {
-              ERROR(108);
+            if (TAB[tl.X].object != OBJECTS::STRUCTAG) {
+              error(108);
             } else {
-              tl.TP = RECS;
-              tl.RF = TAB[tl.X].REF;
-              tl.SZ = TAB[tl.X].ADR;
+              tl.TP = Types::RECS;
+              tl.RF = TAB[tl.X].reference;
+              tl.SZ = TAB[tl.X].address;
             }
           }
         }
       } else {
-        tl.TP = RECS;
+        tl.TP = Types::RECS;
         STRUCTTYP(&tl, tl.RF, tl.SZ);
       }
     }
@@ -967,10 +1014,10 @@ void TYPF(BlockLocal *bl, SYMSET FSYS, TYPES &TP, long &RF, long &SZ) {
 }
 
 void PARAMETERLIST(BlockLocal *bl) {
-  SYMSET su, sv;
+  SymbolSet su, sv;
   su = TYPEBEGSYS;
-  su[RPARENT] = true;
-  su[VALUESY] = true;
+  su[symbol::RPARENT] = true;
+  su[symbol::VALUESY] = true;
   INSYMBOL();
   TEST(su, bl->FSYS, 105);
 
@@ -980,118 +1027,117 @@ void PARAMETERLIST(BlockLocal *bl) {
 
   while (TYPEBEGSYS[SY] || SY == VALUESY) {
     bool VALUEFOUND;
-    if (SY == VALUESY) {
+    if (SY == Symbol::VALUESY) {
       VALUEFOUND = true;
       INSYMBOL();
     } else {
       VALUEFOUND = false;
     }
 
-    TYPES TP;
-    long RF, SZ;
+    Types TP;
+    int64_t RF, SZ;
     su = bl->FSYS;
-    su[SEMICOLON] = true;
-    su[COMMA] = true;
-    su[IDENT] = true;
-    su[TIMES] = true;
-    su[CHANSY] = true;
-    su[LBRACK] = true;
-    su[RPARENT] = true;
+    su[symbol::SEMICOLON] = true;
+    su[symbol::COMMA] = true;
+    su[symbol::IDENT] = true;
+    su[symbol::TIMES] = true;
+    su[symbol::CHANSY] = true;
+    su[symbol::LBRACK] = true;
+    su[symbol::RPARENT] = true;
     TYPF(bl, su, TP, RF, SZ);
 
-    if ((TP == VOIDS) && (SY == RPARENT) && NOPARAMS) {
+    if ((TP == Types::VOIDS) && (SY == RPARENT) && NOPARAMS) {
       goto L56;
     }
 
-    if ((TP == VOIDS) && (SY != TIMES)) {
-      ERROR(151);
+    if ((TP == Types::VOIDS) && (SY != TIMES)) {
+      error(151);
     }
 
     C_PNTCHANTYP(bl, TP, RF, SZ);
 
-    if (SY == IDENT) {
-      ENTERVARIABLE(bl, VARIABLE);
-    } else if ((SY == COMMA) || (SY == RPARENT)) {
-      strcpy(ID, DUMMYNAME);
-      DUMMYNAME[13] = (char)(DUMMYNAME[13] + 1);
+    if (SY == Symbol::IDENT) {
+      ENTERVARIABLE(bl, OBJECTS::VARIABLE);
+    } else if ((SY == Symbol::COMMA) || (SY == Symbol::RPARENT)) {
+      ID = DUMMYNAME;
+      DUMMYNAME[13] = static_cast<char>(DUMMYNAME[13] + 1);
       if (DUMMYNAME[13] == '0') {
-        DUMMYNAME[12] = (char)(DUMMYNAME[12] + 1);
+        DUMMYNAME[12] = static_cast<char>(DUMMYNAME[12] + 1);
       }
-      ENTER(bl, ID, VARIABLE);
+      ENTER(bl, ID, OBJECTS::VARIABLE);
     } else {
-      ERROR(2);
-      strcpy(ID, "              ");
+      error(2);
+      ID = "              ";
     }
 
     NOPARAMS = false;
 
-    if (SY == LBRACK) {
+    if (SY == Symbol::LBRACK) {
       INSYMBOL();
-      long ARF, ASZ;
+      int64_t ARF = 0;
+      int64_t ASZ = 0;
       C_ARRAYTYP(bl, ARF, ASZ, true, TP, RF, SZ);
-      TP = ARRAYS;
+      TP = Types::ARRAYS;
       RF = ARF;
       SZ = ASZ;
     }
 
     bl->PCNT = bl->PCNT + 1;
     //           IF (TP = ARRAYS) AND VALUEFOUND THEN
-    //              IF ATAB[RF].HIGH = 0 THEN ERROR(117);
+    //              IF ATAB[RF].HIGH = 0 THEN error(117);
     //          IF ((TP = ARRAYS) AND NOT VALUEFOUND) OR (TP = CHANS)
     //            THEN NORMAL := FALSE
     //            ELSE NORMAL := TRUE;
     //          IF TP = PNTS THEN PNTPARAM := TRUE ELSE PNTPARAM := FALSE;
-    if (TP == ARRAYS && VALUEFOUND)
-      if (ATAB[RF].HIGH == 0)
-        ERROR(117);
-    if ((TP == ARRAYS && !VALUEFOUND) || TP == CHANS)
-      TAB[Tx].NORMAL = false;
-    else
-      TAB[Tx].NORMAL = true;
-    if (TP == PNTS)
-      TAB[Tx].PNTPARAM = true;
-    else
-      TAB[Tx].PNTPARAM = false;
-    TAB[Tx].TYP = TP;
-    TAB[Tx].REF = (int)RF;
-    TAB[Tx].LEV = bl->LEVEL;
-    TAB[Tx].ADR = bl->DX;
-    TAB[Tx].SIZE = SZ;
+    if (TP == Types::ARRAYS && VALUEFOUND) {
+      if (ATAB[RF].HIGH == 0) {
+        error(117);
+      }
+    }
 
-    if (TAB[Tx].NORMAL) {
-      bl->DX = bl->DX + (int)SZ;
+    TAB[tab_index].NORMAL =
+        (TP != Types::ARRAYS || VALUEFOUND) && TP != Types::CHANS;
+    TAB[tab_index].PNTPARAM = TP == Types::PNTS;
+    TAB[tab_index].TYP = TP;
+    TAB[tab_index].REF = static_cast<int>(RF);
+    TAB[tab_index].LEV = bl->LEVEL;
+    TAB[tab_index].ADR = bl->DX;
+    TAB[tab_index].SIZE = SZ;
+
+    if (TAB[tab_index].NORMAL) {
+      bl->DX = bl->DX + static_cast<int>(SZ);
     } else {
       bl->DX = bl->DX + 1;
     }
 
-    if (SY == COMMA) {
+    if (SY == Symbol::COMMA) {
       INSYMBOL();
     } else {
       su = 0;
-      su[RPARENT] = true;
+      su[symbol::RPARENT] = true;
       TEST(su, bl->FSYS, 105);
     }
   }
 
 L56:
-  if (SY == RPARENT) {
+  if (SY == Symbol::RPARENT) {
     INSYMBOL();
   } else {
     su = 0;
-    su[RPARENT] = true;
+    su[symbol::RPARENT] = true;
     sv = bl->FSYS;
     sv[LSETBRACK] = true;
     TEST(su, sv, 4);
   }
 
-  if (SY != SEMICOLON) {
-    if (SY == LSETBRACK) {
+  if (SY != Symbol::SEMICOLON) {
+    if (SY == Symbol::LSETBRACK) {
       OKBREAK = true;
       INSYMBOL();
       if (PROTOINDEX >= 0) {
         if ((bl->PCNT != BTAB[PROTOREF].PARCNT) ||
             (bl->DX != BTAB[PROTOREF].PSIZE)) {
-          ERROR(152);
+          error(152);
         }
       }
     } else {
@@ -1101,141 +1147,142 @@ L56:
     }
     OKBREAK = true;
   } else if (PROTOINDEX >= 0) {
-    ERROR(153);
+    error(153);
   }
 
   PROTOINDEX = -1;
 }
 
-int GETFUNCID(ALFA FUNCNAME) {
+int GETFUNCID(const ALFA &FUNCNAME) {
   for (int K = 1; K <= LIBMAX; K++) {
-    if (strcmp(FUNCNAME, LIBFUNC[K].NAME) == 0) {
+    if (FUNCNAME == LIBFUNC[K].NAME) {
       return LIBFUNC[K].IDNUM;
     }
   }
   return 0;
 }
 
-void FUNCDECLARATION(BlockLocal *bl, TYPES TP, long RF, long SZ) {
+void FUNCDECLARATION(BlockLocal *bl, Types TP, int64_t RF, int64_t SZ) {
   bool ISFUN = true;
-  SYMSET su, sv;
-  if (TP == CHANS) {
-    ERROR(119);
-    RETURNTYPE.TYP = NOTYP;
+  SymbolSet su, sv;
+  if (TP == Types::CHANS) {
+    error(119);
+    RETURNTYPE.types = Types::NOTYP;
   } else {
-    RETURNTYPE.TYP = TP;
+    ReturnType.types = TP;
   }
-  RETURNTYPE.REF = RF;
-  RETURNTYPE.SIZE = SZ;
-  RETURNTYPE.ISADDR = false;
+  ReturnType.REF = RF;
+  ReturnType.Size = SZ;
+  ReturnType.is_address = false;
 
-  int T0 = Tx;
-  if (PROTOINDEX >= 0) {
-    T0 = PROTOINDEX;
-    ITEM PRORET = {NOTYP, 0, 0l, false};
-    PRORET.TYP = TAB[T0].TYP;
+  int T0 = tab_index;
+  if (ProtoIndex >= 0) {
+    T0 = ProtoIndex;
+    Item PRORET = {Types::NOTYP, 0, 0l, false};
+    PRORET.types = TAB[T0].types;
     PRORET.REF = TAB[T0].FREF;
-    PRORET.SIZE = TAB[T0].SIZE;
-    PRORET.ISADDR = false;
-    if ((!TYPE_COMPATIBLE(RETURNTYPE, PRORET)) ||
-        (RETURNTYPE.TYP != PRORET.TYP)) {
-      ERROR(152);
+    PRORET.size = TAB[T0].size;
+    PRORET.is_address = false;
+    if ((!TYPE_COMPATIBLE(ReturnType, PRORET)) ||
+        (ReturnType.types != PRORET.types)) {
+      error(152);
     }
-    PROTOREF = TAB[T0].REF;
+    ProtoRef = TAB[T0].REF;
   }
 
-  TAB[T0].OBJ = FUNKTION;
-  TAB[T0].TYP = TP;
+  TAB[T0].object = OBJECTS::FUNKTION;
+  TAB[T0].types = TP;
   TAB[T0].FREF = RF;
   TAB[T0].LEV = bl->LEVEL;
-  TAB[T0].NORMAL = true;
-  TAB[T0].SIZE = SZ;
+  TAB[T0].normal = true;
+  TAB[T0].size = SZ;
   TAB[T0].PNTPARAM = false;
-  if (strcmp(TAB[T0].NAME, "MAIN          ") == 0)
+  if (strcmp(TAB[T0].name.c_str(), "MAIN          ") == 0)
     MAINFUNC = T0;
-  int LCSAV = LC;
+  int LCSAV = line_count;
   EMIT(10);
   su = bl->FSYS | STATBEGSYS | ASSIGNBEGSYS | DECLBEGSYS;
-  su[RSETBRACK] = true;
+  su[symbol::RSETBRACK] = true;
   BLOCK(bl->blkil, su, ISFUN, bl->LEVEL + 1, T0);
   EMIT(32 + ISFUN);
-  if (LC - LCSAV == 2) {
-    LC = LCSAV; // no need to generate code for a prototype declaration DE
-    EXECNT = 0; // no executable content , avoids 6 (noop) for breaks
+  if (line_count - LCSAV == 2) {
+    // no need to generate code for a prototype declaration DE
+    line_count = LCSAV;
+    execution_count = 0; // no executable content , avoids 6 (noop) for breaks
   } else
-    CODE[LCSAV].Y = LC;
+    code[LCSAV].Y = line_count;
   OKBREAK = false;
 
   if (inCLUDEFLAG() && (TAB[T0].ADR == 0)) {
     TAB[T0].ADR = -GETFUNCID(TAB[T0].NAME);
   }
 
-  if (SY == SEMICOLON || SY == RSETBRACK) {
+  if (SY == Symbol::SEMICOLON || SY == Symbol::RSETBRACK) {
     INSYMBOL();
   } else {
-    ERROR(104);
+    error(104);
   }
   su = DECLBEGSYS;
-  su[INCLUDESY] = true;
-  su[EOFSY] = true;
+  su[symbol::INCLUDESY] = true;
+  su[symbol::EOFSY] = true;
   TEST(su, bl->FSYS, 6);
 }
 
 void CONSTANTDECLARATION(BlockLocal *bl) {
-  SYMSET su;
+  SymbolSet su;
   INSYMBOL();
   su = 0;
-  su[IDENT] = true;
+  su[symbol::IDENT] = true;
   TEST(su, bl->FSYS, 2);
 
-  if (SY == IDENT) {
-    ENTER(bl, ID, KONSTANT);
+  if (SY == Symbol::IDENT) {
+    ENTER(bl, ID, OBJECTS::KONSTANT);
     INSYMBOL();
     CONREC C;
     su = bl->FSYS;
-    su[SEMICOLON] = true;
-    su[COMMA] = true;
-    su[IDENT] = true;
+    su[symbol::SEMICOLON] = true;
+    su[symbol::COMMA] = true;
+    su[symbol::IDENT] = true;
     CONSTANT(bl, su, C);
-    TAB[Tx].TYP = C.TP;
-    TAB[Tx].REF = 0;
-    TAB[Tx].ADR = C.I;
+    TAB[tab_index].TYP = C.TP;
+    TAB[tab_index].REF = 0;
+    TAB[tab_index].ADR = C.I;
 
-    if (SY == SEMICOLON) {
+    if (SY == Symbol::SEMICOLON) {
       INSYMBOL();
     }
   }
 }
 
 void TYPEDECLARATION(BlockLocal *bl) {
-  SYMSET su;
+  SymbolSet su;
   INSYMBOL();
-  TYPES TP;
-  long RF, SZ, T1, ARF, ASZ;
-  // long ORF, OSZ;
+  Types TP;
+  int64_t RF, SZ, T1, ARF, ASZ;
+  // int64_t ORF, OSZ;
   su = bl->FSYS;
-  su[SEMICOLON] = true;
-  su[COMMA] = true;
-  su[IDENT] = true;
-  su[TIMES] = true;
-  su[CHANSY] = true;
-  su[LBRACK] = true;
+  su[symbol::SEMICOLON] = true;
+  su[symbol::COMMA] = true;
+  su[symbol::IDENT] = true;
+  su[symbol::TIMES] = true;
+  su[symbol::CHANSY] = true;
+  su[symbol::LBRACK] = true;
   TYPF(bl, su, TP, RF, SZ);
   C_PNTCHANTYP(bl, TP, RF, SZ);
 
-  if (SY != IDENT) {
-    ERROR(2);
+  if (SY != Symbol::IDENT) {
+    error(2);
     strcpy(ID, "              ");
   }
 
-  ENTER(bl, ID, TYPE1);
-  T1 = Tx;
+  ENTER(bl, ID, OBJECTS::TYPE1);
+  T1 = tab_index;
   INSYMBOL();
 
-  if (SY == LBRACK) {
+  if (SY == Symbol::LBRACK) {
     INSYMBOL();
     C_ARRAYTYP(bl, ARF, ASZ, true, TP, RF, SZ);
-    TP = ARRAYS;
+    TP = Types::ARRAYS;
     RF = ARF;
     SZ = ASZ;
   }
@@ -1247,57 +1294,57 @@ void TYPEDECLARATION(BlockLocal *bl) {
   TESTSEMICOLON(bl);
 }
 
-void GETLIST(BlockLocal *bl, TYPES TP) {
-  SYMSET su;
-  if (SY == LSETBRACK) {
+void GETLIST(BlockLocal *bl, Types TP) {
+  SymbolSet su;
+  if (SY == Symbol::LSETBRACK) {
     int LBCNT = 1;
     INSYMBOL();
 
-    while ((LBCNT > 0) && (SY != SEMICOLON)) {
-      while (SY == LSETBRACK) {
+    while ((LBCNT > 0) && (SY != Symbol::SEMICOLON)) {
+      while (SY == Symbol::LSETBRACK) {
         LBCNT = LBCNT + 1;
         INSYMBOL();
       }
 
-      CONREC LISTVAL = {NOTYP, 0l};
+      CONREC LISTVAL = {Types::NOTYP, 0l};
       su = 0;
-      su[COMMA] = true;
-      su[RSETBRACK] = true;
-      su[LSETBRACK] = true;
-      su[SEMICOLON] = true;
+      su[symbol::COMMA] = true;
+      su[symbol::RSETBRACK] = true;
+      su[symbol::LSETBRACK] = true;
+      su[symbol::SEMICOLON] = true;
       CONSTANT(bl, su, LISTVAL);
 
       switch (TP) {
-      case REALS:
-        if (LISTVAL.TP == INTS) {
+      case Types::REALS:
+        if (LISTVAL.TP == Types::INTS) {
           INITABLE[ITPNT].IVAL = RTAG;
           INITABLE[ITPNT].RVAL = LISTVAL.I;
-        } else if (LISTVAL.TP == REALS) {
+        } else if (LISTVAL.TP == Types::REALS) {
           INITABLE[ITPNT].IVAL = RTAG;
           INITABLE[ITPNT].RVAL = CONTABLE[LISTVAL.I];
         } else {
-          ERROR(138);
+          error(138);
         }
         break;
-      case INTS:
-        if ((LISTVAL.TP == INTS) || (LISTVAL.TP == CHARS)) {
+      case Types::INTS:
+        if ((LISTVAL.TP == Types::INTS) || (LISTVAL.TP == Types::CHARS)) {
           INITABLE[ITPNT].IVAL = LISTVAL.I;
         } else {
-          ERROR(138);
+          error(138);
         }
         break;
-      case CHARS:
-        if (LISTVAL.TP == CHARS) {
+      case Types::CHARS:
+        if (LISTVAL.TP == Types::CHARS) {
           INITABLE[ITPNT].IVAL = LISTVAL.I;
         } else {
-          ERROR(138);
+          error(138);
         }
         break;
-      case BOOLS:
-        if (LISTVAL.TP == BOOLS) {
+      case Types::BOOLS:
+        if (LISTVAL.TP == Types::BOOLS) {
           INITABLE[ITPNT].IVAL = LISTVAL.I;
         } else {
-          ERROR(138);
+          error(138);
         }
         break;
       default:
@@ -1306,22 +1353,22 @@ void GETLIST(BlockLocal *bl, TYPES TP) {
 
       ITPNT = ITPNT + 1;
 
-      while (SY == RSETBRACK) {
+      while (SY == Symbol::RSETBRACK) {
         LBCNT = LBCNT - 1;
         INSYMBOL();
       }
 
       if (LBCNT > 0) {
-        if (SY == COMMA) {
+        if (SY == Symbol::COMMA) {
           INSYMBOL();
         } else {
-          ERROR(135);
+          error(135);
         }
       }
     }
-  } else if (SY == STRNG) {
-    if (TP != CHARS) {
-      ERROR(138);
+  } else if (SY == Symbol::STRNG) {
+    if (TP != Types::CHARS) {
+      error(138);
     } else {
       for (int CI = 1; CI <= SLENG; CI++) {
         INITABLE[ITPNT].IVAL = STAB[INUM + CI - 1];
@@ -1333,82 +1380,93 @@ void GETLIST(BlockLocal *bl, TYPES TP) {
     INSYMBOL();
   } else {
     su = 0;
-    su[SEMICOLON] = true;
-    su[IDENT] = true;
+    su[symbol::SEMICOLON] = true;
+    su[symbol::IDENT] = true;
     SKIP(su, 106);
   }
 }
 
 void PROCDECLARATION(BlockLocal *bl) {
-  SYMSET su;
+  SymbolSet su;
   bool ISFUN = false;
-  RETURNTYPE.TYP = VOIDS;
+  RETURNTYPE.types = Types::VOIDS;
 
-  if (SY != IDENT) {
-    ERROR(2);
+  if (SY != Symbol::IDENT) {
+    error(2);
     strcpy(ID, "              ");
   }
 
-  ENTER(bl, ID, PROZEDURE);
-  int T0 = Tx;
+  ENTER(bl, ID, OBJECTS::PROZEDURE);
+  int T0 = tab_index;
 
-  if (PROTOINDEX >= 0) {
-    T0 = PROTOINDEX;
-    if (TAB[T0].OBJ != PROZEDURE) {
-      ERROR(152);
+  if (ProtoIndex >= 0) {
+    T0 = ProtoIndex;
+    if (TAB[T0].object != OBJECTS::PROZEDURE) {
+      error(152);
     }
-    PROTOREF = TAB[T0].REF;
+    ProtoRef = TAB[T0].REF;
   }
 
-  TAB[T0].NORMAL = true;
+  TAB[T0].normal = true;
   INSYMBOL();
 
-  int LCSAV = LC;
+  int LCSAV = line_count;
   EMIT(10);
   su = bl->FSYS | STATBEGSYS | ASSIGNBEGSYS | DECLBEGSYS;
-  su[RSETBRACK] = true;
+  su[symbol::RSETBRACK] = true;
   BLOCK(bl->blkil, su, ISFUN, bl->LEVEL + 1, T0);
   EMIT(32 + ISFUN);
-  if (LC - LCSAV == 2) {
-    LC = LCSAV; // no need to generate code for a prototype declaration DE
-    EXECNT = 0; // no executable content , avoids 6 (noop) for breaks
+  if (line_count - LCSAV == 2) {
+    line_count =
+        LCSAV; // no need to generate code for a prototype declaration DE
+    execution_count = 0; // no executable content , avoids 6 (noop) for breaks
   } else
-    CODE[LCSAV].Y = LC;
+    code[LCSAV].Y = line_count;
   OKBREAK = false;
 
   if (inCLUDEFLAG() && (TAB[T0].ADR == 0)) {
     TAB[T0].ADR = -GETFUNCID(TAB[T0].NAME);
   }
 
-  if (SY == SEMICOLON || SY == RSETBRACK) {
+  if (SY == Symbol::SEMICOLON || SY == Symbol::RSETBRACK) {
     INSYMBOL();
   } else {
-    ERROR(104);
+    error(104);
   }
   su = DECLBEGSYS;
-  su[INCLUDESY] = true;
-  su[EOFSY] = true;
+  su[symbol::INCLUDESY] = true;
+  su[symbol::EOFSY] = true;
   TEST(su, bl->FSYS, 6);
 }
 
 void VARIABLEDECLARATION(BlockLocal *bl) {
   bool TYPCALL = true;
   bool PROCDEFN = false;
-  bool DONE;
-  bool FUNCDEC;
-  SYMSET su;
-  int T0;
-  long RI, RF, SZ = 0, ARF, ASZ, ORF, OSZ, LSTART, LEND;
-  TYPES TP, OTP;
-  ITEM X, Y;
-  TP = NOTYP;
-  if (SY == IDENT) {
+  bool DONE = false;
+  bool FUNCDEC = false;
+  SymbolSet su;
+  int T0 = 0;
+  int64_t RI = 0;
+  int64_t RF = 0;
+  int64_t SZ = 0;
+  int64_t ARF = 0;
+  int64_t ASZ = 0;
+  int64_t ORF = 0;
+  int64_t OSZ = 0;
+  int64_t LSTART = 0;
+  int64_t LEND = 0;
+  Types TP;
+  Types OTP;
+  Item X{};
+  Item Y{};
+  TP = Types::NOTYP;
+  if (SY == Symbol::IDENT) {
     bl->UNDEFMSGFLAG = false;
     T0 = LOC(bl, ID);
     bl->UNDEFMSGFLAG = true;
     if (T0 == 0) {
       TYPCALL = false;
-      TP = INTS;
+      TP = Types::INTS;
       SZ = 1;
       RF = 0;
     }
@@ -1416,16 +1474,16 @@ void VARIABLEDECLARATION(BlockLocal *bl) {
 
   if (TYPCALL) {
     su = bl->FSYS;
-    su[SEMICOLON] = true;
-    su[COMMA] = true;
-    su[IDENT] = true;
-    su[TIMES] = true;
-    su[CHANSY] = true;
-    su[LBRACK] = true;
+    su[symbol::SEMICOLON] = true;
+    su[symbol::COMMA] = true;
+    su[symbol::IDENT] = true;
+    su[symbol::TIMES] = true;
+    su[symbol::CHANSY] = true;
+    su[symbol::LBRACK] = true;
     TYPF(bl, su, TP, RF, SZ);
   }
 
-  if ((TP == VOIDS) && (SY != TIMES)) {
+  if ((TP == Types::VOIDS) && (SY != TIMES)) {
     PROCDECLARATION(bl);
     PROCDEFN = true;
   }
@@ -1436,93 +1494,94 @@ void VARIABLEDECLARATION(BlockLocal *bl) {
 
   DONE = false;
   FUNCDEC = false;
-  if (!(TP == RECS && SY == SEMICOLON) && !PROCDEFN) {
+  if ((TP != Types::RECS || SY != SEMICOLON) && !PROCDEFN) {
     do {
       C_PNTCHANTYP(bl, TP, RF, SZ);
-      if (SY != IDENT) {
-        ERROR(2);
+      if (SY != Symbol::IDENT) {
+        error(2);
         strcpy(ID, "              ");
       }
-      T0 = Tx;
-      ENTERVARIABLE(bl, VARIABLE);
+      T0 = tab_index;
+      ENTERVARIABLE(bl, OBJECTS::VARIABLE);
 
-      if (!TYPCALL && (SY != LPARENT)) {
-        TP = NOTYP;
+      if (!TYPCALL && (SY != Symbol::LPARENT)) {
+        TP = Types::NOTYP;
         SZ = 0;
         TYPCALL = true;
-        ERROR(0);
+        error(0);
       }
 
-      if (SY == LBRACK) {
+      if (SY == Symbol::LBRACK) {
         INSYMBOL();
         C_ARRAYTYP(bl, ARF, ASZ, true, TP, RF, SZ);
-        TP = ARRAYS;
+        TP = Types::ARRAYS;
         RF = ARF;
         SZ = ASZ;
       }
 
-      if (SY == LPARENT) {
+      if (SY == Symbol::LPARENT) {
         FUNCDEC = true;
         FUNCDECLARATION(bl, TP, RF, SZ);
       } else {
-        if (PROTOINDEX >= 0) {
-          ERROR(1);
-          PROTOINDEX = -1;
+        if (ProtoIndex >= 0) {
+          error(1);
+          ProtoIndex = -1;
         }
 
         T0 = T0 + 1;
-        TAB[T0].TYP = TP;
-        TAB[T0].REF = RF;
+        TAB[T0].types = TP;
+        TAB[T0].reference = RF;
         TAB[T0].LEV = bl->LEVEL;
-        TAB[T0].ADR = bl->DX;
-        TAB[T0].NORMAL = true;
+        TAB[T0].address = bl->DX;
+        TAB[T0].normal = true;
         bl->DX += SZ;
-        TAB[T0].SIZE = SZ;
+        TAB[T0].size = SZ;
         TAB[T0].PNTPARAM = false;
 
-        if (SY == BECOMES) {
-          if ((TP == CHANS) || (TP == LOCKS) || (TP == RECS)) {
-            ERROR(136);
-          } else if (TP == ARRAYS) {
-            while (TP == ARRAYS) {
+        if (SY == Symbol::BECOMES) {
+          if ((TP == Types::CHANS) || (TP == Types::LOCKS) ||
+              (TP == Types::RECS)) {
+            error(136);
+          } else if (TP == Types::ARRAYS) {
+            while (TP == Types::ARRAYS) {
               TP = ATAB[RF].ELTYP;
               RF = ATAB[RF].ELREF;
             }
             if (!STANTYPS[TP]) {
-              ERROR(137);
+              error(137);
             }
             INSYMBOL();
             LSTART = ITPNT;
             GETLIST(bl, TP);
             LEND = ITPNT;
-            if (TAB[T0].SIZE == 0) {
+            if (TAB[T0].size == 0) {
               ATAB[TAB[T0].REF].HIGH = LEND - LSTART - 1;
-              TAB[T0].SIZE = LEND - LSTART;
-              bl->DX = bl->DX + TAB[T0].SIZE;
+              TAB[T0].size = LEND - LSTART;
+              bl->DX = bl->DX + TAB[T0].size;
             }
-            if (TAB[T0].SIZE < LEND - LSTART) {
-              ERROR(139);
+            if (TAB[T0].size < LEND - LSTART) {
+              error(139);
             } else {
-              EMIT2(0, TAB[T0].LEV, TAB[T0].ADR);
+              EMIT2(0, TAB[T0].LEV, TAB[T0].address);
               EMIT2(82, LSTART, LEND);
-              RI = (TP == REALS) ? 2 : 1;
-              EMIT2(83, TAB[T0].SIZE - (LEND - LSTART), RI);
+              RI = (TP == Types::REALS) ? 2 : 1;
+              EMIT2(83, TAB[T0].size - (LEND - LSTART), RI);
             }
           } else {
-            X.TYP = TP;
+            X.types = TP;
             X.REF = RF;
-            X.SIZE = SZ;
-            X.ISADDR = true;
-            EMIT2(0, bl->LEVEL, TAB[T0].ADR);
+            X.size = SZ;
+            X.is_address = true;
+            EMIT2(0, bl->LEVEL, TAB[T0].address);
             INSYMBOL();
             su = bl->FSYS;
-            su[COMMA] = true;
-            su[SEMICOLON] = true;
+            su[symbol::COMMA] = true;
+            su[symbol::SEMICOLON] = true;
             EXPRESSION(bl, su, Y);
             if (!TYPE_COMPATIBLE(X, Y)) {
-              ERROR(46);
+              error(46);
             } else {
-              if ((X.TYP == REALS) && (Y.TYP == INTS)) {
+              if ((X.types == Types::REALS) && (Y.types == Types::INTS)) {
                 EMIT(91);
               } else {
                 EMIT(38);
@@ -1532,7 +1591,7 @@ void VARIABLEDECLARATION(BlockLocal *bl) {
           }
         }
 
-        if (SY == COMMA) {
+        if (SY == Symbol::COMMA) {
           INSYMBOL();
         } else {
           DONE = true;

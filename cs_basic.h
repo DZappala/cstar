@@ -7,12 +7,12 @@
 #include "cs_block.h"
 #include "cs_compile.h"
 namespace Cstar {
-typedef struct BasicLocal {
-  ITEM Y;
-  SYMBOL OP;
-  int F; // decl in BASICEXPRESSION, set in FACTOR, used in COMPASSIGNEXP
-         // ASSIGNMENTEXP
-  BlockLocal *bl;
-} BasicLocal;
+using BasicLocal = struct BasicLocal {
+  Item item;
+  Symbol operation;
+  int factor; // decl in BASICEXPRESSION, set in FACTOR, used in COMPASSIGNEXP
+              // ASSIGNMENTEXP
+  BlockLocal *block_local;
+} __attribute__((aligned(64))) __attribute__((packed));
 } // namespace Cstar
 #endif // CSTAR_CS_BASIC_H

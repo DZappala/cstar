@@ -7,141 +7,154 @@
 #include "cs_interpret.h"
 #include <cstdio>
 #include <cstring>
+#include <print>
+#include <string_view>
 namespace Cstar {
-const char *lookupSym(int, int);
-const char *arrayName(int);
-const char *opcodes[115] = {"pushstkloc", // 0
-                            "pushstklocri",
-                            "",
-                            "movdspbas",
-                            "clrchnoseq",
-                            "unhookprcr",
-                            "noop",
-                            "jmpseqon",
-                            "pushsys",
-                            "mpiinit",
-                            "jmp",
-                            "popjmpfalse",
-                            "",
-                            "getstkfrm1",
-                            "pushfm[T]",
-                            "addint",
-                            "",
-                            "",
-                            "getstkfrm2",
-                            "callblk",
-                            "swap",
-                            "pushaelstkloc",
-                            "pushpid",
-                            "cpystk[T]>[T-1]",
-                            "pushimm",
-                            "",
-                            "cnvi2r",
-                            "cin",
-                            "outstr",
-                            "outint",
-                            "setwidth/prec",
-                            "end",
-                            "returnv",
-                            "return",
-                            "rplindfmstk",
-                            "not",
-                            "negate",
-                            "outreal",
-                            "stindstk",
-                            "",
-                            "",
-                            "",
-                            "",
-                            "",
-                            "",
-                            "cmpeq",
-                            "cmpne",
-                            "cmplt",
-                            "cmple",
-                            "cmpgt",
-                            "cmpge",
-                            "or",
-                            "add",
-                            "sub",
-                            "",
-                            "",
-                            "and",
-                            "times",
-                            "intdiv",
-                            "intmod",
-                            "",
-                            "",
-                            "",
-                            "outendl",
-                            "recvchvar",
-                            "recvch[var]",
-                            "send",
-                            "fork",
-                            "",
-                            "procend --fork",
-                            "procend --child",
-                            "recvch[T]",
-                            "",
-                            "pushprcr",
-                            "forall",
-                            "forgrpT-2gtT-1jmp",
-                            "incrT-2ltT-1jmp",
-                            "",
-                            "wakepar",
-                            "findprctb",
-                            "",
-                            "",
-                            "initarr",
-                            "zeroarr",
-                            "dup",
-                            "join",
-                            "testvar",
-                            "pushrconfmtbl",
-                            "",
-                            "noswitchon",
-                            "noswitchoff",
-                            "",
-                            "sendri",
-                            "",
-                            "tststrm",
-                            "tststrmind",
-                            "tststrmstkind",
-                            "",
-                            "copymsg",
-                            "",
-                            "",
-                            "lock[T]",
-                            "unlock[T]",
-                            "",
-                            "ltincr[T-1]jmp",
-                            "",
-                            "seqoff",
-                            "seqon",
-                            "incr[T]imm",
-                            "decr[T]imm",
-                            "add3",
-                            "pop",
-                            "condrel[T]",
-                            "cpymsg",
-                            ""
+using std::array;
+using std::print;
+using std::println;
+using std::string;
+using std::string_view;
+
+auto lookupSym(int /*lev*/, int /*adr*/) -> string;
+auto arrayName(int /*ref*/) -> string;
+array<string, 115> opcodes{"pushstkloc", // 0
+                           "pushstklocri",
+                           "",
+                           "movdspbas",
+                           "clrchnoseq",
+                           "unhookprcr",
+                           "noop",
+                           "jmpseqon",
+                           "pushsys",
+                           "mpiinit",
+                           "jmp",
+                           "popjmpfalse",
+                           "",
+                           "getstkfrm1",
+                           "pushfm[T]",
+                           "addint",
+                           "",
+                           "",
+                           "getstkfrm2",
+                           "callblk",
+                           "swap",
+                           "pushaelstkloc",
+                           "pushpid",
+                           "cpystk[T]>[T-1]",
+                           "pushimm",
+                           "",
+                           "cnvi2r",
+                           "cin",
+                           "outstr",
+                           "outint",
+                           "setwidth/prec",
+                           "end",
+                           "returnv",
+                           "return",
+                           "rplindfmstk",
+                           "not",
+                           "negate",
+                           "outreal",
+                           "stindstk",
+                           "",
+                           "",
+                           "",
+                           "",
+                           "",
+                           "",
+                           "cmpeq",
+                           "cmpne",
+                           "cmplt",
+                           "cmple",
+                           "cmpgt",
+                           "cmpge",
+                           "or",
+                           "add",
+                           "sub",
+                           "",
+                           "",
+                           "and",
+                           "times",
+                           "intdiv",
+                           "intmod",
+                           "",
+                           "",
+                           "",
+                           "outendl",
+                           "recvchvar",
+                           "recvch[var]",
+                           "send",
+                           "fork",
+                           "",
+                           "procend --fork",
+                           "procend --child",
+                           "recvch[T]",
+                           "",
+                           "pushprcr",
+                           "forall",
+                           "forgrpT-2gtT-1jmp",
+                           "incrT-2ltT-1jmp",
+                           "",
+                           "wakepar",
+                           "findprctb",
+                           "",
+                           "",
+                           "initarr",
+                           "zeroarr",
+                           "dup",
+                           "join",
+                           "testvar",
+                           "pushrconfmtbl",
+                           "",
+                           "noswitchon",
+                           "noswitchoff",
+                           "",
+                           "sendri",
+                           "",
+                           "tststrm",
+                           "tststrmind",
+                           "tststrmstkind",
+                           "",
+                           "copymsg",
+                           "",
+                           "",
+                           "lock[T]",
+                           "unlock[T]",
+                           "",
+                           "ltincr[T-1]jmp",
+                           "",
+                           "seqoff",
+                           "seqon",
+                           "incr[T]imm",
+                           "decr[T]imm",
+                           "add3",
+                           "pop",
+                           "condrel[T]",
+                           "cpymsg",
+                           ""
 
 };
-static const char *types[] = {"NOTYP", "REALS", "INTS",  "BOOLS",
-                              "CHARS", "ARRAY", "CHANS", "RECS",
-                              "PNTS",  "FORWD", "LOCKS", "VOIDS"};
-static const char *states[] = {"READY",   "RUNNING",    "BLOCKED",
+static array<string, 12> types{"NOTYP", "REALS", "INTS",  "BOOLS",
+                               "CHARS", "ARRAY", "CHANS", "RECS",
+                               "PNTS",  "FORWD", "LOCKS", "VOIDS"};
+
+static array<string, 6> states{"READY",   "RUNNING",    "BLOCKED",
                                "DELAYED", "TERMINATED", "SPINNING"};
-static const char *readstatus[] = {"NONE", "ATCHANNEL", "HASTICKET"};
-static const char *priority[] = {"LOW", "HIGH"};
-static const char *objects[] = {"KONSTANT", "VARIABLE",  "TYPE1",   "PROZEDURE",
+
+static array<string, 3> readstatus{"NONE", "ATCHANNEL", "HASTICKET"};
+static array<string, 2> priority{"LOW", "HIGH"};
+static array<string, 7> objects{"KONSTANT", "VARIABLE",  "TYPE1",   "PROZEDURE",
                                 "FUNKTION", "COMPONENT", "STRUCTAG"};
-static const char *nosym = "nosym";
-static const char *prepost[] = {"pre", "post"};
-static const char *sysname[] = {
+
+static string nosym = "nosym";
+static array<string, 2> prepost{"pre", "post"};
+
+static array<string, 24> sysname{
     "", "", "", "", "", "", "", "",     "",      "",        "int()", "",
     "", "", "", "", "", "", "", "self", "clock", "seqtime", "myid",  "10"};
-static const char *status[] = {"NEVERUSED", "EMPTY    ", "RESERVED ",
+
+static array<string, 4> status{"NEVERUSED", "EMPTY    ", "RESERVED ",
                                "FULL     "};
 
 static struct CurExec {
@@ -149,165 +162,175 @@ static struct CurExec {
   int blockTableIndex;
   int functionVarFirst;
   int functionVarLast;
-} curExec = {0, 0, 0, 0};
-const char *nameState(enum PROCESSDESCRIPTOR::STATE st) { return states[st]; }
-const char *nameRdstatus(enum PROCESSDESCRIPTOR::READSTATUS st) {
-  return readstatus[st];
-}
-const char *prcsrStatus(enum InterpLocal::PROCTAB::STATUS st) {
-  return status[st];
-}
-void dumpInst(int ix) {
-  int F, X, Y;
-  const char *op;
-  char ibuf[80];
+} __attribute__((aligned(16))) curExec = {0, 0, 0, 0};
 
-  F = CODE[ix].F;
-  X = CODE[ix].X;
-  Y = CODE[ix].Y;
-  op = (opcodes[F] == nullptr) ? "..." : opcodes[F];
+auto nameState(enum PROCESSDESCRIPTOR::STATE st) -> string {
+  return states.at(static_cast<int>(st));
+}
+auto nameRdstatus(enum PROCESSDESCRIPTOR::READSTATUS st) -> string {
+  return readstatus.at(static_cast<int>(st));
+}
+
+auto prcsrStatus(enum InterpLocal::PROCTAB::STATUS st) -> string {
+  return status.at(static_cast<int>(st));
+}
+void dumpInst(int i) {
+  int F = 0;
+  int X = 0;
+  int Y = 0;
+  string op;
+
+  F = code.at(i).F;
+  X = code.at(i).X;
+  Y = code.at(i).Y;
+  string parse_op = opcodes.at(F);
+  op = (parse_op.empty()) ? "..." : parse_op;
+
   switch (F) {
   case 0:
   case 1:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %s\n", ix, F, X, Y, op,
-             lookupSym(X, Y));
+    print(string_view{}, "{{%4d}}: {{%3d}} {{%d}},{{%d}} {{%s}} {{%s}}\n", i, F,
+          X, Y, op, lookupSym(X, Y));
     break;
   case 8:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %s\n", ix, F, X, Y, op,
-             sysname[Y]);
+    print(string_view{}, "%4d: %3d %d,%d %s %s\n", i, F, X, Y, op,
+          sysname.at(Y));
     break;
   case 7:
   case 10:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %d\n", ix, F, X, Y, op, Y);
+    print(string_view{}, "%4d: %3d %d,%d %s %d\n", i, F, X, Y, op, Y);
     break;
   case 18:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %s\n", ix, F, X, Y, op,
-             TAB[Y].NAME);
+    print(string_view{}, "%4d: %3d %d,%d %s %s\n", i, F, X, Y, op, TAB[Y].name);
     curExec.functionSymtabIndex = Y;
-    curExec.blockTableIndex = TAB[Y].REF;
+    curExec.blockTableIndex = TAB[Y].reference;
     curExec.functionVarFirst = BTAB[curExec.blockTableIndex].LAST;
     curExec.functionVarLast = BTAB[curExec.blockTableIndex].LASTPAR;
     break;
   case 19:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %s\n", ix, F, X, Y, op,
-             TAB[X].NAME);
+    print(string_view{}, "%4d: %3d %d,%d %s %s\n", i, F, X, Y, op, TAB[X].name);
     break;
   case 23:
   case 110:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s len=%d\n", ix, F, X, Y, op,
-             X);
+    print(string_view{}, "%4d: %3d %d,%d %s len=%d\n", i, F, X, Y, op, X);
     break;
 
   case 21:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %s\n", ix, F, X, Y, op,
-             arrayName(Y));
+    print(string_view{}, "%4d: %3d %d,%d %s %s\n", i, F, X, Y, op,
+          arrayName(Y));
     break;
   case 24:
   case 75:
   case 76:
   case 112:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %d\n", ix, F, X, Y, op, Y);
+    print(string_view{}, "%4d: %3d %d,%d %s %d\n", i, F, X, Y, op, Y);
     break;
   case 64:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %s\n", ix, F, X, Y, op,
-             lookupSym(X, Y));
+    print(string_view{}, "%4d: %3d %d,%d %s %s\n", i, F, X, Y, op,
+          lookupSym(X, Y));
     break;
   case 104:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %d%s\n", ix, F, X, Y, op, X,
-             (Y == 1) ? ",grprep" : "");
+    print(string_view{}, "%4d: %3d %d,%d %s %d%s\n", i, F, X, Y, op, X,
+          (Y == 1) ? ",grprep" : "");
     break;
   case 108:
   case 109:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s %s %d\n", ix, F, X, Y, op,
-             prepost[Y], X);
+    print(string_view{}, "%4d: %3d %d,%d %s %s %d\n", i, F, X, Y, op,
+          prepost.at(Y), X);
     break;
   default:
-    snprintf(ibuf, sizeof ibuf, "%4d: %3d %d,%d %s\n", ix, F, X, Y, op);
+    print(string_view{}, "%4d: %3d %d,%d %s\n", i, F, X, Y, op);
     break;
   }
-  fprintf(STDOUT, "%s", ibuf);
+  print(STDOUT, "{}", string_view{});
 }
-void dumpLInst(int ix, int *line) {
-  while (LOCATION[*line] <= ix) {
-    fprintf(STDOUT, "Line %4d\n", *line);
+void dumpLInst(int idx, int *line) {
+  while (LOCATION[*line] <= idx) {
+    println(STDOUT, "Line {:4}", *line);
     ++*line;
   }
-  dumpInst(ix);
+  dumpInst(idx);
 }
 
 void dumpCode() {
-  int ix;
   int line = 1;
-  for (ix = 0; ix < LC; ++ix) {
-    dumpLInst(ix, &line);
+  for (int i = 0; i < line_count; ++i) {
+    dumpLInst(i, &line);
   }
 }
 void dumpSymbols() {
-  int ix;
   //        const char *np;
+  //
   //        ALFA name;
-  fprintf(STDOUT, "Symbol Table\n");
-  fprintf(STDOUT, "Indx Name           Link     Object  Type Ref Nm Lev   Addr "
-                  "  Size Fref FLev PP\n");
-  for (ix = 0; ix <= Tx; ++ix) {
+  println(STDOUT, "Symbol Table");
+  println(STDOUT, "Indx Name           Link     Object  Type Ref Nm Lev   Addr "
+                  "  Size Fref FLev PP");
+  for (int i = 0; i <= tab_index; ++i) {
     // strcpy(name, TAB[ix].NAME);
-    fprintf(STDOUT, "%4d %.14s %4d %10s %5s %3d %2d %3d %6d %6ld %4d %4d %2d\n",
-            ix, TAB[ix].NAME, TAB[ix].LINK, objects[TAB[ix].OBJ],
-            types[TAB[ix].TYP], TAB[ix].REF, TAB[ix].NORMAL, TAB[ix].LEV,
-            TAB[ix].ADR, TAB[ix].SIZE, TAB[ix].FREF, TAB[ix].FORLEV,
-            TAB[ix].PNTPARAM);
+    print(STDOUT,
+          "{{:4}} {{:.14}} {{:4}} {{:>10}} {{:>5}} {{:3}} {{:2d}} {{:3}} "
+          "{{:6}} {{:6}} {{:4}} {{:4}} {{:2d}}",
+          i, TAB[i].name, TAB[i].link,
+          objects.at(static_cast<int>(TAB[i].object)),
+          types.at(static_cast<int>(TAB[i].types)), TAB[i].reference,
+          static_cast<int>(TAB[i].normal), TAB[i].LEV, TAB[i].address,
+          TAB[i].size, TAB[i].FREF, TAB[i].FORLEV, TAB[i].PNTPARAM);
   }
 }
 void dumpArrays() {
-  int ix;
-  fprintf(STDOUT, "Array Table\n");
-  fprintf(STDOUT, "Indx IxTyp ElTyp ERef Low High ElSz Siz\n");
-  for (ix = 0; ix <= A; ++ix) {
-    fprintf(STDOUT, "%4d %5s %5s %4d %3d %4d %4d %3d\n", ix,
-            types[ATAB[ix].INXTYP], types[ATAB[ix].ELTYP], ATAB[ix].ELREF,
-            ATAB[ix].LOW, ATAB[ix].HIGH, ATAB[ix].ELSIZE, ATAB[ix].SIZE);
+  println(STDOUT, "Array Table");
+  println(STDOUT, "Indx IxTyp ElTyp ERef Low High ElSz Siz");
+  for (int i = 0; i <= atab_index; ++i) {
+    println(STDOUT, "{:4} {:>5} {:>5} {:4} {:3} {:4} {:4} {:3}", i,
+            types.at(ATAB[i].INXTYP), types.at(static_cast<int>(ATAB[i].ELTYP)),
+            ATAB[i].ELREF, ATAB[i].LOW, ATAB[i].HIGH, ATAB[i].ELSIZE,
+            ATAB[i].SIZE);
   }
 }
 void dumpBlocks() {
-  int ix, lst, ct;
-  fprintf(STDOUT, "Block Table\n");
-  fprintf(STDOUT, "  Display\n");
-  ix = 1;
-  while (ix <= LMAX && DISPLAY[ix] > 0) {
-    fprintf(STDOUT, "  D%d %d\n", ix, DISPLAY[ix]);
-    ix += 1;
+  int idx = 0;
+  int lst = 0;
+  int cnt = 0;
+  println(STDOUT, "Block Table");
+  println(STDOUT, "  Display");
+  idx = 1;
+  while (idx <= LMAX && DISPLAY.at(idx) > 0) {
+    std::println(STDOUT, "  D{} {}", idx, DISPLAY[idx]);
+    idx += 1;
   }
-  fprintf(STDOUT, "Indx  Last LstPr PSize VSize PrCnt\n");
-  for (ix = 0; ix <= B; ++ix) {
-    fprintf(STDOUT, "%4d %5d %5d %5d %5d %5d\n", ix, BTAB[ix].LAST,
-            BTAB[ix].LASTPAR, BTAB[ix].PSIZE, BTAB[ix].VSIZE, BTAB[ix].PARCNT);
+  std::println(STDOUT, "Indx  Last LstPr PSize VSize PrCnt");
+  for (idx = 0; idx <= btab_index; ++idx) {
+    std::println(STDOUT, "{:4} {:5} {:5} {:5} {:5} {:5}", idx, BTAB[idx].LAST,
+                 BTAB[idx].LASTPAR, BTAB[idx].PSIZE, BTAB[idx].VSIZE,
+                 BTAB[idx].PARCNT);
   }
-  for (ix = B; ix >= 1; --ix) {
-    lst = BTAB[ix].LAST;
-    fprintf(STDOUT, "block %d declares\n", ix);
-    ct = 0;
+  for (idx = btab_index; idx >= 1; --idx) {
+    lst = BTAB[idx].LAST;
+    std::println(STDOUT, "block {} declares", idx);
+    cnt = 0;
     while (lst != 0) {
-      fprintf(STDOUT, " %s", TAB[lst].NAME);
-      if (++ct % 8 == 0) {
-        fprintf(STDOUT, "\n");
+      std::print(STDOUT, " {}", TAB[lst].name);
+      if (++cnt % 8 == 0) {
+        std::println(STDOUT, "");
       }
-      lst = TAB[lst].LINK;
+      lst = TAB[lst].link;
     }
-    if (ct % 8 != 0)
-      fprintf(STDOUT, "\n");
+    if (cnt % 8 != 0) {
+      println(STDOUT, "");
+    }
   }
 }
 void dumpReals() {
-  int ix;
-  fprintf(STDOUT, "Real Constants\n");
-  fprintf(STDOUT, "Indx     RConst  IConval    RConval\n");
-  for (ix = 0; ix <= CPNT; ++ix) {
-    fprintf(STDOUT, "%4d %12.6f %6d %12.6f\n", ix, CONTABLE[ix],
-            INITABLE[ix].IVAL, INITABLE[ix].RVAL);
+  println(STDOUT, "Real Constants");
+  println(STDOUT, "Indx     RConst  IConval    RConval");
+  for (int i = 0; i <= CPNT; ++i) {
+    println(STDOUT, "{:4} {:12.6f} {:6} {:12.6f}", i, CONTABLE.at(i),
+            INITABLE[i].input_value, INITABLE[i].return_value);
   }
 }
 void dumpPDES(PROCPNT pd) {
-  int ix, ppid;
+  int idx = 0;
+  int ppid = 0;
   //        int T;  // process's stack top index
   //        int B;
   //        int PC;  // process's program counter (index into ORDER type CODE
@@ -338,79 +361,91 @@ void dumpPDES(PROCPNT pd) {
   //        } PRIORITY;
   //        bool SEQON;
   //        bool GROUPREP;
-  fprintf(STDOUT, "**current stack top: %d\n", pd->T);
-  fprintf(STDOUT, "  block table index: %d\n", pd->B);
-  fprintf(STDOUT, "         current PC: %d\n", pd->PC);
-  fprintf(STDOUT, "          stacksize: %d\n", pd->STACKSIZE);
-  fprintf(STDOUT, "            display: %d", pd->DISPLAY[0]);
-  for (ix = 1; ix <= LMAX; ++ix) {
-    fprintf(STDOUT, ", %d", pd->DISPLAY[ix]);
+  println(STDOUT, "**current stack top: {}", pd->T);
+  println(STDOUT, "  block table index: {}", pd->B);
+  println(STDOUT, "         current PC: {}", pd->PC);
+  println(STDOUT, "          stacksize: {}", pd->STACKSIZE);
+  print(STDOUT, "            display: {}", pd->DISPLAY[0]);
+  for (idx = 1; idx <= LMAX; ++idx) {
+    print(STDOUT, ", {}", pd->DISPLAY[idx]);
   }
-  fprintf(STDOUT, "\n");
+  println(STDOUT, "");
   ppid = (pd->PARENT == nullptr) ? -1 : pd->PARENT->PID;
-  fprintf(STDOUT, "             parent: %d\n", ppid);
-  fprintf(STDOUT, " number of children: %d\n", pd->NUMCHILDREN);
-  fprintf(STDOUT, "         stack base: %d\n", pd->BASE);
-  fprintf(STDOUT, "     max child time: %f\n", pd->MAXCHILDTIME);
-  fprintf(STDOUT, "               time: %f\n", pd->TIME);
-  fprintf(STDOUT, "          for level: %d\n", pd->FORLEVEL);
-  fprintf(STDOUT, "          for index: %d\n", pd->FORINDEX);
-  fprintf(STDOUT, "          processor: %d\n", pd->PROCESSOR);
-  fprintf(STDOUT, "      alt processor: %d\n", pd->ALTPROC);
-  fprintf(STDOUT, "          wake time: %f\n", pd->WAKETIME);
-  fprintf(STDOUT, "              state: %s\n", states[pd->STATE]);
-  fprintf(STDOUT, "         process ID: %d\n", pd->PID);
-  fprintf(STDOUT, "       virtual time: %f\n", pd->VIRTUALTIME);
-  fprintf(STDOUT, "         read staus: %s\n", readstatus[pd->READSTATUS]);
-  fprintf(STDOUT, "         fork count: %d\n", pd->FORKCOUNT);
-  fprintf(STDOUT, "     join semaphore: %d\n", pd->JOINSEM);
-  fprintf(STDOUT, "      max fork time: %f\n", pd->MAXFORKTIME);
-  fprintf(STDOUT, "           priority: %s\n", priority[pd->PRIORITY]);
-  fprintf(STDOUT, "        sequence on: %s\n", (pd->SEQON) ? "true" : "false");
-  fprintf(STDOUT, "          group rep: %s\n",
-          (pd->GROUPREP) ? "true" : "false");
+  println(STDOUT, "             parent: {}", ppid);
+  println(STDOUT, " number of children: {}", pd->NUMCHILDREN);
+  println(STDOUT, "         stack base: {}", pd->BASE);
+  println(STDOUT, "     max child time: {:f}", pd->MAXCHILDTIME);
+  println(STDOUT, "               time: {:f}", pd->TIME);
+  println(STDOUT, "          for level: {}", pd->FORLEVEL);
+  println(STDOUT, "          for index: {}", pd->FORINDEX);
+  println(STDOUT, "          processor: {}", pd->PROCESSOR);
+  println(STDOUT, "      alt processor: {}", pd->ALTPROC);
+  println(STDOUT, "          wake time: {:f}", pd->WAKETIME);
+  println(STDOUT, "              state: {}",
+          states.at(static_cast<int>(pd->STATE)));
+  println(STDOUT, "         process ID: {}", pd->PID);
+  println(STDOUT, "       virtual time: {:f}", pd->VIRTUALTIME);
+  println(STDOUT, "         read staus: {}",
+          readstatus.at(static_cast<int>(pd->READSTATUS)));
+  println(STDOUT, "         fork count: {}", pd->FORKCOUNT);
+  println(STDOUT, "     join semaphore: {}", pd->JOINSEM);
+  println(STDOUT, "      max fork time: {:f}", pd->MAXFORKTIME);
+  println(STDOUT, "           priority: {}",
+          priority.at(static_cast<int>(pd->PRIORITY)));
+  println(STDOUT, "        sequence on: {}", (pd->SEQON) ? "true" : "false");
+  println(STDOUT, "          group rep: {}", (pd->GROUPREP) ? "true" : "false");
 }
-void snapPDES(InterpLocal *il, PROCESSDESCRIPTOR *pd) {
-  struct InterpLocal::PROCTAB *ptab;
-  ptab = &il->PROCTAB[pd->PROCESSOR];
-  fprintf(STDOUT, "process ID: %d\n", pd->PID);
-  fprintf(STDOUT, "  state: %s\n", states[pd->STATE]);
-  fprintf(STDOUT, "  time: %7.1f\n", pd->TIME);
-  fprintf(STDOUT, "  wake time: %7.1f\n", pd->WAKETIME);
-  fprintf(STDOUT, "  processor: %d%s\n", pd->PROCESSOR,
-          (ptab->RUNPROC == pd) ? " runproc" : "");
-  fprintf(STDOUT, "  stack S[T] S[S[T]] %d %d\n", il->S[pd->T],
-          il->S[il->S[pd->T]]);
-  fprintf(STDOUT, "  rdstatus: %s\n", nameRdstatus(pd->READSTATUS));
-  fprintf(STDOUT, "  priority: %s\n",
-          (pd->PRIORITY == PROCESSDESCRIPTOR::PRIORITY::LOW) ? "LOW" : "HIGH");
-  if (pd->STATE == PROCESSDESCRIPTOR::STATE::RUNNING && pd->TIME < il->CLOCK) {
-    fprintf(STDOUT, "    can dispatch\n");
-  } else if (pd->STATE == PROCESSDESCRIPTOR::STATE::READY) {
-    fprintf(STDOUT, "    ptab RUNPROC %snull\n",
+
+void snapPDES(InterpLocal *interp_local,
+              PROCESSDESCRIPTOR *process_descriptor) {
+  struct InterpLocal::PROCTAB *ptab = nullptr;
+  ptab = &interp_local->PROCTAB[process_descriptor->PROCESSOR];
+  println(STDOUT, "process ID: {}", process_descriptor->PID);
+  println(STDOUT, "  state: {}",
+          states.at(static_cast<int>(process_descriptor->STATE)));
+  println(STDOUT, "  time: {:7.1f}", process_descriptor->TIME);
+  println(STDOUT, "  wake time: {:7.1f}", process_descriptor->WAKETIME);
+  println(STDOUT, "  processor: {}{}", process_descriptor->PROCESSOR,
+          (ptab->RUNPROC == process_descriptor) ? " runproc" : "");
+  println(STDOUT, "  stack S[T] S[S[T]] {} {}",
+          interp_local->S[process_descriptor->T],
+          interp_local->S[interp_local->S[process_descriptor->T]]);
+  println(STDOUT, "  rdstatus: {}",
+          nameRdstatus(process_descriptor->READSTATUS));
+  println(STDOUT, "  priority: {}",
+          (process_descriptor->PRIORITY == PROCESSDESCRIPTOR::PRIORITY::LOW)
+              ? "LOW"
+              : "HIGH");
+  if (process_descriptor->STATE == PROCESSDESCRIPTOR::STATE::RUNNING &&
+      process_descriptor->TIME < interp_local->CLOCK) {
+    println(STDOUT, "    can dispatch");
+  } else if (process_descriptor->STATE == PROCESSDESCRIPTOR::STATE::READY) {
+    println(STDOUT, "    ptab RUNPROC {}null",
             (ptab->RUNPROC != nullptr) ? "non-" : "");
     if (ptab->RUNPROC != nullptr) {
-      fprintf(STDOUT, "        RUNPROC PID %d\n", ptab->RUNPROC->PID);
-      fprintf(STDOUT, "        RUNPROC STATE %s\n",
-              states[ptab->RUNPROC->STATE]);
+      println(STDOUT, "        RUNPROC PID {}", ptab->RUNPROC->PID);
+      println(STDOUT, "        RUNPROC STATE {}",
+              states.at(static_cast<int>(ptab->RUNPROC->STATE)));
     }
-    fprintf(STDOUT, "    ptab VIRTIME %7.1f\n", ptab->VIRTIME);
-    fprintf(STDOUT, "    ptab STARTTIME %7.1f\n", ptab->STARTTIME);
+    println(STDOUT, "    ptab VIRTIME {:7.1f}", ptab->VIRTIME);
+    println(STDOUT, "    ptab STARTTIME {:7.1f}", ptab->STARTTIME);
   }
 }
-void dumpDeadlock(InterpLocal *il) {
-  ACTIVEPROCESS *act, *acphead;
-  PROCESSDESCRIPTOR *pd;
-  struct InterpLocal::PROCTAB *ptab;
-  acphead = il->ACPHEAD;
+void dumpDeadlock(InterpLocal *interp_local) {
+  ACTIVEPROCESS *act = nullptr;
+  ACTIVEPROCESS *acphead = nullptr;
+  PROCESSDESCRIPTOR *pd = nullptr;
+  struct InterpLocal::PROCTAB *ptab = nullptr;
+  acphead = interp_local->ACPHEAD;
   act = acphead;
   do {
     pd = act->PDES;
-    snapPDES(il, pd);
+    snapPDES(interp_local, pd);
     act = act->NEXT;
   } while (act != nullptr && act != acphead);
 }
-void dumpChans(InterpLocal *il) {
+
+void dumpChans(InterpLocal *interp_local) {
   //         struct Channel {
   //            int HEAD;
   //            int SEM;
@@ -419,50 +454,63 @@ void dumpChans(InterpLocal *il) {
   //            bool MOVED;
   //            int READER;
   //        } CHAN[OPCHMAX+1];
-  int ix, pid;
-  PROCESSDESCRIPTOR *pdes;
-  fprintf(STDOUT, "Channels\n");
-  fprintf(STDOUT, "Indx  Head   Sem  WPID   RTime Moved Reader\n");
-  for (ix = 0; ix <= OPCHMAX; ++ix) {
-    if (il->CHAN[ix].HEAD != -1) {
-      pid = (il->CHAN[ix].WAIT == nullptr) ? -1 : il->CHAN[ix].WAIT->PDES->PID;
-      fprintf(STDOUT, "%4d %5d %5d %5d %7.1f %5d %6d\n", ix, il->CHAN[ix].HEAD,
-              il->CHAN[ix].SEM, pid, il->CHAN[ix].READTIME, il->CHAN[ix].MOVED,
-              il->CHAN[ix].READER);
+  int idx = 0;
+  int pid = 0;
+  PROCESSDESCRIPTOR *pdes = nullptr;
+  println(STDOUT, "Channels");
+  println(STDOUT, "Indx  Head   Sem  WPID   RTime Moved Reader");
+  for (idx = 0; idx <= OPCHMAX; ++idx) {
+    if (interp_local->CHAN[idx].HEAD != -1) {
+      pid = (interp_local->CHAN[idx].WAIT == nullptr)
+                ? -1
+                : interp_local->CHAN[idx].WAIT->PDES->PID;
+      println(STDOUT, "{:4} {:5} {:5} {:5} {:7.1f} {:5d} {:6}", idx,
+              interp_local->CHAN[idx].HEAD, interp_local->CHAN[idx].SEM, pid,
+              interp_local->CHAN[idx].READTIME, interp_local->CHAN[idx].MOVED,
+              interp_local->CHAN[idx].READER);
     }
   }
 }
-void dumpStkfrms(InterpLocal *il) {
-  BLKPNT free;
-  int top, first, ix, val;
-  fprintf(STDOUT, "STACK USE\n");
+void dumpStkfrms(InterpLocal *interp_local) {
+  BLKPNT free = nullptr;
+  int top = 0;
+  int first = 0;
+  int idx = 0;
+  int val = 0;
+  std::println(STDOUT, "STACK USE");
   first = 0;
-  free = il->STHEAD;
+  free = interp_local->STHEAD;
+
   while (free != nullptr) {
-    if (first < free->START)
-      fprintf(STDOUT, "used %d - %d len %d processor %d\n", first,
-              free->START - 1, free->START - first, il->SLOCATION[first]);
-    fprintf(STDOUT, "free %d - %d len %d SLOC %d\n", free->START,
+    if (first < free->START) {
+      println(STDOUT, "used {} - {} len {} processor {}", first,
+              free->START - 1, free->START - first,
+              interp_local->SLOCATION[first]);
+    }
+    println(STDOUT, "free {} - {} len {} SLOC {}", free->START,
             free->START + free->SIZE - 1, free->SIZE,
-            il->SLOCATION[free->START]);
+            interp_local->SLOCATION[free->START]);
     top = free->START;
     first = free->START + free->SIZE;
     free = free->NEXT;
   }
-  fprintf(STDOUT, "SLOCATION\n");
-  val = il->SLOCATION[0];
-  first = ix = 0;
-  while (ix < STMAX) {
-    if (il->SLOCATION[ix] != val) {
-      fprintf(STDOUT, "first %d last %d val %d\n", first, ix - 1, val);
-      first = ix;
-      val = il->SLOCATION[ix];
+
+  println(STDOUT, "SLOCATION");
+  val = interp_local->SLOCATION[0];
+  first = idx = 0;
+
+  while (idx < STMAX) {
+    if (interp_local->SLOCATION[idx] != val) {
+      println(STDOUT, "first {} last {} val {}", first, idx - 1, val);
+      first = idx;
+      val = interp_local->SLOCATION[idx];
     }
-    ix += 1;
+    idx += 1;
   }
-  fprintf(STDOUT, "first %d last %d val %d\n", first, ix - 1, val);
+  println(STDOUT, "first {} last {} val {}", first, idx - 1, val);
 }
-void dumpProctab(InterpLocal *il) {
+
+void dumpProctab(InterpLocal *interp_local) {
   //         struct PROCTAB {
   //            enum STATUS {NEVERUSED, EMPTY, RESERVED, FULL} STATUS;
   //            float VIRTIME;
@@ -474,34 +522,41 @@ void dumpProctab(InterpLocal *il) {
   //            BUSYPNT BUSYLIST;
   //            float SPEED;
   //        } PROCTAB[PMAX+1];
-  int ix, pid;
+  int idx = 0;
+  int pid = 0;
   fprintf(STDOUT, "Processor Table\n");
   fprintf(
       STDOUT,
       "Indx Status    Virtime Brktime Protime  Rpid  Num Strtime   Speed\n");
-  ix = 0;
-  while (il->PROCTAB[ix].STATUS != InterpLocal::PROCTAB::STATUS::NEVERUSED) {
-    pid = (il->PROCTAB[ix].RUNPROC == nullptr) ? -1
-                                               : il->PROCTAB[ix].RUNPROC->PID;
-    fprintf(STDOUT, "%4d %.9s %7.1f %7.1f %7.1f %5d %4d %7.1f %7.1f\n", ix,
-            status[il->PROCTAB[ix].STATUS], il->PROCTAB[ix].VIRTIME,
-            il->PROCTAB[ix].BRKTIME, il->PROCTAB[ix].PROTIME, pid,
-            il->PROCTAB[ix].NUMPROC, il->PROCTAB[ix].STARTTIME,
-            il->PROCTAB[ix].SPEED);
-    ix += 1;
+  idx = 0;
+  while (interp_local->PROCTAB[idx].STATUS !=
+         InterpLocal::PROCTAB::STATUS::NEVERUSED) {
+    pid = (interp_local->PROCTAB[idx].RUNPROC == nullptr)
+              ? -1
+              : interp_local->PROCTAB[idx].RUNPROC->PID;
+    println(
+        STDOUT, "{:4} {:.9} {:7.1f} {:7.1f} {:7.1f} {:5} {:4} {:7.1f} {:7.1f}",
+        idx, status.at(static_cast<int>(interp_local->PROCTAB[idx].STATUS)),
+        interp_local->PROCTAB[idx].VIRTIME, interp_local->PROCTAB[idx].BRKTIME,
+        interp_local->PROCTAB[idx].PROTIME, pid,
+        interp_local->PROCTAB[idx].NUMPROC,
+        interp_local->PROCTAB[idx].STARTTIME, interp_local->PROCTAB[idx].SPEED);
+    idx += 1;
   }
 }
-void dumpActive(InterpLocal *il) {
-  ACTIVEPROCESS *act, *acphead;
-  acphead = il->ACPHEAD;
+void dumpActive(InterpLocal *interp_local) {
+  ACTIVEPROCESS *act = nullptr;
+  ACTIVEPROCESS *acphead = nullptr;
+  acphead = interp_local->ACPHEAD;
   act = acphead;
   do {
     dumpPDES(act->PDES);
     act = act->NEXT;
   } while (act != nullptr && act != acphead);
 }
-const char *lookupSym(int lev, int adr) {
-  int ix, blev;
+auto lookupSym(int lev, int adr) -> string {
+  int idx = 0;
+  int blev = 0;
   //        for (ix = Tx; ix >= 0; --ix)
   //        {
   //            if (TAB[ix].ADR == adr && TAB[ix].LEV == lev)
@@ -513,19 +568,20 @@ const char *lookupSym(int lev, int adr) {
   //            if (TAB[ix].ADR == adr && TAB[ix].LEV == lev)
   //                return TAB[ix].NAME;
   //        }
-  ix = BTAB[lev].LAST;
-  while (ix != 0) {
-    if (TAB[ix].ADR == adr)
-      return TAB[ix].NAME;
-    ix = TAB[ix].LINK;
+  idx = BTAB[lev].LAST;
+  while (idx != 0) {
+    if (TAB.at(idx).address == adr) {
+      return TAB.at(idx).name;
+    }
+    idx = TAB.at(idx).link;
   }
   return nosym;
 }
-const char *arrayName(int ref) {
-  int ix;
-  for (ix = Tx; ix >= 0; --ix) {
-    if (TAB[ix].TYP == ARRAYS && TAB[ix].REF == ref)
-      return TAB[ix].NAME;
+auto arrayName(int ref) -> string {
+  for (int idx = tab_index; idx >= 0; --idx) {
+    if (TAB.at(idx).types == Types::ARRAYS && TAB[idx].reference == ref) {
+      return TAB.at(idx).name;
+    }
   }
   return nosym;
 }
