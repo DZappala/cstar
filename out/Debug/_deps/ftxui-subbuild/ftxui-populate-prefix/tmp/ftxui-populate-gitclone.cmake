@@ -41,12 +41,12 @@ endif()
 
 execute_process(
   COMMAND "/usr/bin/git"
-          checkout "cdf28903a7781f97ba94d30b79c3a4b0c97ccce7" --
+          checkout "v5.0.0" --
   WORKING_DIRECTORY "/home/dom/projects/pace/parallel/cstar/out/Debug/_deps/ftxui-src"
   RESULT_VARIABLE error_code
 )
 if(error_code)
-  message(FATAL_ERROR "Failed to checkout tag: 'cdf28903a7781f97ba94d30b79c3a4b0c97ccce7'")
+  message(FATAL_ERROR "Failed to checkout tag: 'v5.0.0'")
 endif()
 
 set(init_submodules TRUE)

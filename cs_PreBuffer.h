@@ -6,6 +6,7 @@
 #include "cs_defines.h"
 #include <cstdio>
 #include <cstring>
+#include <sstream>
 namespace Cstar {
 /*
  * PreBuffer is used by the function Freadline(), a rewritten version of
@@ -15,30 +16,29 @@ namespace Cstar {
  * non-interactive compilation and execution.
  */
 struct PreBuffer {
-  FILE *fp;          // file pointer
-  int bl;            // buffer low
-  int bh;            // buffer high
-  char buffer[LLNG]; // buffer
-  explicit PreBuffer(FILE *fp) {
-    this->fp = fp;
-    bl = 0;
-    bh = 0;
-    buffer[0] = '\0';
+  explicit PreBuffer(FILE *file_ptr) : file_ptr(file_ptr) {
+    buffer.sputc('\0');
   }
 
-  int getc() {
-    if (bh == bl)
-      return fgetc(fp);
-    return buffer[bl++];
+  FILE *file_ptr;
+  int buffer_low{};
+  int buffer_high{};
+  std::stringbuf buffer;
+
+  auto getc() -> int {
+    if (buffer_high == buffer_low) {
+      return fgetc(file_ptr);
+    }
+    return buffer.str().at(buffer_low++);
   }
 
   void setBuffer(const char *data, int size) {
     if (size < LLNG) {
-      memmove(buffer, data, size);
-      bl = 0;
-      bh = size;
+      buffer.sputn(data, size);
+      buffer_low = 0;
+      buffer_high = size;
     }
   }
-};
+} __attribute__((aligned(128))) __attribute__((packed));
 } // namespace Cstar
 #endif // CSTAR_CS_PREBUFFER_H

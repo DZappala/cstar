@@ -192,6 +192,7 @@ using InterpLocal = struct InterpLocal {
     double STARTTIME;
     BUSYPNT BUSYLIST;
     float SPEED;
+
   } __attribute__((aligned(64))) __attribute__((packed)) PROCTAB[PMAX + 1];
 
   int CNUM, H1;

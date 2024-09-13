@@ -6,14 +6,26 @@
 #define CSTAR_CS_EXEC_H
 #include "cs_global.h"
 #include "cs_interpret.h"
+#include <sstream>
+
 struct ExLocal {
-  int I, J, K, H1, H2, H3, H4, TGAP;
-  double RH1;
-  Cstar::ORDER IR;
-  bool B1;
-  Cstar::PROCPNT NEWPROC;
+  ExLocal() = default;
+  int I = 0;
+  int J = 0;
+  int K = 0;
+  int H1 = 0;
+  int H2 = 0;
+  int H3 = 0;
+  int H4 = 0;
+  int TGAP = 0;
+  double RH1 = 0;
+
+  Cstar::ORDER IR{};
+  bool B1 = false;
+  Cstar::PROCPNT NEWPROC = nullptr;
   // InterpLocal *il;
-  double log10;
-  char buf[24];
-};
+  double log10 = 0.0;
+  std::stringbuf buf;
+} __attribute__((aligned(128))) __attribute__((packed));
+
 #endif // CSTAR_CS_EXEC_H

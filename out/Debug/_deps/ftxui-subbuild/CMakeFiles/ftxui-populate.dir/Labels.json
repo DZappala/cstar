@@ -26,13 +26,13 @@
 			"file" : "/home/dom/projects/pace/parallel/cstar/out/Debug/_deps/ftxui-subbuild/ftxui-populate-prefix/src/ftxui-populate-stamp/ftxui-populate-mkdir.rule"
 		},
 		{
-			"file" : "/home/dom/projects/pace/parallel/cstar/out/Debug/_deps/ftxui-subbuild/ftxui-populate-prefix/src/ftxui-populate-stamp/ftxui-populate-patch_disconnected.rule"
+			"file" : "/home/dom/projects/pace/parallel/cstar/out/Debug/_deps/ftxui-subbuild/ftxui-populate-prefix/src/ftxui-populate-stamp/ftxui-populate-patch.rule"
 		},
 		{
 			"file" : "/home/dom/projects/pace/parallel/cstar/out/Debug/_deps/ftxui-subbuild/ftxui-populate-prefix/src/ftxui-populate-stamp/ftxui-populate-test.rule"
 		},
 		{
-			"file" : "/home/dom/projects/pace/parallel/cstar/out/Debug/_deps/ftxui-subbuild/ftxui-populate-prefix/src/ftxui-populate-stamp/ftxui-populate-update_disconnected.rule"
+			"file" : "/home/dom/projects/pace/parallel/cstar/out/Debug/_deps/ftxui-subbuild/ftxui-populate-prefix/src/ftxui-populate-stamp/ftxui-populate-update.rule"
 		}
 	],
 	"target" : 

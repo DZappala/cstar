@@ -5,21 +5,25 @@
 #include "cs_exec.h"
 #include "cs_global.h"
 #include "cs_interpret.h"
+#include <algorithm>
 #include <cerrno>
 #include <cmath>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <numbers>
 #include <print>
 namespace Cstar {
+using std::cout;
 using std::println;
+using std::numbers::ln10;
 
 #define MAXINT 32767
 // enum PS {RUN, BREAK, FIN, DEAD, STKCHK};
 struct ACTIVEPROCESS;
-typedef struct PROCESSDESCRIPTOR PRD;
-typedef struct PROCESSDESCRIPTOR *PROCPNT;
-typedef struct ACTIVEPROCESS *ACTPNT;
+using PRD = struct PROCESSDESCRIPTOR;
+using PROCPNT = struct PROCESSDESCRIPTOR *;
+using ACTPNT = struct ACTIVEPROCESS *;
 //    typedef struct ACTIVEPROCESS {
 //        PROCPNT PDES;
 //        ACTPNT NEXT;
@@ -31,6 +35,7 @@ struct CommdelayLocal {
   double PASTINTERVAL, NOWINTERVAL, FINALINTERVAL;
   InterpLocal *il;
 };
+
 extern ALFA PROGNAME;
 extern const char *opcodes[115];
 extern void snapPDES(InterpLocal *, PROCPNT);
@@ -223,8 +228,8 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
   if (LEN % 3 != 0) {
     cl.NUMPACK = cl.NUMPACK + 1;
   }
-  if ((!il->CONGESTION) || (Topology == Symbol::SHAREDSY)) {
-    switch (Topology) {
+  if ((!il->CONGESTION) || (topology == Symbol::SHAREDSY)) {
+    switch (topology) {
     case Symbol::SHAREDSY:
       rtn = 0;
       break;
@@ -286,13 +291,13 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
     default:
       break;
     }
-    if (Topology != Symbol::SHAREDSY) {
+    if (topology != Symbol::SHAREDSY) {
       rtn = (int)std::round((cl.DIST + (cl.NUMPACK - 1) / 2.0) * il->TOPDELAY);
     }
   } else {
     cl.PATH[0] = SOURCE;
     cl.PATHLEN = 0;
-    switch (Topology) {
+    switch (topology) {
     case Symbol::FULLCONNSY:
     case Symbol::CLUSTERSY:
       cl.PATH[1] = DEST;
@@ -353,7 +358,7 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
       rtn = 0;
     }
   }
-  if ((SOURCE > HighestProcessor) || (DEST > HighestProcessor)) {
+  if ((SOURCE > highest_processor) || (DEST > highest_processor)) {
     il->PS = InterpLocal::PS::CPUCHK;
   }
   //        if (rtn != 0)
@@ -535,16 +540,16 @@ void SLICE(InterpLocal *il) {
   //     fprintf(STDOUT, "dispatch %d time %.1f seqtime %.1f\n", il->CURPR->PID,
   //     il->CURPR->TIME, il->SEQTIME);
   if (DEADLOCK) {
-    std::cout << "    DEADLOCK:  All Processes are Blocked" << std::endl;
-    std::cout << "For Further Information Type STATUS Command" << std::endl;
-    fprintf(STDOUT, "CLOCK %.1f PS %d, DONE %d, COUNT %d, DEADLOCK %d\n",
-            il->CLOCK, il->PS, DONE, COUNT, DEADLOCK);
+    cout << "    DEADLOCK:  All Processes are Blocked" << '\n';
+    cout << "For Further Information Type STATUS Command" << '\n';
+    println(STDOUT, "CLOCK {:.1f} PS {}, DONE {:d}, COUNT {}, DEADLOCK {:d}",
+            il->CLOCK, static_cast<std::int8_t>(il->PS), DONE, COUNT, DEADLOCK);
     il->PS = InterpLocal::PS::DEAD;
     dumpDeadlock(il);
   }
 }
 
-void EXECUTE(InterpLocal *il) {
+void EXECUTE(InterpLocal *interp_local) {
   //        ProcessState PS;
   //        PROCPNT CURPR;
   //        int LC;
@@ -552,10 +557,10 @@ void EXECUTE(InterpLocal *il) {
   //        char CH;
   //        int T;
   //        std::vector<int> STACK(STACKSIZE);
-  PROCPNT CURPR = il->CURPR;
-  PROCPNT proc;
-  struct InterpLocal::PROCTAB *prtb;
-  struct InterpLocal::Channel *chan;
+  PROCPNT current_process = interp_local->CURPR;
+  PROCPNT process = nullptr;
+  struct InterpLocal::PROCTAB *process_metadata = nullptr;
+  struct InterpLocal::Channel *channel = nullptr;
   // --- debugging ---
 
   //        int lct = 0;
@@ -563,76 +568,84 @@ void EXECUTE(InterpLocal *il) {
   //        int braddr = 0;
   //        bool watch = false, breakat = false;
   // ---------
-  ExLocal el = {0, 0,   0,         0,     0,       0,   0,
-                0, 0.0, {0, 0, 0}, false, nullptr, 0.0, {0}};
+  ExLocal executor{};
+
   // memset(&el, 0, sizeof(ExLocal));
   // el.il = il;
-  el.log10 = log(10);
+  executor.log10 = ln10;
   // dumpPDES(CURPR);
   do {
-    if (il->PS != InterpLocal::PS::BREAK) {
-      if ((!il->NOSWITCH && CURPR->TIME >= il->CLOCK) ||
-          CURPR->STATE != PRD::STATE::RUNNING) {
+    if (interp_local->PS != InterpLocal::PS::BREAK) {
+      if ((!interp_local->NOSWITCH &&
+           current_process->TIME >= interp_local->CLOCK) ||
+          current_process->STATE != PRD::STATE::RUNNING) {
         //                    fprintf(STDOUT, "state %s noswitch %d time %.1f
         //                    clock %.1f",
         //                            nameState(CURPR->STATE), il->NOSWITCH,
         //                            CURPR->TIME, il->CLOCK);
-        SLICE(il);
-        CURPR = il->CURPR;
+        SLICE(interp_local);
+        current_process = interp_local->CURPR;
         //                    fprintf(STDOUT, " new process %d processor %d\n",
         //                    CURPR->PID, CURPR->PROCESSOR);
       }
     }
 
-    if (il->PS == InterpLocal::PS::FIN || il->PS == InterpLocal::PS::DEAD) {
+    if (interp_local->PS == InterpLocal::PS::FIN ||
+        interp_local->PS == InterpLocal::PS::DEAD) {
       // goto label_999;
       continue;
     }
 
-    el.IR = code[CURPR->PC];
-    CURPR->PC++;
-    TIMEINC(il, 1, "exe1");
+    executor.IR = code.at(current_process->PC);
+    current_process->PC++;
+    TIMEINC(interp_local, 1, "exe1");
 
-    if (il->NUMBRK > 0 && il->MAXSTEPS < 0 && !il->RESTART) {
+    if (interp_local->NUMBRK > 0 && interp_local->MAXSTEPS < 0 &&
+        !interp_local->RESTART) {
       for (int i = 1; i <= BRKMAX; i++) {
-        if (il->BRKTAB[i] == CURPR->PC - 1) {
-          il->PS = InterpLocal::PS::BREAK;
+        if (interp_local->BRKTAB[i] == current_process->PC - 1) {
+          interp_local->PS = InterpLocal::PS::BREAK;
         }
       }
     }
 
-    il->RESTART = false;
+    interp_local->RESTART = false;
 
-    if (il->MAXSTEPS > 0 && CURPR == il->STEPROC) {
-      LC = CURPR->PC - 1;
-      if (LC < il->STARTLOC || LC > il->ENDLOC) {
-        il->MAXSTEPS--;
-        il->STARTLOC = LC;
-        il->ENDLOC = LOCATION[GETLNUM(LC) + 1] - 1;
-        if (il->MAXSTEPS == 0) {
-          il->PS = InterpLocal::PS::BREAK;
+    if (interp_local->MAXSTEPS > 0 &&
+        current_process == interp_local->STEPROC) {
+      line_count = current_process->PC - 1;
+      if (line_count < interp_local->STARTLOC ||
+          line_count > interp_local->ENDLOC) {
+        interp_local->MAXSTEPS--;
+        interp_local->STARTLOC = line_count;
+        interp_local->ENDLOC = LOCATION[GETLNUM(line_count) + 1] - 1;
+        if (interp_local->MAXSTEPS == 0) {
+          interp_local->PS = InterpLocal::PS::BREAK;
         }
       }
     }
 
-    if (il->PROFILEON) {
-      if (il->CLOCK >= il->PROTIME) {
-        if (il->PROLINECNT == 0) {
-          std::cout << "TIME: " << std::round(il->PROTIME - il->PROSTEP)
-                    << std::endl;
-          if (il->FIRSTPROC < 10) {
-            std::cout << il->FIRSTPROC;
+    if (interp_local->PROFILEON) {
+      if (interp_local->CLOCK >= interp_local->PROTIME) {
+        if (interp_local->PROLINECNT == 0) {
+          std::cout << "TIME: "
+                    << std::round(interp_local->PROTIME - interp_local->PROSTEP)
+                    << '\n';
+          if (interp_local->FIRSTPROC < 10) {
+            std::cout << interp_local->FIRSTPROC;
           } else {
             std::cout << " ";
           }
-          for (int i = 1; i <= (4 - (il->FIRSTPROC % 5)); i++) {
-            if (il->FIRSTPROC + i < 10 && il->FIRSTPROC + i <= il->LASTPROC) {
-              std::cout << std::setw(2) << il->FIRSTPROC + i;
+          for (int i = 1; i <= (4 - (interp_local->FIRSTPROC % 5)); i++) {
+            if (interp_local->FIRSTPROC + i < 10 &&
+                interp_local->FIRSTPROC + i <= interp_local->LASTPROC) {
+              std::cout << std::setw(2) << interp_local->FIRSTPROC + i;
             } else {
               std::cout << "  ";
             }
           }
-          for (int i = il->FIRSTPROC + 1; i <= il->LASTPROC; i++) {
+          for (int i = interp_local->FIRSTPROC + 1; i <= interp_local->LASTPROC;
+               i++) {
             if (i % 5 == 0) {
               if (i < 10) {
                 std::cout << std::setw(2) << i << "         ";
@@ -643,75 +656,80 @@ void EXECUTE(InterpLocal *il) {
           }
           std::cout << std::endl;
         }
-        for (int i = il->FIRSTPROC; i <= il->LASTPROC; i++) {
-          il->USAGE = (float)(il->PROCTAB[i].PROTIME / il->PROSTEP);
-          if (il->PROCTAB[i].STATUS ==
+        for (int i = interp_local->FIRSTPROC; i <= interp_local->LASTPROC;
+             i++) {
+          interp_local->USAGE =
+              (float)(interp_local->PROCTAB[i].PROTIME / interp_local->PROSTEP);
+          if (interp_local->PROCTAB[i].STATUS ==
               InterpLocal::PROCTAB::STATUS::NEVERUSED) {
             CH = ' ';
-          } else if (il->USAGE < 0.25) {
+          } else if (interp_local->USAGE < 0.25) {
             CH = '.';
-          } else if (il->USAGE < 0.5) {
+          } else if (interp_local->USAGE < 0.5) {
             CH = '-';
-          } else if (il->USAGE < 0.75) {
+          } else if (interp_local->USAGE < 0.75) {
             CH = '+';
           } else {
             CH = '*';
           }
           std::cout << CH << " ";
-          il->PROCTAB[i].PROTIME = 0;
+          interp_local->PROCTAB[i].PROTIME = 0;
         }
         std::cout << std::endl;
-        il->PROLINECNT = (il->PROLINECNT + 1) % 20;
-        il->PROTIME += il->PROSTEP;
+        interp_local->PROLINECNT = (interp_local->PROLINECNT + 1) % 20;
+        interp_local->PROTIME += interp_local->PROSTEP;
       }
     }
 
-    if (il->ALARMON && il->ALARMENABLED) {
-      if (il->CLOCK >= il->ALARMTIME) {
+    if (interp_local->ALARMON && interp_local->ALARMENABLED) {
+      if (interp_local->CLOCK >= interp_local->ALARMTIME) {
         std::cout << std::endl;
-        std::cout << "Alarm Went Off at Time " << std::round(il->ALARMTIME)
-                  << std::endl;
-        if (il->CLOCK > il->ALARMTIME + 2 * TIMESTEP) {
-          std::cout << "Current Time is " << std::round(il->CLOCK) << std::endl;
+        std::cout << "Alarm Went Off at Time "
+                  << std::round(interp_local->ALARMTIME) << std::endl;
+        if (interp_local->CLOCK > interp_local->ALARMTIME + 2 * TIMESTEP) {
+          std::cout << "Current Time is " << std::round(interp_local->CLOCK)
+                    << std::endl;
         }
-        il->PS = InterpLocal::PS::BREAK;
-        il->ALARMENABLED = false;
+        interp_local->PS = InterpLocal::PS::BREAK;
+        interp_local->ALARMENABLED = false;
       }
     }
 
-    if (il->PS == InterpLocal::PS::BREAK) {
-      CURPR->PC--;
-      TIMEINC(il, -1, "exe2");
-      il->BLINE = GETLNUM(CURPR->PC);
+    if (interp_local->PS == InterpLocal::PS::BREAK) {
+      current_process->PC--;
+      TIMEINC(interp_local, -1, "exe2");
+      interp_local->BLINE = GETLNUM(current_process->PC);
       //                std::cout << std::endl;
       //                std::cout << "Break At " << il->BLINE << std::endl;
-      fprintf(STDOUT, "\nBreak At %d", il->BLINE);
-      el.H1 = CURPR->B;
-      il->INX = il->S[CURPR->B + 4];
-      while (TAB[il->INX].name[0] == '*') {
-        el.H1 = il->S[el.H1 + 3];
-        il->INX = il->S[el.H1 + 4];
+      fprintf(STDOUT, "\nBreak At %d", interp_local->BLINE);
+      executor.H1 = current_process->B;
+      interp_local->INX = interp_local->S[current_process->B + 4];
+      while (TAB[interp_local->INX].name[0] == '*') {
+        executor.H1 = interp_local->S[executor.H1 + 3];
+        interp_local->INX = interp_local->S[executor.H1 + 4];
       }
-      if (el.H1 == 0) {
+      if (executor.H1 == 0) {
         std::cout << "  In Function " << PROGNAME << std::endl;
       } else {
-        std::cout << "  In Function " << TAB[il->INX].name << std::endl;
+        std::cout << "  In Function " << TAB[interp_local->INX].name
+                  << std::endl;
       }
-      std::cout << "Process Number  " << CURPR->PID << std::endl;
-      il->STEPROC = CURPR;
-      if (il->MAXSTEPS == 0) {
-        double R1 = CURPR->TIME - il->STEPTIME;
+      std::cout << "Process Number  " << current_process->PID << std::endl;
+      interp_local->STEPROC = current_process;
+      if (interp_local->MAXSTEPS == 0) {
+        double R1 = current_process->TIME - interp_local->STEPTIME;
         if (R1 > 0) {
-          el.H2 = (int)std::round((CURPR->VIRTUALTIME - il->VIRSTEPTIME) / R1 *
-                                  100.0);
+          executor.H2 = (int)std::round(
+              (current_process->VIRTUALTIME - interp_local->VIRSTEPTIME) / R1 *
+              100.0);
         } else {
-          el.H2 = 0;
+          executor.H2 = 0;
         }
-        if (el.H2 > 100) {
-          el.H2 = 100;
+        if (executor.H2 > 100) {
+          executor.H2 = 100;
         }
         std::cout << "Step Time is " << std::round(R1) << ".  Process running "
-                  << el.H2 << " percent." << std::endl;
+                  << executor.H2 << " percent." << std::endl;
       }
       std::cout << std::endl;
     } else {
@@ -744,22 +762,23 @@ void EXECUTE(InterpLocal *il) {
         //                    if (CURPR->PROCESSOR == 0 && CURPR->PC < 81 &&
         //                    CURPR->PC > 18)
         //                    {
-        fprintf(STDOUT, "proc %3d stk %5d [%5d] ", CURPR->PROCESSOR, CURPR->T,
-                il->S[CURPR->T]);
-        dumpInst(CURPR->PC - 1);
+        fprintf(STDOUT, "proc %3d stk %5d [%5d] ", current_process->PROCESSOR,
+                current_process->T, interp_local->S[current_process->T]);
+        dumpInst(current_process->PC - 1);
         //                    }
       }
       //                if (CURPR->PID == 1)
       //                    dumpInst(CURPR->PC - 1);
       //                if (++lct > 2000000)
       //                    throw std::exception();
-      switch (el.IR.F) {
+      switch (executor.IR.F) {
       case 0: // push DISPLAY[op1]+op2 (stack frame location of variable op2)
-        CURPR->T++;
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        current_process->T++;
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          il->S[CURPR->T] = CURPR->DISPLAY[el.IR.X] + el.IR.Y;
+          interp_local->S[current_process->T] =
+              current_process->DISPLAY[executor.IR.X] + executor.IR.Y;
           //                            fprintf(STDOUT, "%3d: %d %d,%d %s %s\n",
           //                            CURPR->PC - 1,
           //                                el.IR.F, el.IR.X, el.IR.Y,
@@ -768,20 +787,21 @@ void EXECUTE(InterpLocal *il) {
         }
         break;
       case 1: {
-        CURPR->T++;
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        current_process->T++;
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          el.H1 = CURPR->DISPLAY[el.IR.X] + el.IR.Y;
-          if (Topology != Symbol::SHAREDSY) {
-            TESTVAR(il, el.H1);
+          executor.H1 = current_process->DISPLAY[executor.IR.X] + executor.IR.Y;
+          if (topology != Symbol::SHAREDSY) {
+            TESTVAR(interp_local, executor.H1);
           }
-          if (il->NUMTRACE > 0) {
-            CHKVAR(il, el.H1);
+          if (interp_local->NUMTRACE > 0) {
+            CHKVAR(interp_local, executor.H1);
           }
-          il->S[CURPR->T] = il->S[el.H1];
-          if (il->S[CURPR->T] == RTAG) {
-            il->RS[CURPR->T] = il->RS[el.H1];
+          interp_local->S[current_process->T] = interp_local->S[executor.H1];
+          if (interp_local->S[current_process->T] == RTAG) {
+            interp_local->RS[current_process->T] =
+                interp_local->RS[executor.H1];
           }
           //                            fprintf(STDOUT, "%3d: %d %d,%d %s %s\n",
           //                            CURPR->PC - 1,
@@ -792,114 +812,119 @@ void EXECUTE(InterpLocal *il) {
         break;
       }
       case 2: {
-        CURPR->T++;
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        current_process->T++;
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          el.H1 = il->S[CURPR->DISPLAY[el.IR.X] + el.IR.Y];
-          if (Topology != Symbol::SHAREDSY) {
-            TESTVAR(il, el.H1);
+          executor.H1 =
+              interp_local
+                  ->S[current_process->DISPLAY[executor.IR.X] + executor.IR.Y];
+          if (topology != Symbol::SHAREDSY) {
+            TESTVAR(interp_local, executor.H1);
           }
-          if (il->NUMTRACE > 0) {
-            CHKVAR(il, el.H1);
+          if (interp_local->NUMTRACE > 0) {
+            CHKVAR(interp_local, executor.H1);
           }
-          il->S[CURPR->T] = il->S[el.H1];
-          if (il->S[CURPR->T] == RTAG) {
-            il->RS[CURPR->T] = il->RS[el.H1];
+          interp_local->S[current_process->T] = interp_local->S[executor.H1];
+          if (interp_local->S[current_process->T] == RTAG) {
+            interp_local->RS[current_process->T] =
+                interp_local->RS[executor.H1];
           }
         }
         break;
       }
       case 3: {
-        el.H1 = el.IR.Y;
-        el.H2 = el.IR.X;
-        el.H3 = CURPR->B;
+        executor.H1 = executor.IR.Y;
+        executor.H2 = executor.IR.X;
+        executor.H3 = current_process->B;
         do {
-          CURPR->DISPLAY[el.H1] = el.H3;
-          el.H1--;
-          el.H3 = il->S[el.H3 + 2];
-        } while (el.H1 != el.H2);
+          current_process->DISPLAY[executor.H1] = executor.H3;
+          executor.H1--;
+          executor.H3 = interp_local->S[executor.H3 + 2];
+        } while (executor.H1 != executor.H2);
         break;
       }
       case 4: {
-        CURPR->NUMCHILDREN = 0;
-        CURPR->SEQON = false;
+        current_process->NUMCHILDREN = 0;
+        current_process->SEQON = false;
         break;
       }
       case 5: {
-        if (CURPR->NUMCHILDREN > 0) {
-          CURPR->STATE = PRD::STATE::BLOCKED;
-          il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
+        if (current_process->NUMCHILDREN > 0) {
+          current_process->STATE = PRD::STATE::BLOCKED;
+          interp_local->PROCTAB[current_process->PROCESSOR].RUNPROC = nullptr;
         }
-        CURPR->SEQON = true;
+        current_process->SEQON = true;
         break;
       }
       case 6: { // noop
         break;
       }
       case 7: {
-        CURPR->PC = el.IR.Y;
-        CURPR->SEQON = true;
+        current_process->PC = executor.IR.Y;
+        current_process->SEQON = true;
         break;
       }
       case 8: {
-        switch (el.IR.Y) {
+        switch (executor.IR.Y) {
         case 10: {
-          il->R1 = il->RS[CURPR->T];
-          if (il->R1 >= 0 || il->R1 == (int)(il->R1)) {
-            il->S[CURPR->T] = (int)(il->R1);
+          interp_local->R1 = interp_local->RS[current_process->T];
+          if (interp_local->R1 >= 0 ||
+              interp_local->R1 == (int)(interp_local->R1)) {
+            interp_local->S[current_process->T] = (int)(interp_local->R1);
           } else {
-            il->S[CURPR->T] = (int)(il->R1) - 1; // ?? should go toward 0
+            interp_local->S[current_process->T] =
+                (int)(interp_local->R1) - 1; // ?? should go toward 0
           }
-          if (abs(il->S[CURPR->T]) > NMAX) {
-            il->PS = InterpLocal::PS::INTCHK;
+          if (abs(interp_local->S[current_process->T]) > NMAX) {
+            interp_local->PS = InterpLocal::PS::INTCHK;
           }
           break;
         }
         case 19: {
-          CURPR->T++;
-          if (CURPR->T > CURPR->STACKSIZE) {
-            il->PS = InterpLocal::PS::STKCHK;
+          current_process->T++;
+          if (current_process->T > current_process->STACKSIZE) {
+            interp_local->PS = InterpLocal::PS::STKCHK;
           } else {
-            il->S[CURPR->T] = CURPR->PROCESSOR;
+            interp_local->S[current_process->T] = current_process->PROCESSOR;
           }
           break;
         }
         case 20: {
-          CURPR->T++;
-          if (CURPR->T > CURPR->STACKSIZE) {
-            il->PS = InterpLocal::PS::STKCHK;
+          current_process->T++;
+          if (current_process->T > current_process->STACKSIZE) {
+            interp_local->PS = InterpLocal::PS::STKCHK;
           } else {
-            il->S[CURPR->T] = RTAG;
-            il->RS[CURPR->T] = CURPR->TIME;
+            interp_local->S[current_process->T] = RTAG;
+            interp_local->RS[current_process->T] = current_process->TIME;
           }
           break;
         }
         case 21: {
-          CURPR->T++;
-          if (CURPR->T > CURPR->STACKSIZE) {
-            il->PS = InterpLocal::PS::STKCHK;
+          current_process->T++;
+          if (current_process->T > current_process->STACKSIZE) {
+            interp_local->PS = InterpLocal::PS::STKCHK;
           } else {
-            il->S[CURPR->T] = RTAG;
-            il->RS[CURPR->T] = il->SEQTIME;
+            interp_local->S[current_process->T] = RTAG;
+            interp_local->RS[current_process->T] = interp_local->SEQTIME;
           }
           break;
         }
         case 22: {
-          CURPR->T++;
-          if (CURPR->T > CURPR->STACKSIZE) {
-            il->PS = InterpLocal::PS::STKCHK;
+          current_process->T++;
+          if (current_process->T > current_process->STACKSIZE) {
+            interp_local->PS = InterpLocal::PS::STKCHK;
           } else {
-            il->S[CURPR->T] = CURPR->PID;
+            interp_local->S[current_process->T] = current_process->PID;
           }
           break;
         }
         case 23: {
-          CURPR->T++;
-          if (CURPR->T > CURPR->STACKSIZE) {
-            il->PS = InterpLocal::PS::STKCHK;
+          current_process->T++;
+          if (current_process->T > current_process->STACKSIZE) {
+            interp_local->PS = InterpLocal::PS::STKCHK;
           } else {
-            il->S[CURPR->T] = 10;
+            interp_local->S[current_process->T] = 10;
           }
           break;
         }
@@ -907,222 +932,250 @@ void EXECUTE(InterpLocal *il) {
         break;
       }
       case 9: {
-        if (CURPR->PID == 0) {
-          for (el.I = 1; el.I <= HighestProcessor; el.I++) {
-            proc = (PRD *)calloc(1, sizeof(PROCESSDESCRIPTOR));
-            proc->PC = 0;
-            proc->PID = il->NEXTID++;
-            if (il->NEXTID > PIDMAX) {
-              il->PS = InterpLocal::PS::PROCCHK;
+        if (current_process->PID == 0) {
+          for (executor.I = 1; executor.I <= highest_processor; executor.I++) {
+            process = static_cast<PRD *>(calloc(1, sizeof(PROCESSDESCRIPTOR)));
+            process->PC = 0;
+            process->PID = interp_local->NEXTID++;
+            if (interp_local->NEXTID > PIDMAX) {
+              interp_local->PS = InterpLocal::PS::PROCCHK;
             }
-            proc->VIRTUALTIME = 0;
-            memcpy(proc->DISPLAY, CURPR->DISPLAY, sizeof(CURPR->DISPLAY));
-            il->PTEMP = (ACTPNT)calloc(1, sizeof(ACTIVEPROCESS));
-            il->PTEMP->PDES = proc;
-            il->PTEMP->NEXT = il->ACPTAIL->NEXT;
-            il->ACPTAIL->NEXT = il->PTEMP;
-            il->ACPTAIL = il->PTEMP;
-            el.H1 = FINDFRAME(il, il->STKMAIN);
-            if (debug & DBGPROC) {
-              fprintf(STDOUT, "opc %d findframe %d length %d, response %d\n",
-                      el.IR.F, CURPR->PID, il->STKMAIN, el.H1);
+            process->VIRTUALTIME = 0;
+            process->DISPLAY.swap(current_process->DISPLAY);
+            interp_local->PTEMP =
+                static_cast<ACTPNT>(calloc(1, sizeof(ACTIVEPROCESS)));
+            interp_local->PTEMP->PDES = process;
+            interp_local->PTEMP->NEXT = interp_local->ACPTAIL->NEXT;
+            interp_local->ACPTAIL->NEXT = interp_local->PTEMP;
+            interp_local->ACPTAIL = interp_local->PTEMP;
+            executor.H1 = FINDFRAME(interp_local, interp_local->STKMAIN);
+            if ((debug & DBGPROC) != 0) {
+              println(STDOUT, "opc {} findframe {} length {}, response {}",
+                      executor.IR.F, current_process->PID,
+                      interp_local->STKMAIN, executor.H1);
             }
-            if (el.H1 > 0) {
-              proc->T = el.H1 + BTAB[2].VSIZE - 1;
-              proc->STACKSIZE = el.H1 + il->STKMAIN - 1;
-              proc->B = el.H1;
-              proc->BASE = el.H1;
-              for (el.J = el.H1; el.J <= el.H1 + il->STKMAIN - 1; el.J++) {
-                il->S[el.J] = 0;
-                il->SLOCATION[el.J] = el.I;
-                il->RS[el.I] = 0.0;
+            if (executor.H1 > 0) {
+              process->T = executor.H1 + BTAB[2].VSIZE - 1;
+              process->STACKSIZE = executor.H1 + interp_local->STKMAIN - 1;
+              process->B = executor.H1;
+              process->BASE = executor.H1;
+              for (executor.J = executor.H1;
+                   executor.J <= executor.H1 + interp_local->STKMAIN - 1;
+                   executor.J++) {
+                interp_local->S[executor.J] = 0;
+                interp_local->SLOCATION[executor.J] = executor.I;
+                interp_local->RS[executor.I] = 0.0;
               }
-              for (el.J = el.H1; el.J <= el.H1 + BASESIZE - 1; el.J++) {
-                il->STARTMEM[el.I] = -il->STARTMEM[el.I];
+              for (executor.J = executor.H1;
+                   executor.J <= executor.H1 + BASESIZE - 1; executor.J++) {
+                interp_local->STARTMEM[executor.I] =
+                    -interp_local->STARTMEM[executor.I];
               }
-              il->S[el.H1 + 1] = 0;
-              il->S[el.H1 + 2] = 0;
-              il->S[el.H1 + 3] = -1;
-              il->S[el.H1 + 4] = BTAB[1].LAST;
-              il->S[el.H1 + 5] = 1;
-              il->S[el.H1 + 6] = il->STKMAIN;
-              proc->DISPLAY[1] = el.H1;
+              interp_local->S[executor.H1 + 1] = 0;
+              interp_local->S[executor.H1 + 2] = 0;
+              interp_local->S[executor.H1 + 3] = -1;
+              interp_local->S[executor.H1 + 4] = BTAB[1].LAST;
+              interp_local->S[executor.H1 + 5] = 1;
+              interp_local->S[executor.H1 + 6] = interp_local->STKMAIN;
+              process->DISPLAY[1] = executor.H1;
             }
-            proc->TIME = CURPR->TIME;
-            proc->STATE = PRD::STATE::READY;
-            proc->FORLEVEL = CURPR->FORLEVEL;
-            proc->READSTATUS = PRD::NONE;
-            proc->FORKCOUNT = 1;
-            proc->MAXFORKTIME = 0;
-            proc->JOINSEM = 0;
-            proc->PARENT = CURPR;
-            proc->PRIORITY = PRD::PRIORITY::LOW;
-            proc->ALTPROC = -1;
-            proc->SEQON = true;
-            proc->GROUPREP = false;
-            proc->PROCESSOR = el.I;
-            if (il->PROCTAB[el.I].STATUS ==
+            process->TIME = current_process->TIME;
+            process->STATE = PRD::STATE::READY;
+            process->FORLEVEL = current_process->FORLEVEL;
+            process->READSTATUS = PRD::READSTATUS::NONE;
+            process->FORKCOUNT = 1;
+            process->MAXFORKTIME = 0;
+            process->JOINSEM = 0;
+            process->PARENT = current_process;
+            process->PRIORITY = PRD::PRIORITY::LOW;
+            process->ALTPROC = -1;
+            process->SEQON = true;
+            process->GROUPREP = false;
+            process->PROCESSOR = executor.I;
+            if (interp_local->PROCTAB[executor.I].STATUS ==
                 InterpLocal::PROCTAB::STATUS::NEVERUSED) {
-              il->USEDPROCS++;
+              interp_local->USEDPROCS++;
             }
-            il->PROCTAB[el.I].STATUS = InterpLocal::PROCTAB::STATUS::FULL;
-            il->PROCTAB[el.I].NUMPROC++;
-            el.J = 1;
-            while (proc->DISPLAY[el.J] != -1) {
-              il->S[proc->DISPLAY[el.J] + 5]++;
+            interp_local->PROCTAB[executor.I].STATUS =
+                InterpLocal::PROCTAB::STATUS::FULL;
+            interp_local->PROCTAB[executor.I].NUMPROC++;
+            executor.J = 1;
+            while (process->DISPLAY[executor.J] != -1) {
+              interp_local->S[process->DISPLAY[executor.J] + 5]++;
               if (debug & DBGRELEASE) {
-                fprintf(STDOUT, "%d ref ct %d ct=%d\n", el.IR.F, CURPR->PID,
-                        il->S[proc->DISPLAY[el.J] + 5]);
+                println(STDOUT, "{} ref ct {} ct={}", executor.IR.F,
+                        current_process->PID,
+                        interp_local->S[process->DISPLAY[executor.J] + 5]);
               }
-              el.J++;
+              executor.J++;
             }
             if (debug & DBGPROC) {
-              fprintf(STDOUT, "opc %d newproc pid %d\n", el.IR.F, proc->PID);
+              println(STDOUT, "opc {} newproc pid {}", executor.IR.F,
+                      process->PID);
             }
-            CURPR->FORKCOUNT += 1;
+            current_process->FORKCOUNT += 1;
           }
-          CURPR->PC = CURPR->PC + 3;
+          current_process->PC = current_process->PC + 3;
         }
         break;
       }
       case 10: { // jmp op2
-        CURPR->PC = (int)el.IR.Y;
+        current_process->PC = executor.IR.Y;
         break;
       }
       case 11: // if0 pop,->op2
-        if (il->S[CURPR->T] == 0) {
-          CURPR->PC = el.IR.Y;
+        if (interp_local->S[current_process->T] == 0) {
+          current_process->PC = executor.IR.Y;
         }
-        CURPR->T--;
+        current_process->T--;
         break;
       case 12: {
-        el.H1 = il->S[CURPR->T];
-        CURPR->T--;
-        el.H2 = el.IR.Y;
-        el.H3 = 0;
+        executor.H1 = interp_local->S[current_process->T];
+        current_process->T--;
+        executor.H2 = executor.IR.Y;
+        executor.H3 = 0;
         do {
-          if (code[el.H2].F != 13) {
-            el.H3 = 1;
-            il->PS = InterpLocal::PS::CASCHK;
-          } else if (code[el.H2].X == -1 || code[el.H2].Y == el.H1) {
-            el.H3 = 1;
-            CURPR->PC = code[el.H2 + 1].Y;
+          if (code[executor.H2].F != 13) {
+            executor.H3 = 1;
+            interp_local->PS = InterpLocal::PS::CASCHK;
+          } else if (code[executor.H2].X == -1 ||
+                     code[executor.H2].Y == executor.H1) {
+            executor.H3 = 1;
+            current_process->PC = code[executor.H2 + 1].Y;
           } else {
-            el.H2 = el.H2 + 2;
+            executor.H2 = executor.H2 + 2;
           }
-        } while (el.H3 == 0);
+        } while (executor.H3 == 0);
         break;
       }
       case 13: {
-        el.H1 = el.IR.X;
-        el.H2 = el.IR.Y;
-        el.H3 = FINDFRAME(il, el.H2 + 1);
+        executor.H1 = executor.IR.X;
+        executor.H2 = executor.IR.Y;
+        executor.H3 = FINDFRAME(interp_local, executor.H2 + 1);
         if (debug & DBGPROC) {
           fprintf(STDOUT, "opc %d findframe %d length %d, response %d\n",
-                  el.IR.F, CURPR->PID, el.H2 + 1, el.H3);
+                  executor.IR.F, current_process->PID, executor.H2 + 1,
+                  executor.H3);
         }
-        if (el.H3 < 0) {
-          il->PS = InterpLocal::PS::STKCHK;
+        if (executor.H3 < 0) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          for (el.I = 0; el.I < el.H2; el.I++) {
-            il->S[el.H3 + el.I] = (unsigned char)STAB[el.H1 + el.I];
+          for (executor.I = 0; executor.I < executor.H2; executor.I++) {
+            interp_local->S[executor.H3 + executor.I] =
+                (unsigned char)STAB[executor.H1 + executor.I];
           }
-          il->S[el.H3 + el.H2] = 0;
-          CURPR->T++;
-          if (CURPR->T > CURPR->STACKSIZE) {
-            il->PS = InterpLocal::PS::STKCHK;
+          interp_local->S[executor.H3 + executor.H2] = 0;
+          current_process->T++;
+          if (current_process->T > current_process->STACKSIZE) {
+            interp_local->PS = InterpLocal::PS::STKCHK;
           } else {
-            il->S[CURPR->T] = el.H3;
+            interp_local->S[current_process->T] = executor.H3;
           }
         }
         break;
       }
       case 14: { // push from stack top stack frame loc
-        el.H1 = il->S[CURPR->T];
+        executor.H1 = interp_local->S[current_process->T];
         //                        if (CURPR->PROCESSOR == 0)
         //                            fprintf(STDOUT, "14: proc %d pc %d stack
         //                            %d\n", CURPR->PROCESSOR, CURPR->PC,
         //                            CURPR->T);
-        CURPR->T++;
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        current_process->T++;
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          il->S[CURPR->T] = il->S[el.H1];
-          if (il->S[CURPR->T] == RTAG) {
-            il->RS[CURPR->T] = il->RS[el.H1];
+          interp_local->S[current_process->T] = interp_local->S[executor.H1];
+          if (interp_local->S[current_process->T] == RTAG) {
+            interp_local->RS[current_process->T] =
+                interp_local->RS[executor.H1];
           }
         }
         break;
       }
       case 15: { // add
-        CURPR->T--;
-        il->S[CURPR->T] = il->S[CURPR->T] + il->S[CURPR->T + 1];
+        current_process->T--;
+        interp_local->S[current_process->T] =
+            interp_local->S[current_process->T] +
+            interp_local->S[current_process->T + 1];
         break;
       }
       case 18: { // IR.Y is index of a function in TAB[] symbol table
                  // get stack frame for block execution callblk op
-        if (TAB[el.IR.Y].address == 0) {
-          il->PS = InterpLocal::PS::FUNCCHK;
-        } else if (TAB[el.IR.Y].address > 0) {
-          el.H1 = BTAB[TAB[el.IR.Y].reference].VSIZE + WORKSIZE;
-          el.H2 = FINDFRAME(il, el.H1);
+        if (TAB[executor.IR.Y].address == 0) {
+          interp_local->PS = InterpLocal::PS::FUNCCHK;
+        } else if (TAB[executor.IR.Y].address > 0) {
+          executor.H1 = BTAB[TAB[executor.IR.Y].reference].VSIZE + WORKSIZE;
+          executor.H2 = FINDFRAME(interp_local, executor.H1);
           if (debug & DBGPROC) {
             fprintf(STDOUT, "opc %d findframe %d length %d, response %d\n",
-                    el.IR.F, CURPR->PID, el.H1, el.H2);
+                    executor.IR.F, current_process->PID, executor.H1,
+                    executor.H2);
           }
-          if (el.H2 >= 0) {
-            il->S[el.H2 + 7] = CURPR->T;
-            CURPR->T = el.H2 - 1;
-            CURPR->STACKSIZE = el.H1 + el.H2 - 1;
-            CURPR->T += 8;
-            il->S[CURPR->T - 4] = el.H1 - 1;
-            il->S[CURPR->T - 3] = el.IR.Y;
-            for (el.I = el.H2; el.I <= el.H2 + BASESIZE - 1; el.I++) {
-              il->STARTMEM[el.I] = -il->STARTMEM[el.I];
+          if (executor.H2 >= 0) {
+            interp_local->S[executor.H2 + 7] = current_process->T;
+            current_process->T = executor.H2 - 1;
+            current_process->STACKSIZE = executor.H1 + executor.H2 - 1;
+            current_process->T += 8;
+            interp_local->S[current_process->T - 4] = executor.H1 - 1;
+            interp_local->S[current_process->T - 3] = executor.IR.Y;
+            for (executor.I = executor.H2;
+                 executor.I <= executor.H2 + BASESIZE - 1; executor.I++) {
+              interp_local->STARTMEM[executor.I] =
+                  -interp_local->STARTMEM[executor.I];
             }
           }
         }
         break;
       }
       case 19: {
-        if (TAB[el.IR.X].address < 0) {
-          EXECLIB(il, &el, CURPR, -TAB[el.IR.X].address);
+        if (TAB[executor.IR.X].address < 0) {
+          EXECLIB(interp_local, &executor, current_process,
+                  -TAB[executor.IR.X].address);
         } else {
-          el.H1 = CURPR->T - el.IR.Y;        // base of frame acquired by 18
-          el.H2 = il->S[el.H1 + 4];          // function TAB index
-          el.H3 = TAB[el.H2].LEV;            // TAB[stk + 4].LEV
-          CURPR->DISPLAY[el.H3 + 1] = el.H1; // DISPLAY[H3 + 1]
-          for (el.I = el.H3 + 2; el.I <= LMAX;
-               el.I++) { // clear DISPLAY to top w/-1
-            CURPR->DISPLAY[el.I] = -1;
+          executor.H1 = current_process->T -
+                        executor.IR.Y; // base of frame acquired by 18
+          executor.H2 = interp_local->S[executor.H1 + 4]; // function TAB index
+          executor.H3 = TAB[executor.H2].LEV;             // TAB[stk + 4].LEV
+          current_process->DISPLAY[executor.H3 + 1] =
+              executor.H1; // DISPLAY[H3 + 1]
+          for (executor.I = executor.H3 + 2; executor.I <= LMAX;
+               executor.I++) { // clear DISPLAY to top w/-1
+            current_process->DISPLAY[executor.I] = -1;
           }
-          il->S[el.H1 + 6] = il->S[el.H1 + 3] + 1;
-          el.H4 = il->S[el.H1 + 3] + el.H1;
-          il->S[el.H1 + 1] = CURPR->PC; // return addr
-          il->S[el.H1 + 2] = CURPR->DISPLAY[el.H3];
-          il->S[el.H1 + 3] = CURPR->B;
-          il->S[el.H1 + 5] = 1;
-          for (el.H3 = CURPR->T + 1; el.H3 <= el.H4; el.H3++) {
-            il->S[el.H3] = 0;
-            il->RS[el.H3] = 0.0;
+          interp_local->S[executor.H1 + 6] =
+              interp_local->S[executor.H1 + 3] + 1;
+          executor.H4 = interp_local->S[executor.H1 + 3] + executor.H1;
+          interp_local->S[executor.H1 + 1] = current_process->PC; // return addr
+          interp_local->S[executor.H1 + 2] =
+              current_process->DISPLAY[executor.H3];
+          interp_local->S[executor.H1 + 3] = current_process->B;
+          interp_local->S[executor.H1 + 5] = 1;
+          for (executor.H3 = current_process->T + 1; executor.H3 <= executor.H4;
+               executor.H3++) {
+            interp_local->S[executor.H3] = 0;
+            interp_local->RS[executor.H3] = 0.0;
           }
-          for (el.H3 = el.H1; el.H3 <= el.H4; el.H3++) {
-            il->SLOCATION[el.H3] = CURPR->PROCESSOR;
+          for (executor.H3 = executor.H1; executor.H3 <= executor.H4;
+               executor.H3++) {
+            interp_local->SLOCATION[executor.H3] = current_process->PROCESSOR;
           }
-          CURPR->B = el.H1;
-          CURPR->T = el.H4 - WORKSIZE;
-          CURPR->PC = TAB[el.H2].address; // jump to block address
-          TIMEINC(il, 3, "cs19");
+          current_process->B = executor.H1;
+          current_process->T = executor.H4 - WORKSIZE;
+          current_process->PC =
+              TAB[executor.H2].address; // jump to block address
+          TIMEINC(interp_local, 3, "cs19");
         }
         break;
       }
       case 20: { // swap
-        el.H1 = il->S[CURPR->T];
-        el.RH1 = il->RS[CURPR->T];
-        il->S[CURPR->T] = il->S[CURPR->T - 1];
-        il->RS[CURPR->T] = il->RS[CURPR->T - 1];
-        il->S[CURPR->T - 1] = el.H1;
-        il->RS[CURPR->T - 1] = el.RH1;
+        executor.H1 = interp_local->S[current_process->T];
+        executor.RH1 = interp_local->RS[current_process->T];
+        interp_local->S[current_process->T] =
+            interp_local->S[current_process->T - 1];
+        interp_local->RS[current_process->T] =
+            interp_local->RS[current_process->T - 1];
+        interp_local->S[current_process->T - 1] = executor.H1;
+        interp_local->RS[current_process->T - 1] = executor.RH1;
         break;
       }
       case 21: { // load array Y[T]
@@ -1131,99 +1184,107 @@ void EXECUTE(InterpLocal *il) {
         // top - 1 is array base in stack
         // pop stack
         // replace top with stack element at array base plus subscript
-        el.H1 = el.IR.Y;
-        el.H2 = ATAB[el.H1].LOW;
-        el.H3 = il->S[CURPR->T]; // array subscript
-        if (el.H3 < el.H2 ||
-            ((el.H3 > ATAB[el.H1].HIGH) && (ATAB[el.H1].HIGH > 0))) {
-          il->PS = InterpLocal::PS::INXCHK;
+        executor.H1 = executor.IR.Y;
+        executor.H2 = ATAB[executor.H1].LOW;
+        executor.H3 = interp_local->S[current_process->T]; // array subscript
+        if (executor.H3 < executor.H2 ||
+            ((executor.H3 > ATAB[executor.H1].HIGH) &&
+             (ATAB[executor.H1].HIGH > 0))) {
+          interp_local->PS = InterpLocal::PS::INXCHK;
         } else {
-          CURPR->T--;
-          el.H4 = il->S[CURPR->T]; // added for debugging
-          il->S[CURPR->T] =
-              il->S[CURPR->T] + (el.H3 - el.H2) * ATAB[el.H1].ELSIZE;
+          current_process->T--;
+          executor.H4 =
+              interp_local->S[current_process->T]; // added for debugging
+          interp_local->S[current_process->T] =
+              interp_local->S[current_process->T] +
+              (executor.H3 - executor.H2) * ATAB[executor.H1].ELSIZE;
           // fprintf(STDOUT, "\nindex %d array stack base %d stack loc %d\n",
           // el.H3, el.H4, il->S[CURPR->T]);
         }
         break;
       }
       case 22: {
-        el.H1 = il->S[CURPR->T];
-        if ((el.H1 <= 0) || (el.H1 >= STMAX)) {
-          il->PS = InterpLocal::PS::REFCHK;
+        executor.H1 = interp_local->S[current_process->T];
+        if ((executor.H1 <= 0) || (executor.H1 >= STMAX)) {
+          interp_local->PS = InterpLocal::PS::REFCHK;
         } else {
-          CURPR->T--;
-          el.H2 = el.IR.Y + CURPR->T;
-          if (Topology != Symbol::SHAREDSY) {
-            TESTVAR(il, el.H1);
+          current_process->T--;
+          executor.H2 = executor.IR.Y + current_process->T;
+          if (topology != Symbol::SHAREDSY) {
+            TESTVAR(interp_local, executor.H1);
           }
-          if (el.H2 > CURPR->STACKSIZE) {
-            il->PS = InterpLocal::PS::STKCHK;
+          if (executor.H2 > current_process->STACKSIZE) {
+            interp_local->PS = InterpLocal::PS::STKCHK;
           } else {
-            while (CURPR->T < el.H2) {
-              CURPR->T++;
-              if (il->NUMTRACE > 0) {
-                CHKVAR(il, el.H1);
+            while (current_process->T < executor.H2) {
+              current_process->T++;
+              if (interp_local->NUMTRACE > 0) {
+                CHKVAR(interp_local, executor.H1);
               }
-              il->S[CURPR->T] = il->S[el.H1];
-              if (il->S[el.H1] == RTAG)
-                il->RS[CURPR->T] = il->RS[el.H1];
-              el.H1++;
+              interp_local->S[current_process->T] =
+                  interp_local->S[executor.H1];
+              if (interp_local->S[executor.H1] == RTAG)
+                interp_local->RS[current_process->T] =
+                    interp_local->RS[executor.H1];
+              executor.H1++;
             }
           }
         }
         break;
       }
       case 23: {
-        el.H1 = il->S[CURPR->T - 1];
-        el.H2 = il->S[CURPR->T];
-        if ((el.H1 <= 0) || (el.H2 <= 0) || (el.H1 >= STMAX) ||
-            (el.H2 >= STMAX)) {
-          il->PS = InterpLocal::PS::REFCHK;
+        executor.H1 = interp_local->S[current_process->T - 1];
+        executor.H2 = interp_local->S[current_process->T];
+        if ((executor.H1 <= 0) || (executor.H2 <= 0) ||
+            (executor.H1 >= STMAX) || (executor.H2 >= STMAX)) {
+          interp_local->PS = InterpLocal::PS::REFCHK;
         } else {
-          el.H3 = el.H1 + el.IR.X;
-          if (Topology != Symbol::SHAREDSY) {
-            TESTVAR(il, el.H2);
-            if (el.IR.Y == 0) {
-              TESTVAR(il, el.H1);
-            } else if (il->CONGESTION) {
-              el.H4 = COMMDELAY(il, CURPR->PROCESSOR, il->SLOCATION[el.H1],
-                                el.IR.X);
+          executor.H3 = executor.H1 + executor.IR.X;
+          if (topology != Symbol::SHAREDSY) {
+            TESTVAR(interp_local, executor.H2);
+            if (executor.IR.Y == 0) {
+              TESTVAR(interp_local, executor.H1);
+            } else if (interp_local->CONGESTION) {
+              executor.H4 = COMMDELAY(interp_local, current_process->PROCESSOR,
+                                      interp_local->SLOCATION[executor.H1],
+                                      executor.IR.X);
             }
           }
-          while (el.H1 < el.H3) {
-            if (il->NUMTRACE > 0) {
-              CHKVAR(il, el.H1);
-              CHKVAR(il, el.H2);
+          while (executor.H1 < executor.H3) {
+            if (interp_local->NUMTRACE > 0) {
+              CHKVAR(interp_local, executor.H1);
+              CHKVAR(interp_local, executor.H2);
             }
-            if (il->STARTMEM[el.H1] <= 0) {
-              il->PS = InterpLocal::PS::REFCHK;
+            if (interp_local->STARTMEM[executor.H1] <= 0) {
+              interp_local->PS = InterpLocal::PS::REFCHK;
             }
-            il->S[el.H1] = il->S[el.H2];
-            if (il->S[el.H2] == RTAG) {
-              il->RS[el.H1] = il->RS[el.H2];
+            interp_local->S[executor.H1] = interp_local->S[executor.H2];
+            if (interp_local->S[executor.H2] == RTAG) {
+              interp_local->RS[executor.H1] = interp_local->RS[executor.H2];
             }
-            el.H1++;
-            el.H2++;
+            executor.H1++;
+            executor.H2++;
           }
-          TIMEINC(il, el.IR.X / 5, "cs23");
-          il->S[CURPR->T - 1] = il->S[CURPR->T];
-          CURPR->T--;
+          TIMEINC(interp_local, executor.IR.X / 5, "cs23");
+          interp_local->S[current_process->T - 1] =
+              interp_local->S[current_process->T];
+          current_process->T--;
         }
         break;
       }
       case 24: { // push imm op2
-        CURPR->T++;
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        current_process->T++;
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          il->S[CURPR->T] = (int)el.IR.Y;
+          interp_local->S[current_process->T] = (int)executor.IR.Y;
         }
         break;
       }
       case 26: { // convreal
-        il->RS[CURPR->T] = il->S[CURPR->T];
-        il->S[CURPR->T] = RTAG;
+        interp_local->RS[current_process->T] =
+            interp_local->S[current_process->T];
+        interp_local->S[current_process->T] = RTAG;
         break;
       }
       case 27: {
@@ -1233,29 +1294,30 @@ void EXECUTE(InterpLocal *il) {
 #elif defined(__linux__) || defined(_WIN32)
         errno = 0;
 #endif
-        el.H1 = il->S[CURPR->T];
-        if (Topology != Symbol::SHAREDSY) {
-          TESTVAR(il, el.H1);
+        executor.H1 = interp_local->S[current_process->T];
+        if (topology != Symbol::SHAREDSY) {
+          TESTVAR(interp_local, executor.H1);
         }
-        if (il->NUMTRACE > 0) {
-          CHKVAR(il, el.H1);
+        if (interp_local->NUMTRACE > 0) {
+          CHKVAR(interp_local, executor.H1);
         }
         if (INPUTFILE) {
           if (feof(INP)) {
-            il->PS = InterpLocal::PS::REDCHK;
+            interp_local->PS = InterpLocal::PS::REDCHK;
           }
         } else if (feof(STDIN)) {
-          il->PS = InterpLocal::PS::REDCHK;
+          interp_local->PS = InterpLocal::PS::REDCHK;
         }
-        if (il->PS != InterpLocal::PS::REDCHK) {
+        if (interp_local->PS != InterpLocal::PS::REDCHK) {
           if (!INPUTFILE) {
-            switch (el.IR.Y) {
+            switch (executor.IR.Y) {
             case 1: {
-              il->S[el.H1] = RTAG;
+              interp_local->S[executor.H1] = RTAG;
               // INPUT >> il->RS[el.H1];
               // fscanf(STDIN, "%lf", &il->RS[el.H1]);
-              fscanf(STDIN, "%s", el.buf);
-              il->RS[el.H1] = strtod(el.buf, nullptr);
+              fscanf(STDIN, "%s", executor.buf.str().data());
+              interp_local->RS[executor.H1] =
+                  strtod(executor.buf.str().data(), nullptr);
 #if defined(__APPLE__)
               if (*__error() != 0)
 #elif defined(__linux__) || defined(_WIN32)
@@ -1267,34 +1329,37 @@ void EXECUTE(InterpLocal *il) {
             case 2: {
               // INPUT >> il->S[el.H1];
               // fscanf(STDIN, "%d", &il->S[el.H1]);
-              fscanf(STDIN, "%s", el.buf);
-              il->S[el.H1] = (int)strtol(el.buf, nullptr, 10);
+              fscanf(STDIN, "%s", executor.buf.str().data());
+              interp_local->S[executor.H1] = static_cast<int>(
+                  strtol(executor.buf.str().data(), nullptr, 10));
 #if defined(__APPLE__)
-              if (*__error() != 0)
+              if (*__error() != 0) {
 #elif defined(__linux__) || defined(_WIN32)
-              if (errno != 0)
+              if (errno != 0) {
 #endif
                 IORESULT = -1;
+              }
               break;
             }
             case 4: {
               // char CH;
               //  INPUT >> CH;
               // il->S[el.H1] = int(CH);
-              il->S[el.H1] = fgetc(STDIN);
-              if (0 > il->S[el.H1])
+              interp_local->S[executor.H1] = fgetc(STDIN);
+              if (0 > interp_local->S[executor.H1])
                 IORESULT = -1;
               break;
             }
             }
           } else {
-            switch (el.IR.Y) {
+            switch (executor.IR.Y) {
             case 1: {
-              il->S[el.H1] = RTAG;
+              interp_local->S[executor.H1] = RTAG;
               // INP >> il->RS[el.H1];
               // fscanf(INP, "%lf", &il->RS[el.H1]);
-              fscanf(INP, "%s", el.buf);
-              il->RS[el.H1] = strtod(el.buf, nullptr);
+              fscanf(INP, "%s", executor.buf.str().data());
+              interp_local->RS[executor.H1] =
+                  strtod(executor.buf.str().data(), nullptr);
 #if defined(__APPLE__)
               if (*__error() != 0)
 #elif defined(__linux__) || defined(_WIN32)
@@ -1306,8 +1371,9 @@ void EXECUTE(InterpLocal *il) {
             case 2: {
               // INP >> il->S[el.H1];
               // fscanf(STDIN, "%d", &il->S[el.H1]);
-              fscanf(INP, "%s", el.buf);
-              il->S[el.H1] = (int)strtol(el.buf, nullptr, 10);
+              fscanf(INP, "%s", executor.buf.str().data());
+              interp_local->S[executor.H1] = static_cast<int>(
+                  strtol(executor.buf.str().data(), nullptr, 10));
 #if defined(__APPLE__)
               if (*__error() != 0)
 #elif defined(__linux__) || (_WIN32)
@@ -1321,89 +1387,101 @@ void EXECUTE(InterpLocal *il) {
               // INP >> CH;
               // il->S[el.H1] = int(CH);
               // il->S[el.H1] = fgetc(STDIN);
-              il->S[el.H1] = fgetc(INP);
-              if (0 > il->S[el.H1])
+              interp_local->S[executor.H1] = fgetc(INP);
+              if (0 > interp_local->S[executor.H1]) {
                 IORESULT = -1;
+              }
               break;
             }
             }
           }
           if (IORESULT != 0) {
-            il->PS = InterpLocal::PS::DATACHK;
+            interp_local->PS = InterpLocal::PS::DATACHK;
           }
         }
-        CURPR->T--;
+        current_process->T--;
         break;
       }
       case 28: { // write from string table
-        el.H1 = il->S[CURPR->T];
-        el.H2 = el.IR.Y;
-        CURPR->T--;
-        il->CHRCNT = il->CHRCNT + el.H1;
-        if (il->CHRCNT > LINELENG) {
-          il->PS = InterpLocal::PS::LNGCHK;
+        executor.H1 = interp_local->S[current_process->T];
+        executor.H2 = executor.IR.Y;
+        current_process->T--;
+        interp_local->CHRCNT = interp_local->CHRCNT + executor.H1;
+        if (interp_local->CHRCNT > LINELENG) {
+          interp_local->PS = InterpLocal::PS::LNGCHK;
         }
         do {
           if (!OUTPUTFILE) {
-            std::fputc(STAB[el.H2], STDOUT);
+            std::fputc(STAB[executor.H2], STDOUT);
           } else {
-            std::fputc(STAB[el.H2], OUTP);
+            std::fputc(STAB[executor.H2], OUTP);
           }
-          el.H1--;
-          el.H2++;
-          if (STAB[el.H2] == (char)10 || STAB[el.H2] == (char)13) {
-            il->CHRCNT = 0;
+          executor.H1--;
+          executor.H2++;
+          if (STAB[executor.H2] == (char)10 || STAB[executor.H2] == (char)13) {
+            interp_local->CHRCNT = 0;
           }
-        } while (el.H1 != 0);
+        } while (executor.H1 != 0);
         break;
       }
       case 29: { //  outwidth output formatted with WIDTH
-        if (il->COUTWIDTH <= 0) {
-          il->CHRCNT = il->CHRCNT + il->FLD[el.IR.Y];
-          if (il->CHRCNT > LINELENG) {
-            il->PS = InterpLocal::PS::LNGCHK;
+        if (interp_local->COUTWIDTH <= 0) {
+          interp_local->CHRCNT =
+              interp_local->CHRCNT + interp_local->FLD[executor.IR.Y];
+          if (interp_local->CHRCNT > LINELENG) {
+            interp_local->PS = InterpLocal::PS::LNGCHK;
           } else {
             if (!OUTPUTFILE) {
-              switch (el.IR.Y) {
+              switch (executor.IR.Y) {
               case 2: {
-                fprintf(STDOUT, "%*d", il->FLD[2], il->S[CURPR->T]);
+                fprintf(STDOUT, "%*d", interp_local->FLD[2],
+                        interp_local->S[current_process->T]);
                 break;
               }
               case 3: {
-                fprintf(STDOUT, "%*s", il->FLD[3],
-                        (ITOB(il->S[CURPR->T])) ? "TRUE" : "FALSE");
+                fprintf(STDOUT, "%*s", interp_local->FLD[3],
+                        (ITOB(interp_local->S[current_process->T])) ? "TRUE"
+                                                                    : "FALSE");
                 break;
               }
               case 4: {
-                if ((il->S[CURPR->T] < CHARL) || (il->S[CURPR->T] > CHARH)) {
-                  il->PS = InterpLocal::PS::CHRCHK;
+                if ((interp_local->S[current_process->T] < CHARL) ||
+                    (interp_local->S[current_process->T] > CHARH)) {
+                  interp_local->PS = InterpLocal::PS::CHRCHK;
                 } else {
-                  fprintf(STDOUT, "%*c", il->FLD[4], (char)(il->S[CURPR->T]));
-                  if ((il->S[CURPR->T] == 10) || (il->S[CURPR->T] == 13)) {
-                    il->CHRCNT = 0;
+                  fprintf(STDOUT, "%*c", interp_local->FLD[4],
+                          (char)(interp_local->S[current_process->T]));
+                  if ((interp_local->S[current_process->T] == 10) ||
+                      (interp_local->S[current_process->T] == 13)) {
+                    interp_local->CHRCNT = 0;
                   }
                 }
                 break;
               }
               }
             } else {
-              switch (el.IR.Y) {
+              switch (executor.IR.Y) {
               case 2: {
-                fprintf(OUTP, "%*d", il->FLD[2], il->S[CURPR->T]);
+                fprintf(OUTP, "%*d", interp_local->FLD[2],
+                        interp_local->S[current_process->T]);
                 break;
               }
               case 3: {
-                fprintf(OUTP, "%*s", il->FLD[3],
-                        (ITOB(il->S[CURPR->T])) ? "true" : "false");
+                fprintf(OUTP, "%*s", interp_local->FLD[3],
+                        (ITOB(interp_local->S[current_process->T])) ? "true"
+                                                                    : "false");
                 break;
               }
               case 4: {
-                if ((il->S[CURPR->T] < CHARL) || (il->S[CURPR->T] > CHARH)) {
-                  il->PS = InterpLocal::PS::CHRCHK;
+                if ((interp_local->S[current_process->T] < CHARL) ||
+                    (interp_local->S[current_process->T] > CHARH)) {
+                  interp_local->PS = InterpLocal::PS::CHRCHK;
                 } else {
-                  fprintf(OUTP, "%*c", il->FLD[4], char(il->S[CURPR->T]));
-                  if ((il->S[CURPR->T] == 10) || (il->S[CURPR->T] == 13)) {
-                    il->CHRCNT = 0;
+                  fprintf(OUTP, "%*c", interp_local->FLD[4],
+                          char(interp_local->S[current_process->T]));
+                  if ((interp_local->S[current_process->T] == 10) ||
+                      (interp_local->S[current_process->T] == 13)) {
+                    interp_local->CHRCNT = 0;
                   }
                 }
                 break;
@@ -1412,55 +1490,57 @@ void EXECUTE(InterpLocal *il) {
             }
           }
         } else {
-          il->CHRCNT = il->CHRCNT + il->COUTWIDTH;
-          el.H1 = il->S[CURPR->T];
-          if (il->CHRCNT > LINELENG) {
-            il->PS = InterpLocal::PS::LNGCHK;
+          interp_local->CHRCNT = interp_local->CHRCNT + interp_local->COUTWIDTH;
+          executor.H1 = interp_local->S[current_process->T];
+          if (interp_local->CHRCNT > LINELENG) {
+            interp_local->PS = InterpLocal::PS::LNGCHK;
           } else {
             if (!OUTPUTFILE) {
-              switch (el.IR.Y) {
+              switch (executor.IR.Y) {
               case 2: {
                 // std::cout << el.H1;
-                fprintf(STDOUT, "%*d", il->COUTWIDTH, el.H1);
+                fprintf(STDOUT, "%*d", interp_local->COUTWIDTH, executor.H1);
                 break;
               }
               case 3: {
                 // std::cout << ITOB(el.H1);
-                fprintf(STDOUT, "%*s", il->COUTWIDTH,
-                        (ITOB(el.H1)) ? "true" : "false");
+                fprintf(STDOUT, "%*s", interp_local->COUTWIDTH,
+                        (ITOB(executor.H1)) ? "true" : "false");
                 break;
               }
               case 4: {
-                if ((el.H1 < CHARL) || (el.H1 > CHARH)) {
-                  il->PS = InterpLocal::PS::CHRCHK;
+                if ((executor.H1 < CHARL) || (executor.H1 > CHARH)) {
+                  interp_local->PS = InterpLocal::PS::CHRCHK;
                 } else {
                   // std::cout << char(el.H1);
-                  fprintf(STDOUT, "%*c", il->COUTWIDTH, (char)el.H1);
-                  if ((el.H1 == 10) || (el.H1 == 13)) {
-                    il->CHRCNT = 0;
+                  fprintf(STDOUT, "%*c", interp_local->COUTWIDTH,
+                          (char)executor.H1);
+                  if ((executor.H1 == 10) || (executor.H1 == 13)) {
+                    interp_local->CHRCNT = 0;
                   }
                 }
                 break;
               }
               }
             } else {
-              switch (el.IR.Y) {
+              switch (executor.IR.Y) {
               case 2: {
-                fprintf(OUTP, "%*d", il->COUTWIDTH, el.H1);
+                fprintf(OUTP, "%*d", interp_local->COUTWIDTH, executor.H1);
                 break;
               }
               case 3: {
-                fprintf(OUTP, "%*s", il->COUTWIDTH,
-                        (ITOB(el.H1)) ? "true" : "false");
+                fprintf(OUTP, "%*s", interp_local->COUTWIDTH,
+                        (ITOB(executor.H1)) ? "true" : "false");
                 break;
               }
               case 4: {
-                if ((el.H1 < CHARL) || (el.H1 > CHARH)) {
-                  il->PS = InterpLocal::PS::CHRCHK;
+                if ((executor.H1 < CHARL) || (executor.H1 > CHARH)) {
+                  interp_local->PS = InterpLocal::PS::CHRCHK;
                 } else {
-                  fprintf(OUTP, "%*c", il->COUTWIDTH, (char)el.H1);
-                  if ((el.H1 == 10) || (el.H1 == 13)) {
-                    il->CHRCNT = 0;
+                  fprintf(OUTP, "%*c", interp_local->COUTWIDTH,
+                          (char)executor.H1);
+                  if ((executor.H1 == 10) || (executor.H1 == 13)) {
+                    interp_local->CHRCNT = 0;
                   }
                 }
                 break;
@@ -1469,180 +1549,198 @@ void EXECUTE(InterpLocal *il) {
             }
           }
         }
-        CURPR->T--;
-        il->COUTWIDTH = -1;
+        current_process->T--;
+        interp_local->COUTWIDTH = -1;
         break;
       }
       case 30: { // pop and set out width or out prec
-        if (el.IR.Y == 1) {
-          il->COUTWIDTH = il->S[CURPR->T];
+        if (executor.IR.Y == 1) {
+          interp_local->COUTWIDTH = interp_local->S[current_process->T];
         } else {
-          il->COUTPREC = il->S[CURPR->T];
+          interp_local->COUTPREC = interp_local->S[current_process->T];
         }
-        CURPR->T = CURPR->T - 1;
+        current_process->T = current_process->T - 1;
         break;
       }
       case 31: { // main  end
-        if (CURPR->FORKCOUNT > 1) {
-          CURPR->STATE = PRD::STATE::BLOCKED;
-          CURPR->PC = CURPR->PC - 1;
-          il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-          CURPR->FORKCOUNT = CURPR->FORKCOUNT - 1;
+        if (current_process->FORKCOUNT > 1) {
+          current_process->STATE = PRD::STATE::BLOCKED;
+          current_process->PC = current_process->PC - 1;
+          interp_local->PROCTAB[current_process->PROCESSOR].RUNPROC = nullptr;
+          current_process->FORKCOUNT = current_process->FORKCOUNT - 1;
         } else {
-          il->PS = InterpLocal::PS::FIN;
+          interp_local->PS = InterpLocal::PS::FIN;
           if (debug & DBGPROC) {
-            fprintf(STDOUT, "opc %d terminated pid %d\n", el.IR.F, CURPR->PID);
-            if (CURPR->PID == 0)
-              unreleased(il);
+            fprintf(STDOUT, "opc %d terminated pid %d\n", executor.IR.F,
+                    current_process->PID);
+            if (current_process->PID == 0)
+              unreleased(interp_local);
           }
-          CURPR->STATE = PROCESSDESCRIPTOR::TERMINATED;
+          current_process->STATE = PROCESSDESCRIPTOR::STATE::TERMINATED;
         }
         break;
       }
       case 32: {
-        if (il->S[CURPR->B + 5] == 1) {
+        if (interp_local->S[current_process->B + 5] == 1) {
           if (debug & DBGRELEASE) {
-            fprintf(STDOUT, "%d release %d fm=%d ln=%d\n", el.IR.F, CURPR->PID,
-                    CURPR->B, il->S[CURPR->B + 6]);
+            fprintf(STDOUT, "%d release %d fm=%d ln=%d\n", executor.IR.F,
+                    current_process->PID, current_process->B,
+                    interp_local->S[current_process->B + 6]);
           }
-          RELEASE(il, CURPR->B, il->S[CURPR->B + 6]);
+          RELEASE(interp_local, current_process->B,
+                  interp_local->S[current_process->B + 6]);
         } else {
-          il->S[CURPR->B + 5] -= 1;
+          interp_local->S[current_process->B + 5] -= 1;
           if (debug & DBGRELEASE) {
-            fprintf(STDOUT, "%d ref ct %d ct=%d\n", el.IR.F, CURPR->PID,
-                    il->S[CURPR->B + 5]);
+            fprintf(STDOUT, "%d ref ct %d ct=%d\n", executor.IR.F,
+                    current_process->PID,
+                    interp_local->S[current_process->B + 5]);
           }
         }
-        el.H1 = TAB[il->S[CURPR->B + 4]].LEV;
-        CURPR->DISPLAY[el.H1 + 1] = -1;
-        CURPR->PC = il->S[CURPR->B + 1];
-        CURPR->T = il->S[CURPR->B + 7];
-        CURPR->B = il->S[CURPR->B + 3];
-        if ((CURPR->T >= CURPR->B - 1) &&
-            (CURPR->T < CURPR->B + il->S[CURPR->B + 6])) {
-          CURPR->STACKSIZE = CURPR->B + il->S[CURPR->B + 6] - 1;
+        executor.H1 = TAB[interp_local->S[current_process->B + 4]].LEV;
+        current_process->DISPLAY[executor.H1 + 1] = -1;
+        current_process->PC = interp_local->S[current_process->B + 1];
+        current_process->T = interp_local->S[current_process->B + 7];
+        current_process->B = interp_local->S[current_process->B + 3];
+        if ((current_process->T >= current_process->B - 1) &&
+            (current_process->T <
+             current_process->B + interp_local->S[current_process->B + 6])) {
+          current_process->STACKSIZE =
+              current_process->B + interp_local->S[current_process->B + 6] - 1;
         } else {
-          CURPR->STACKSIZE = CURPR->BASE + WORKSIZE - 1;
+          current_process->STACKSIZE = current_process->BASE + WORKSIZE - 1;
         }
         break;
       }
       case 33: { // release block resources ?
-        el.H1 = TAB[il->S[CURPR->B + 4]].LEV;
-        el.H2 = CURPR->T;
-        CURPR->DISPLAY[el.H1 + 1] = -1;
-        if (il->S[CURPR->B + 5] == 1) {
+        executor.H1 = TAB[interp_local->S[current_process->B + 4]].LEV;
+        executor.H2 = current_process->T;
+        current_process->DISPLAY[executor.H1 + 1] = -1;
+        if (interp_local->S[current_process->B + 5] == 1) {
           if (debug & DBGRELEASE) {
             // fprintf(STDOUT, "release base %d, length %d\n", CURPR->B,
             // il->S[CURPR->B+6]);
-            fprintf(STDOUT, "%d release %d fm=%d ln=%d\n", el.IR.F, CURPR->PID,
-                    CURPR->B, il->S[CURPR->B + 6]);
+            fprintf(STDOUT, "%d release %d fm=%d ln=%d\n", executor.IR.F,
+                    current_process->PID, current_process->B,
+                    interp_local->S[current_process->B + 6]);
           }
-          RELEASE(il, CURPR->B, il->S[CURPR->B + 6]);
+          RELEASE(interp_local, current_process->B,
+                  interp_local->S[current_process->B + 6]);
         } else {
           // fprintf(STDOUT, "release adjacent %d\n", il->S[CURPR->B+6]);
-          il->S[CURPR->B + 5] = il->S[CURPR->B + 5] - 1;
+          interp_local->S[current_process->B + 5] =
+              interp_local->S[current_process->B + 5] - 1;
           if (debug & DBGRELEASE) {
-            fprintf(STDOUT, "%d ref ct %d ct=%d\n", el.IR.F, CURPR->PID,
-                    il->S[CURPR->B + 5]);
+            fprintf(STDOUT, "%d ref ct %d ct=%d\n", executor.IR.F,
+                    current_process->PID,
+                    interp_local->S[current_process->B + 5]);
           }
         }
-        CURPR->T = il->S[CURPR->B + 7] + 1;
-        il->S[CURPR->T] = il->S[el.H2];
-        if (il->S[CURPR->T] == RTAG) {
-          il->RS[CURPR->T] = il->RS[el.H2];
+        current_process->T = interp_local->S[current_process->B + 7] + 1;
+        interp_local->S[current_process->T] = interp_local->S[executor.H2];
+        if (interp_local->S[current_process->T] == RTAG) {
+          interp_local->RS[current_process->T] = interp_local->RS[executor.H2];
         }
-        CURPR->PC = il->S[CURPR->B + 1];
-        CURPR->B = il->S[CURPR->B + 3];
-        if ((CURPR->T >= CURPR->B - 1) &&
-            (CURPR->T < CURPR->B + il->S[CURPR->B + 6])) {
-          CURPR->STACKSIZE = CURPR->B + il->S[CURPR->B + 6] - 1;
+        current_process->PC = interp_local->S[current_process->B + 1];
+        current_process->B = interp_local->S[current_process->B + 3];
+        if ((current_process->T >= current_process->B - 1) &&
+            (current_process->T <
+             current_process->B + interp_local->S[current_process->B + 6])) {
+          current_process->STACKSIZE =
+              current_process->B + interp_local->S[current_process->B + 6] - 1;
         } else {
-          CURPR->STACKSIZE = CURPR->BASE + WORKSIZE - 1;
+          current_process->STACKSIZE = current_process->BASE + WORKSIZE - 1;
         }
         break;
       }
       case 34: { // get variable stack location and replace top with value
         // load indirect ->[T] to T
-        el.H1 = il->S[CURPR->T];
-        if ((el.H1 <= 0) || (el.H1 >= STMAX)) {
-          il->PS = InterpLocal::PS::REFCHK;
+        executor.H1 = interp_local->S[current_process->T];
+        if ((executor.H1 <= 0) || (executor.H1 >= STMAX)) {
+          interp_local->PS = InterpLocal::PS::REFCHK;
         } else {
-          if (Topology != Symbol::SHAREDSY) {
-            TESTVAR(il, el.H1);
+          if (topology != Symbol::SHAREDSY) {
+            TESTVAR(interp_local, executor.H1);
           }
-          if (il->NUMTRACE > 0) {
-            CHKVAR(il, el.H1);
+          if (interp_local->NUMTRACE > 0) {
+            CHKVAR(interp_local, executor.H1);
           }
-          if (il->S[el.H1] == RTAG) {
-            il->RS[CURPR->T] = il->RS[el.H1];
+          if (interp_local->S[executor.H1] == RTAG) {
+            interp_local->RS[current_process->T] =
+                interp_local->RS[executor.H1];
           }
-          il->S[CURPR->T] = il->S[el.H1];
+          interp_local->S[current_process->T] = interp_local->S[executor.H1];
         }
         break;
       }
       case 35: // not
-        il->S[CURPR->T] = BTOI(!(ITOB(il->S[CURPR->T])));
+        interp_local->S[current_process->T] =
+            BTOI(!(ITOB(interp_local->S[current_process->T])));
         break;
       case 36: { // negate
-        if (il->S[CURPR->T] == RTAG) {
-          il->RS[CURPR->T] = -il->RS[CURPR->T];
+        if (interp_local->S[current_process->T] == RTAG) {
+          interp_local->RS[current_process->T] =
+              -interp_local->RS[current_process->T];
         } else {
-          il->S[CURPR->T] = -il->S[CURPR->T];
+          interp_local->S[current_process->T] =
+              -interp_local->S[current_process->T];
         }
         break;
       }
       case 37: { // out real with prec/width or none
-        el.RH1 = il->RS[CURPR->T];
-        if (el.RH1 < 1) {
-          el.H2 = 0;
+        executor.RH1 = interp_local->RS[current_process->T];
+        if (executor.RH1 < 1) {
+          executor.H2 = 0;
         } else {
-          el.H2 = 1 + (int)std::floor(std::log(std::fabs(el.RH1)) / el.log10);
+          executor.H2 = 1 + (int)std::floor(std::log(std::fabs(executor.RH1)) /
+                                            executor.log10);
         }
-        if (il->COUTWIDTH <= 0) {
-          el.H1 = il->FLD[1];
+        if (interp_local->COUTWIDTH <= 0) {
+          executor.H1 = interp_local->FLD[1];
         } else {
-          el.H1 = il->COUTWIDTH;
+          executor.H1 = interp_local->COUTWIDTH;
         }
-        if ((il->COUTPREC > 0) && (il->COUTPREC + 3 < el.H1)) {
-          el.H1 = il->COUTPREC + 3;
+        if ((interp_local->COUTPREC > 0) &&
+            (interp_local->COUTPREC + 3 < executor.H1)) {
+          executor.H1 = interp_local->COUTPREC + 3;
         }
-        il->CHRCNT = il->CHRCNT + el.H1;
-        if (il->CHRCNT > LINELENG) {
-          il->PS = InterpLocal::PS::LNGCHK;
+        interp_local->CHRCNT = interp_local->CHRCNT + executor.H1;
+        if (interp_local->CHRCNT > LINELENG) {
+          interp_local->PS = InterpLocal::PS::LNGCHK;
         } else {
           if (!OUTPUTFILE) {
-            if (il->COUTPREC <= 0) {
+            if (interp_local->COUTPREC <= 0) {
               // cout << el.RH1;
-              fprintf(STDOUT, "%*f", el.H1, el.RH1);
+              fprintf(STDOUT, "%*f", executor.H1, executor.RH1);
             } else {
-              if (il->COUTWIDTH <= 0) {
+              if (interp_local->COUTWIDTH <= 0) {
                 // cout << el.RH1 << ":" << il->COUTPREC - el.H2;
-                fprintf(STDOUT, "%*.*f", il->COUTPREC + 3, il->COUTPREC - el.H2,
-                        el.RH1);
+                fprintf(STDOUT, "%*.*f", interp_local->COUTPREC + 3,
+                        interp_local->COUTPREC - executor.H2, executor.RH1);
               } else {
                 // cout << el.RH1 << ":" << il->COUTWIDTH << ":" << il->COUTPREC
                 // - el.H2;
-                fprintf(STDOUT, "%*.*f", il->COUTWIDTH, il->COUTPREC - el.H2,
-                        el.RH1);
+                fprintf(STDOUT, "%*.*f", interp_local->COUTWIDTH,
+                        interp_local->COUTPREC - executor.H2, executor.RH1);
               }
             }
           } else {
-            if (il->COUTPREC <= 0) {
+            if (interp_local->COUTPREC <= 0) {
               // OUTP << el.RH1;
-              fprintf(OUTP, "%*f", el.H1, el.RH1);
+              fprintf(OUTP, "%*f", executor.H1, executor.RH1);
             } else {
-              if (il->COUTWIDTH <= 0) {
-                fprintf(OUTP, "%*.*f", il->COUTPREC + 3, il->COUTPREC - el.H2,
-                        el.RH1);
+              if (interp_local->COUTWIDTH <= 0) {
+                fprintf(OUTP, "%*.*f", interp_local->COUTPREC + 3,
+                        interp_local->COUTPREC - executor.H2, executor.RH1);
               } else {
-                fprintf(OUTP, "%*.*f", il->COUTWIDTH, il->COUTPREC - el.H2,
-                        el.RH1);
+                fprintf(OUTP, "%*.*f", interp_local->COUTWIDTH,
+                        interp_local->COUTPREC - executor.H2, executor.RH1);
               }
             }
           }
         }
-        CURPR->T = CURPR->T - 1;
-        il->COUTWIDTH = -1;
+        current_process->T = current_process->T - 1;
+        interp_local->COUTWIDTH = -1;
         break;
       }
       case 38: { // get saved DISPLAY (a stack location for a variable) copy top
@@ -1651,185 +1749,234 @@ void EXECUTE(InterpLocal *il) {
         // [T-1] <- [T]
         // T <- T-1
         // stindstk
-        el.H1 = il->S[CURPR->T - 1];
-        if (el.H1 <= 0 || el.H1 >= STMAX) {
-          il->PS = InterpLocal::PS::REFCHK;
+        executor.H1 = interp_local->S[current_process->T - 1];
+        if (executor.H1 <= 0 || executor.H1 >= STMAX) {
+          interp_local->PS = InterpLocal::PS::REFCHK;
         } else {
-          if (il->STARTMEM[el.H1] <= 0) {
-            il->PS = InterpLocal::PS::REFCHK;
+          if (interp_local->STARTMEM[executor.H1] <= 0) {
+            interp_local->PS = InterpLocal::PS::REFCHK;
           }
-          il->S[el.H1] = il->S[CURPR->T];
-          if (Topology != Symbol::SHAREDSY) {
-            if (el.IR.Y == 0) {
-              TESTVAR(il, el.H1);
-            } else if (il->CONGESTION) {
-              el.H2 = COMMDELAY(il, CURPR->PROCESSOR, il->SLOCATION[el.H1], 1);
+          interp_local->S[executor.H1] = interp_local->S[current_process->T];
+          if (topology != Symbol::SHAREDSY) {
+            if (executor.IR.Y == 0) {
+              TESTVAR(interp_local, executor.H1);
+            } else if (interp_local->CONGESTION) {
+              executor.H2 = COMMDELAY(interp_local, current_process->PROCESSOR,
+                                      interp_local->SLOCATION[executor.H1], 1);
             }
           }
-          if (il->NUMTRACE > 0) {
-            CHKVAR(il, el.H1);
+          if (interp_local->NUMTRACE > 0) {
+            CHKVAR(interp_local, executor.H1);
           }
-          if (il->S[CURPR->T] == RTAG) {
-            il->RS[el.H1] = il->RS[CURPR->T];
+          if (interp_local->S[current_process->T] == RTAG) {
+            interp_local->RS[executor.H1] =
+                interp_local->RS[current_process->T];
           }
-          il->S[CURPR->T - 1] = il->S[CURPR->T];
-          if (il->S[CURPR->T] == RTAG) {
-            il->RS[CURPR->T - 1] = il->RS[CURPR->T];
+          interp_local->S[current_process->T - 1] =
+              interp_local->S[current_process->T];
+          if (interp_local->S[current_process->T] == RTAG) {
+            interp_local->RS[current_process->T - 1] =
+                interp_local->RS[current_process->T];
           }
-          CURPR->T = CURPR->T - 1;
+          current_process->T = current_process->T - 1;
         }
         break;
       }
       case 45: { // pop and compare EQ
-        CURPR->T = CURPR->T - 1;
-        if (ISREAL(il)) {
-          il->S[CURPR->T] = BTOI(il->RS[CURPR->T] == il->RS[CURPR->T + 1]);
+        current_process->T = current_process->T - 1;
+        if (ISREAL(interp_local)) {
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->RS[current_process->T] ==
+                   interp_local->RS[current_process->T + 1]);
         } else {
-          il->S[CURPR->T] = BTOI(il->S[CURPR->T] == il->S[CURPR->T + 1]);
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->S[current_process->T] ==
+                   interp_local->S[current_process->T + 1]);
         }
         break;
       }
       case 46: { // pop and compare NE
-        CURPR->T = CURPR->T - 1;
-        if (ISREAL(il)) {
-          il->S[CURPR->T] = BTOI(il->RS[CURPR->T] != il->RS[CURPR->T + 1]);
+        current_process->T = current_process->T - 1;
+        if (ISREAL(interp_local)) {
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->RS[current_process->T] !=
+                   interp_local->RS[current_process->T + 1]);
         } else {
-          il->S[CURPR->T] = BTOI(il->S[CURPR->T] != il->S[CURPR->T + 1]);
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->S[current_process->T] !=
+                   interp_local->S[current_process->T + 1]);
         }
         break;
       }
       case 47: { // pop, then compare top op top+1, replace top with comparison
                  // result
         //  pop and compare LT
-        CURPR->T = CURPR->T - 1;
-        if (ISREAL(il)) {
-          il->S[CURPR->T] = BTOI(il->RS[CURPR->T] < il->RS[CURPR->T + 1]);
+        current_process->T = current_process->T - 1;
+        if (ISREAL(interp_local)) {
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->RS[current_process->T] <
+                   interp_local->RS[current_process->T + 1]);
         } else {
-          il->S[CURPR->T] = BTOI(il->S[CURPR->T] < il->S[CURPR->T + 1]);
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->S[current_process->T] <
+                   interp_local->S[current_process->T + 1]);
         }
         break;
       }
       case 48: { // pop and compare LE
-        CURPR->T = CURPR->T - 1;
-        if (ISREAL(il)) {
-          il->S[CURPR->T] = BTOI(il->RS[CURPR->T] <= il->RS[CURPR->T + 1]);
+        current_process->T = current_process->T - 1;
+        if (ISREAL(interp_local)) {
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->RS[current_process->T] <=
+                   interp_local->RS[current_process->T + 1]);
         } else {
-          il->S[CURPR->T] = BTOI(il->S[CURPR->T] <= il->S[CURPR->T + 1]);
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->S[current_process->T] <=
+                   interp_local->S[current_process->T + 1]);
         }
         break;
       }
       case 49: { // pop and compare GT
-        CURPR->T = CURPR->T - 1;
-        if (ISREAL(il)) {
-          il->S[CURPR->T] = BTOI(il->RS[CURPR->T] > il->RS[CURPR->T + 1]);
+        current_process->T = current_process->T - 1;
+        if (ISREAL(interp_local)) {
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->RS[current_process->T] >
+                   interp_local->RS[current_process->T + 1]);
         } else {
-          il->S[CURPR->T] = BTOI(il->S[CURPR->T] > il->S[CURPR->T + 1]);
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->S[current_process->T] >
+                   interp_local->S[current_process->T + 1]);
         }
         break;
       }
       case 50: { // pop and compare GE
-        CURPR->T = CURPR->T - 1;
-        if (ISREAL(il)) {
-          il->S[CURPR->T] = BTOI(il->RS[CURPR->T] >= il->RS[CURPR->T + 1]);
+        current_process->T = current_process->T - 1;
+        if (ISREAL(interp_local)) {
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->RS[current_process->T] >=
+                   interp_local->RS[current_process->T + 1]);
         } else {
-          il->S[CURPR->T] = BTOI(il->S[CURPR->T] >= il->S[CURPR->T + 1]);
+          interp_local->S[current_process->T] =
+              BTOI(interp_local->S[current_process->T] >=
+                   interp_local->S[current_process->T + 1]);
         }
         break;
       }
       case 51: { // pop OR
-        CURPR->T = CURPR->T - 1;
-        il->S[CURPR->T] =
-            BTOI(ITOB(il->S[CURPR->T]) || ITOB(il->S[CURPR->T + 1]));
+        current_process->T = current_process->T - 1;
+        interp_local->S[current_process->T] =
+            BTOI(ITOB(interp_local->S[current_process->T]) ||
+                 ITOB(interp_local->S[current_process->T + 1]));
         break;
       }
       case 52: { // plus
-        CURPR->T = CURPR->T - 1;
-        if (ISREAL(il)) {
-          il->RS[CURPR->T] = il->RS[CURPR->T] + il->RS[CURPR->T + 1];
-          if (il->RS[CURPR->T] != 0) {
-            el.RH1 = log(fabs(il->RS[CURPR->T])) / el.log10;
-            if ((el.RH1 >= 292.5) || (el.RH1 <= -292.5)) {
-              il->PS = InterpLocal::PS::OVRCHK;
+        current_process->T = current_process->T - 1;
+        if (ISREAL(interp_local)) {
+          interp_local->RS[current_process->T] =
+              interp_local->RS[current_process->T] +
+              interp_local->RS[current_process->T + 1];
+          if (interp_local->RS[current_process->T] != 0) {
+            executor.RH1 = log(fabs(interp_local->RS[current_process->T])) /
+                           executor.log10;
+            if ((executor.RH1 >= 292.5) || (executor.RH1 <= -292.5)) {
+              interp_local->PS = InterpLocal::PS::OVRCHK;
             }
           }
         } else {
-          il->S[CURPR->T] = il->S[CURPR->T] + il->S[CURPR->T + 1];
-          if (abs(il->S[CURPR->T]) > NMAX) {
-            il->PS = InterpLocal::PS::INTCHK;
+          interp_local->S[current_process->T] =
+              interp_local->S[current_process->T] +
+              interp_local->S[current_process->T + 1];
+          if (abs(interp_local->S[current_process->T]) > NMAX) {
+            interp_local->PS = InterpLocal::PS::INTCHK;
           }
         }
         break;
       }
       case 53: { // minus
-        CURPR->T = CURPR->T - 1;
-        if (ISREAL(il)) {
-          il->RS[CURPR->T] = il->RS[CURPR->T] - il->RS[CURPR->T + 1];
-          if (il->RS[CURPR->T] != 0) {
-            el.RH1 = log(fabs(il->RS[CURPR->T])) / el.log10;
-            if ((el.RH1 >= 292.5) || (el.RH1 <= -292.5)) {
-              il->PS = InterpLocal::PS::OVRCHK;
+        current_process->T = current_process->T - 1;
+        if (ISREAL(interp_local)) {
+          interp_local->RS[current_process->T] =
+              interp_local->RS[current_process->T] -
+              interp_local->RS[current_process->T + 1];
+          if (interp_local->RS[current_process->T] != 0) {
+            executor.RH1 = log(fabs(interp_local->RS[current_process->T])) /
+                           executor.log10;
+            if ((executor.RH1 >= 292.5) || (executor.RH1 <= -292.5)) {
+              interp_local->PS = InterpLocal::PS::OVRCHK;
             }
           }
         } else {
-          il->S[CURPR->T] = il->S[CURPR->T] - il->S[CURPR->T + 1];
-          if (abs(il->S[CURPR->T]) > NMAX) {
-            il->PS = InterpLocal::PS::INTCHK;
+          interp_local->S[current_process->T] =
+              interp_local->S[current_process->T] -
+              interp_local->S[current_process->T + 1];
+          if (abs(interp_local->S[current_process->T]) > NMAX) {
+            interp_local->PS = InterpLocal::PS::INTCHK;
           }
         }
         break;
       }
       case 56: { // and
-        CURPR->T = CURPR->T - 1;
-        il->S[CURPR->T] =
-            BTOI(ITOB(il->S[CURPR->T]) && ITOB(il->S[CURPR->T + 1]));
+        current_process->T = current_process->T - 1;
+        interp_local->S[current_process->T] =
+            BTOI(ITOB(interp_local->S[current_process->T]) &&
+                 ITOB(interp_local->S[current_process->T + 1]));
         break;
       }
       case 57: { // times
-        CURPR->T = CURPR->T - 1;
-        if (ISREAL(il)) {
-          il->RS[CURPR->T] = il->RS[CURPR->T] * il->RS[CURPR->T + 1];
-          if (il->RS[CURPR->T] != 0) {
-            el.RH1 = log(fabs(il->RS[CURPR->T])) / el.log10;
-            if ((el.RH1 >= 292.5) || (el.RH1 <= -292.5)) {
-              il->PS = InterpLocal::PS::OVRCHK;
+        current_process->T = current_process->T - 1;
+        if (ISREAL(interp_local)) {
+          interp_local->RS[current_process->T] =
+              interp_local->RS[current_process->T] *
+              interp_local->RS[current_process->T + 1];
+          if (interp_local->RS[current_process->T] != 0) {
+            executor.RH1 = log(fabs(interp_local->RS[current_process->T])) /
+                           executor.log10;
+            if ((executor.RH1 >= 292.5) || (executor.RH1 <= -292.5)) {
+              interp_local->PS = InterpLocal::PS::OVRCHK;
             }
           }
         } else {
-          il->S[CURPR->T] = il->S[CURPR->T] * il->S[CURPR->T + 1];
-          if (abs(il->S[CURPR->T]) > NMAX) {
-            il->PS = InterpLocal::PS::INTCHK;
+          interp_local->S[current_process->T] =
+              interp_local->S[current_process->T] *
+              interp_local->S[current_process->T + 1];
+          if (abs(interp_local->S[current_process->T]) > NMAX) {
+            interp_local->PS = InterpLocal::PS::INTCHK;
           }
         }
         break;
       }
       case 58: { // int div
-        CURPR->T = CURPR->T - 1;
-        if (il->S[CURPR->T + 1] == 0) {
-          il->PS = InterpLocal::PS::DIVCHK;
+        current_process->T = current_process->T - 1;
+        if (interp_local->S[current_process->T + 1] == 0) {
+          interp_local->PS = InterpLocal::PS::DIVCHK;
         } else {
-          il->S[CURPR->T] = il->S[CURPR->T] / il->S[CURPR->T + 1];
+          interp_local->S[current_process->T] =
+              interp_local->S[current_process->T] /
+              interp_local->S[current_process->T + 1];
         }
         break;
       }
       case 59: { // int mod
-        CURPR->T = CURPR->T - 1;
-        if (il->S[CURPR->T + 1] == 0) {
-          il->PS = InterpLocal::PS::DIVCHK;
+        current_process->T = current_process->T - 1;
+        if (interp_local->S[current_process->T + 1] == 0) {
+          interp_local->PS = InterpLocal::PS::DIVCHK;
         } else {
-          il->S[CURPR->T] = il->S[CURPR->T] % il->S[CURPR->T + 1];
+          interp_local->S[current_process->T] =
+              interp_local->S[current_process->T] %
+              interp_local->S[current_process->T + 1];
         }
         break;
       }
       case 62: {
         if (!INPUTFILE) {
           if (feof(STDIN)) {
-            il->PS = InterpLocal::PS::REDCHK;
+            interp_local->PS = InterpLocal::PS::REDCHK;
           } else {
             fgetc(STDIN);
           }
         } else {
           if (feof(INP)) {
-            il->PS = InterpLocal::PS::REDCHK;
+            interp_local->PS = InterpLocal::PS::REDCHK;
           } else {
             fgetc(INP);
           }
@@ -1842,351 +1989,385 @@ void EXECUTE(InterpLocal *il) {
         } else {
           fputc('\n', OUTP);
         }
-        il->LNCNT = il->LNCNT + 1;
-        il->CHRCNT = 0;
-        if (il->LNCNT > LINELIMIT) {
-          il->PS = InterpLocal::PS::LINCHK;
+        interp_local->LNCNT = interp_local->LNCNT + 1;
+        interp_local->CHRCNT = 0;
+        if (interp_local->LNCNT > LINELIMIT) {
+          interp_local->PS = InterpLocal::PS::LINCHK;
         }
         break;
       }
       case 64:
       case 65:
       case 71: { // [T] is stk loc of channel
-        switch (el.IR.F) {
+        switch (executor.IR.F) {
         case 64:
-          el.H1 = CURPR->DISPLAY[el.IR.X] + el.IR.Y;
+          executor.H1 = current_process->DISPLAY[executor.IR.X] + executor.IR.Y;
           break;
         case 65:
-          el.H1 = il->S[CURPR->DISPLAY[el.IR.X] + el.IR.Y];
+          executor.H1 =
+              interp_local
+                  ->S[current_process->DISPLAY[executor.IR.X] + executor.IR.Y];
           break;
         case 71:
-          el.H1 = il->S[CURPR->T];
+          executor.H1 = interp_local->S[current_process->T];
           break;
         }
-        el.H2 = il->SLOCATION[el.H1];
-        il->CNUM = il->S[el.H1];
+        executor.H2 = interp_local->SLOCATION[executor.H1];
+        interp_local->CNUM = interp_local->S[executor.H1];
         if (debug & DBGRECV) {
           fprintf(STDOUT, "recv %d pid %d pc %d state %s rdstatus %s chan %d\n",
-                  el.IR.F, CURPR->PID, CURPR->PC, nameState(CURPR->STATE),
-                  nameRdstatus(CURPR->READSTATUS), il->CNUM);
+                  executor.IR.F, current_process->PID, current_process->PC,
+                  nameState(current_process->STATE),
+                  nameRdstatus(current_process->READSTATUS),
+                  interp_local->CNUM);
         }
-        if (il->NUMTRACE > 0) {
-          CHKVAR(il, el.H1);
+        if (interp_local->NUMTRACE > 0) {
+          CHKVAR(interp_local, executor.H1);
         }
-        if (il->CNUM == 0) {
-          il->CNUM = FIND(il);     // get and initialize unused channel
-          il->S[el.H1] = il->CNUM; // store channel in stack loc
+        if (interp_local->CNUM == 0) {
+          interp_local->CNUM =
+              FIND(interp_local); // get and initialize unused channel
+          interp_local->S[executor.H1] =
+              interp_local->CNUM; // store channel in stack loc
         }
-        if (CURPR->READSTATUS == PRD::READSTATUS::NONE) {
-          CURPR->READSTATUS = PRD::READSTATUS::ATCHANNEL;
+        if (current_process->READSTATUS == PRD::READSTATUS::NONE) {
+          current_process->READSTATUS = PRD::READSTATUS::ATCHANNEL;
         }
-        chan = &il->CHAN[il->CNUM];
+        channel = &interp_local->CHAN[interp_local->CNUM];
         // WITH CHAN[CNUM]
-        if (!(*chan).MOVED && (*chan).READER < 0) {
-          il->SLOCATION[el.H1] = CURPR->PROCESSOR;
-          (*chan).READER = CURPR->PID;
+        if (!(*channel).MOVED && (*channel).READER < 0) {
+          interp_local->SLOCATION[executor.H1] = current_process->PROCESSOR;
+          (*channel).READER = current_process->PID;
         }
-        if (Topology != Symbol::SHAREDSY)
-          TESTVAR(il, el.H1); // channel in stk
-        if ((*chan).READTIME < il->CLOCK - TIMESTEP) {
-          (*chan).READTIME = il->CLOCK - TIMESTEP;
+        if (topology != Symbol::SHAREDSY)
+          TESTVAR(interp_local, executor.H1); // channel in stk
+        if ((*channel).READTIME < interp_local->CLOCK - TIMESTEP) {
+          (*channel).READTIME = interp_local->CLOCK - TIMESTEP;
         }
-        il->PNT = (*chan).HEAD;
-        el.B1 = (*chan).SEM == 0;
-        if (!el.B1) {
-          el.B1 = il->DATE[il->PNT] > CURPR->TIME;
+        interp_local->PNT = (*channel).HEAD;
+        executor.B1 = (*channel).SEM == 0;
+        if (!executor.B1) {
+          executor.B1 =
+              interp_local->DATE[interp_local->PNT] > current_process->TIME;
         }
-        if (el.B1) {
-          il->PTEMP = (ACTPNT)calloc(1, sizeof(ACTIVEPROCESS));
-          il->PTEMP->PDES = CURPR;
-          il->PTEMP->NEXT = nullptr;
-          il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-          if ((*chan).WAIT == nullptr) {
-            el.H3 = 1;
-            (*chan).WAIT = il->PTEMP;
-            if ((*chan).SEM != 0) {
-              CURPR->STATE = PRD::STATE::DELAYED;
-              CURPR->WAKETIME = il->DATE[il->PNT];
+        if (executor.B1) {
+          interp_local->PTEMP = (ACTPNT)calloc(1, sizeof(ACTIVEPROCESS));
+          interp_local->PTEMP->PDES = current_process;
+          interp_local->PTEMP->NEXT = nullptr;
+          interp_local->PROCTAB[current_process->PROCESSOR].RUNPROC = nullptr;
+          if ((*channel).WAIT == nullptr) {
+            executor.H3 = 1;
+            (*channel).WAIT = interp_local->PTEMP;
+            if ((*channel).SEM != 0) {
+              current_process->STATE = PRD::STATE::DELAYED;
+              current_process->WAKETIME = interp_local->DATE[interp_local->PNT];
             } else {
-              CURPR->STATE = PRD::STATE::BLOCKED;
+              current_process->STATE = PRD::STATE::BLOCKED;
             }
           } else {
-            il->RTEMP = (*chan).WAIT;
-            while (il->RTEMP->NEXT != nullptr) {
-              il->RTEMP = il->RTEMP->NEXT;
+            interp_local->RTEMP = (*channel).WAIT;
+            while (interp_local->RTEMP->NEXT != nullptr) {
+              interp_local->RTEMP = interp_local->RTEMP->NEXT;
             }
-            il->RTEMP->NEXT = il->PTEMP;
-            CURPR->STATE = PRD::STATE::BLOCKED;
+            interp_local->RTEMP->NEXT = interp_local->PTEMP;
+            current_process->STATE = PRD::STATE::BLOCKED;
           }
-          CURPR->PC = CURPR->PC - 1;
-          il->NOSWITCH = false;
+          current_process->PC = current_process->PC - 1;
+          interp_local->NOSWITCH = false;
         } else {
-          if (CURPR->READSTATUS != PRD::READSTATUS::HASTICKET) {
-            if ((*chan).READTIME > CURPR->TIME) {
-              CURPR->TIME = (*chan).READTIME;
+          if (current_process->READSTATUS != PRD::READSTATUS::HASTICKET) {
+            if ((*channel).READTIME > current_process->TIME) {
+              current_process->TIME = (*channel).READTIME;
               if (debug & DBGTIME)
-                procTime(CURPR, 0.0, "case 64,65,71");
-              CURPR->READSTATUS = PRD::READSTATUS::HASTICKET;
-              CURPR->PC = CURPR->PC - 1;
-              il->NOSWITCH = false;
-              (*chan).READTIME = (*chan).READTIME + CHANTIME;
+                procTime(current_process, 0.0, "case 64,65,71");
+              current_process->READSTATUS = PRD::READSTATUS::HASTICKET;
+              current_process->PC = current_process->PC - 1;
+              interp_local->NOSWITCH = false;
+              (*channel).READTIME = (*channel).READTIME + CHANTIME;
               goto L699;
             } else {
-              (*chan).READTIME = (*chan).READTIME + CHANTIME;
+              (*channel).READTIME = (*channel).READTIME + CHANTIME;
             }
           }
-          TIMEINC(il, CHANTIME, "cs64");
-          (*chan).SEM = (*chan).SEM - 1;
-          (*chan).HEAD = il->LINK[il->PNT];
-          if ((el.IR.F == 64) || (el.IR.F == 65)) {
-            CURPR->T = CURPR->T + 1;
+          TIMEINC(interp_local, CHANTIME, "cs64");
+          (*channel).SEM = (*channel).SEM - 1;
+          (*channel).HEAD = interp_local->LINK[interp_local->PNT];
+          if ((executor.IR.F == 64) || (executor.IR.F == 65)) {
+            current_process->T = current_process->T + 1;
           }
-          if (CURPR->T > CURPR->STACKSIZE) {
-            il->PS = InterpLocal::PS::STKCHK;
+          if (current_process->T > current_process->STACKSIZE) {
+            interp_local->PS = InterpLocal::PS::STKCHK;
           } else {
-            il->S[CURPR->T] = il->VALUE[il->PNT];
-            if (il->S[CURPR->T] == RTAG) {
-              il->RS[CURPR->T] = il->RVALUE[il->PNT];
+            interp_local->S[current_process->T] =
+                interp_local->VALUE[interp_local->PNT];
+            if (interp_local->S[current_process->T] == RTAG) {
+              interp_local->RS[current_process->T] =
+                  interp_local->RVALUE[interp_local->PNT];
             }
           }
-          il->LINK[il->PNT] = il->FREE;
-          il->FREE = il->PNT;
-          CURPR->READSTATUS = PRD::READSTATUS::NONE;
-          if ((*chan).WAIT != nullptr) {
-            if ((*chan).WAIT->PDES == CURPR) { // remove CURPR from wait list
-              il->PTEMP = (*chan).WAIT;
-              (*chan).WAIT = (*chan).WAIT->NEXT;
+          interp_local->LINK[interp_local->PNT] = interp_local->FREE;
+          interp_local->FREE = interp_local->PNT;
+          current_process->READSTATUS = PRD::READSTATUS::NONE;
+          if ((*channel).WAIT != nullptr) {
+            if ((*channel).WAIT->PDES ==
+                current_process) { // remove CURPR from wait list
+              interp_local->PTEMP = (*channel).WAIT;
+              (*channel).WAIT = (*channel).WAIT->NEXT;
               if (debug & DBGPROC) {
-                fprintf(STDOUT, "remove pid %d from wait list\n", CURPR->PID);
+                fprintf(STDOUT, "remove pid %d from wait list\n",
+                        current_process->PID);
               }
-              std::free(il->PTEMP); // free ACTPNT
+              std::free(interp_local->PTEMP); // free ACTPNT
             }
-            if ((*chan).WAIT != nullptr) { // set next on wait list
-              if ((*chan).SEM == 0) {
-                (*chan).WAIT->PDES->STATE = PRD::STATE::BLOCKED;
+            if ((*channel).WAIT != nullptr) { // set next on wait list
+              if ((*channel).SEM == 0) {
+                (*channel).WAIT->PDES->STATE = PRD::STATE::BLOCKED;
               } else {
-                (*chan).WAIT->PDES->STATE = PRD::STATE::DELAYED;
-                (*chan).WAIT->PDES->WAKETIME = il->DATE[(*chan).HEAD];
+                (*channel).WAIT->PDES->STATE = PRD::STATE::DELAYED;
+                (*channel).WAIT->PDES->WAKETIME =
+                    interp_local->DATE[(*channel).HEAD];
               }
             }
           }
         }
       L699:
         if (debug & DBGRECV) {
-          fprintf(STDOUT,
-                  "recv(e) pid %d state %s rdstatus %s chan %d WPID %d\n",
-                  CURPR->PID, nameState(CURPR->STATE),
-                  nameRdstatus(CURPR->READSTATUS), il->CNUM,
-                  ((*chan).WAIT != nullptr) ? (*chan).WAIT->PDES->PID : -1);
+          fprintf(
+              STDOUT, "recv(e) pid %d state %s rdstatus %s chan %d WPID %d\n",
+              current_process->PID, nameState(current_process->STATE),
+              nameRdstatus(current_process->READSTATUS), interp_local->CNUM,
+              ((*channel).WAIT != nullptr) ? (*channel).WAIT->PDES->PID : -1);
         }
         break;
       }
       case 66:
       case 92: {
-        el.J = il->S[CURPR->T - 1]; // stack loc of channel number
-        il->CNUM = il->S[el.J];     // channel number
-        el.H2 = il->SLOCATION[el.J];
-        if (il->NUMTRACE > 0)
-          CHKVAR(il, il->S[CURPR->T - 1]);
-        if (il->CNUM == 0) {
-          il->CNUM = FIND(il);
-          il->S[il->S[CURPR->T - 1]] = il->CNUM;
+        executor.J =
+            interp_local
+                ->S[current_process->T - 1]; // stack loc of channel number
+        interp_local->CNUM = interp_local->S[executor.J]; // channel number
+        executor.H2 = interp_local->SLOCATION[executor.J];
+        if (interp_local->NUMTRACE > 0)
+          CHKVAR(interp_local, interp_local->S[current_process->T - 1]);
+        if (interp_local->CNUM == 0) {
+          interp_local->CNUM = FIND(interp_local);
+          interp_local->S[interp_local->S[current_process->T - 1]] =
+              interp_local->CNUM;
         }
         if (debug & DBGSEND) {
-          fprintf(STDOUT, "sendchan %d pid %d var [[T]] %d chan %d\n", el.IR.F,
-                  CURPR->PID, il->S[il->S[CURPR->T - 1]], il->CNUM);
+          fprintf(STDOUT, "sendchan %d pid %d var [[T]] %d chan %d\n",
+                  executor.IR.F, current_process->PID,
+                  interp_local->S[interp_local->S[current_process->T - 1]],
+                  interp_local->CNUM);
         }
-        el.H1 = COMMDELAY(il, CURPR->PROCESSOR, el.H2, el.IR.Y);
+        executor.H1 = COMMDELAY(interp_local, current_process->PROCESSOR,
+                                executor.H2, executor.IR.Y);
         // WITH CHAN[CNUM] DO
         // il->CHAN[il->CNUM]
-        chan = &il->CHAN[il->CNUM];
+        channel = &interp_local->CHAN[interp_local->CNUM];
         {
-          if (il->FREE == 0)
-            il->PS = InterpLocal::PS::BUFCHK;
+          if (interp_local->FREE == 0)
+            interp_local->PS = InterpLocal::PS::BUFCHK;
           else {
-            TIMEINC(il, CHANTIME, "cs66");
-            el.K = il->FREE;
-            il->DATE[el.K] = CURPR->TIME + el.H1;
-            il->FREE = il->LINK[il->FREE];
-            il->LINK[el.K] = 0;
-            if ((*chan).HEAD == 0) {
-              (*chan).HEAD = el.K;
+            TIMEINC(interp_local, CHANTIME, "cs66");
+            executor.K = interp_local->FREE;
+            interp_local->DATE[executor.K] =
+                current_process->TIME + executor.H1;
+            interp_local->FREE = interp_local->LINK[interp_local->FREE];
+            interp_local->LINK[executor.K] = 0;
+            if ((*channel).HEAD == 0) {
+              (*channel).HEAD = executor.K;
             } else {
-              il->PNT = (*chan).HEAD;
-              el.I = 0;
-              el.B1 = true;
-              while (il->PNT != 0 && el.B1) {
-                if (el.I != 0) {
-                  el.TGAP = (int)(il->DATE[il->PNT] - il->DATE[el.I]);
+              interp_local->PNT = (*channel).HEAD;
+              executor.I = 0;
+              executor.B1 = true;
+              while (interp_local->PNT != 0 && executor.B1) {
+                if (executor.I != 0) {
+                  executor.TGAP = (int)(interp_local->DATE[interp_local->PNT] -
+                                        interp_local->DATE[executor.I]);
                 } else {
-                  el.TGAP = CHANTIME + 3;
+                  executor.TGAP = CHANTIME + 3;
                 }
-                if (il->DATE[il->PNT] > il->DATE[el.K] &&
-                    el.TGAP > CHANTIME + 1) {
-                  el.B1 = false;
+                if (interp_local->DATE[interp_local->PNT] >
+                        interp_local->DATE[executor.K] &&
+                    executor.TGAP > CHANTIME + 1) {
+                  executor.B1 = false;
                 } else {
-                  el.I = il->PNT;
-                  il->PNT = il->LINK[il->PNT];
+                  executor.I = interp_local->PNT;
+                  interp_local->PNT = interp_local->LINK[interp_local->PNT];
                 }
               }
-              il->LINK[el.K] = il->PNT;
-              if (el.I == 0) {
-                (*chan).HEAD = el.K;
+              interp_local->LINK[executor.K] = interp_local->PNT;
+              if (executor.I == 0) {
+                (*channel).HEAD = executor.K;
               } else {
-                il->LINK[el.I] = el.K;
-                if (il->DATE[el.K] < il->DATE[el.I] + CHANTIME)
-                  il->DATE[el.K] = il->DATE[el.I] + CHANTIME;
+                interp_local->LINK[executor.I] = executor.K;
+                if (interp_local->DATE[executor.K] <
+                    interp_local->DATE[executor.I] + CHANTIME)
+                  interp_local->DATE[executor.K] =
+                      interp_local->DATE[executor.I] + CHANTIME;
               }
             }
-            if (Topology == Symbol::SHAREDSY) {
-              CURPR->TIME = il->DATE[el.K];
+            if (topology == Symbol::SHAREDSY) {
+              current_process->TIME = interp_local->DATE[executor.K];
               if (debug & DBGTIME)
-                procTime(CURPR, 0.0, "case 66,92");
+                procTime(current_process, 0.0, "case 66,92");
             }
-            if ((*chan).HEAD == el.K &&
-                (*chan).WAIT != nullptr) { // WITH WAIT->PDES
-              proc = il->CHAN[il->CNUM].WAIT->PDES;
-              proc->STATE = PRD::STATE::DELAYED;
-              proc->WAKETIME = il->DATE[el.K];
+            if ((*channel).HEAD == executor.K &&
+                (*channel).WAIT != nullptr) { // WITH WAIT->PDES
+              process = interp_local->CHAN[interp_local->CNUM].WAIT->PDES;
+              process->STATE = PRD::STATE::DELAYED;
+              process->WAKETIME = interp_local->DATE[executor.K];
             }
-            if (el.IR.F == 66) {
-              il->VALUE[el.K] = il->S[CURPR->T];
-              if (il->S[CURPR->T] == RTAG)
-                il->RVALUE[el.K] = il->RS[CURPR->T];
+            if (executor.IR.F == 66) {
+              interp_local->VALUE[executor.K] =
+                  interp_local->S[current_process->T];
+              if (interp_local->S[current_process->T] == RTAG)
+                interp_local->RVALUE[executor.K] =
+                    interp_local->RS[current_process->T];
             } else {
-              il->VALUE[el.K] = RTAG;
-              il->RVALUE[el.K] = il->S[CURPR->T];
-              il->RS[CURPR->T] = il->S[CURPR->T];
-              il->S[CURPR->T] = RTAG;
+              interp_local->VALUE[executor.K] = RTAG;
+              interp_local->RVALUE[executor.K] =
+                  interp_local->S[current_process->T];
+              interp_local->RS[current_process->T] =
+                  interp_local->S[current_process->T];
+              interp_local->S[current_process->T] = RTAG;
             }
-            il->S[CURPR->T - 1] = il->S[CURPR->T];
-            if (il->S[CURPR->T] == RTAG)
-              il->RS[CURPR->T - 1] = il->RS[CURPR->T];
-            CURPR->T -= 2;
-            (*chan).SEM += 1;
+            interp_local->S[current_process->T - 1] =
+                interp_local->S[current_process->T];
+            if (interp_local->S[current_process->T] == RTAG)
+              interp_local->RS[current_process->T - 1] =
+                  interp_local->RS[current_process->T];
+            current_process->T -= 2;
+            (*channel).SEM += 1;
           }
         }
         break;
       }
       case 67:
       case 74: {
-        il->NOSWITCH = false;
-        TIMEINC(il, CREATETIME, "cs67");
-        proc = (PROCPNT)calloc(1, sizeof(PROCESSDESCRIPTOR));
-        proc->PC = CURPR->PC + 1;
-        proc->PID = il->NEXTID++;
+        interp_local->NOSWITCH = false;
+        TIMEINC(interp_local, CREATETIME, "cs67");
+        process = (PROCPNT)calloc(1, sizeof(PROCESSDESCRIPTOR));
+        process->PC = current_process->PC + 1;
+        process->PID = interp_local->NEXTID++;
         // il->NEXTID += 1;
-        if (il->NEXTID > PIDMAX) {
-          il->PS = InterpLocal::PS::PROCCHK;
+        if (interp_local->NEXTID > PIDMAX) {
+          interp_local->PS = InterpLocal::PS::PROCCHK;
         }
-        proc->VIRTUALTIME = 0;
+        process->VIRTUALTIME = 0;
         for (int i = 0; i <= LMAX; i++) {
-          proc->DISPLAY[i] = CURPR->DISPLAY[i];
+          process->DISPLAY[i] = current_process->DISPLAY[i];
         }
-        proc->B = CURPR->B;
-        il->PTEMP = (ACTPNT)calloc(1, sizeof(ACTIVEPROCESS));
-        il->PTEMP->PDES = proc;
-        il->PTEMP->NEXT = il->ACPTAIL->NEXT;
-        il->ACPTAIL->NEXT = il->PTEMP;
-        il->ACPTAIL = il->PTEMP;
-        proc->T = FINDFRAME(il, WORKSIZE) - 1;
+        process->B = current_process->B;
+        interp_local->PTEMP = (ACTPNT)calloc(1, sizeof(ACTIVEPROCESS));
+        interp_local->PTEMP->PDES = process;
+        interp_local->PTEMP->NEXT = interp_local->ACPTAIL->NEXT;
+        interp_local->ACPTAIL->NEXT = interp_local->PTEMP;
+        interp_local->ACPTAIL = interp_local->PTEMP;
+        process->T = FINDFRAME(interp_local, WORKSIZE) - 1;
         if (debug & DBGPROC) {
           fprintf(STDOUT, "opc %d findframe %d length %d, response %d\n",
-                  el.IR.F, proc->PID, WORKSIZE, proc->T + 1);
+                  executor.IR.F, process->PID, WORKSIZE, process->T + 1);
         }
-        proc->STACKSIZE = proc->T + WORKSIZE;
-        proc->BASE = proc->T + 1;
-        proc->TIME = CURPR->TIME;
+        process->STACKSIZE = process->T + WORKSIZE;
+        process->BASE = process->T + 1;
+        process->TIME = current_process->TIME;
         // proc->NUMCHILDREN = 0;
         // proc->MAXCHILDTIME = 0;
-        if (el.IR.Y != 1) {
-          proc->WAKETIME =
-              CURPR->TIME + COMMDELAY(il, CURPR->PROCESSOR, il->S[CURPR->T], 1);
-          if (proc->WAKETIME > proc->TIME) {
-            proc->STATE = PRD::STATE::DELAYED;
+        if (executor.IR.Y != 1) {
+          process->WAKETIME =
+              current_process->TIME +
+              COMMDELAY(interp_local, current_process->PROCESSOR,
+                        interp_local->S[current_process->T], 1);
+          if (process->WAKETIME > process->TIME) {
+            process->STATE = PRD::STATE::DELAYED;
           } else {
-            proc->STATE = PRD::STATE::READY;
+            process->STATE = PRD::STATE::READY;
           }
         }
-        proc->FORLEVEL = CURPR->FORLEVEL;
-        proc->READSTATUS = PRD::READSTATUS::NONE;
-        proc->FORKCOUNT = 1;
-        proc->MAXFORKTIME = 0;
-        proc->JOINSEM = 0;
-        proc->PARENT = CURPR;
-        proc->PRIORITY = PRD::PRIORITY::LOW;
-        proc->ALTPROC = -1;
-        proc->SEQON = true;
-        proc->GROUPREP = false;
-        proc->PROCESSOR = il->S[CURPR->T];
-        if (proc->PROCESSOR > HighestProcessor || proc->PROCESSOR < 0) {
-          il->PS = InterpLocal::PS::CPUCHK;
+        process->FORLEVEL = current_process->FORLEVEL;
+        process->READSTATUS = PRD::READSTATUS::NONE;
+        process->FORKCOUNT = 1;
+        process->MAXFORKTIME = 0;
+        process->JOINSEM = 0;
+        process->PARENT = current_process;
+        process->PRIORITY = PRD::PRIORITY::LOW;
+        process->ALTPROC = -1;
+        process->SEQON = true;
+        process->GROUPREP = false;
+        process->PROCESSOR = interp_local->S[current_process->T];
+        if (process->PROCESSOR > highest_processor || process->PROCESSOR < 0) {
+          interp_local->PS = InterpLocal::PS::CPUCHK;
         } else {
-          if (il->PROCTAB[proc->PROCESSOR].STATUS ==
+          if (interp_local->PROCTAB[process->PROCESSOR].STATUS ==
               InterpLocal::PROCTAB::STATUS::NEVERUSED) {
-            il->USEDPROCS += 1;
+            interp_local->USEDPROCS += 1;
           }
-          il->PROCTAB[proc->PROCESSOR].STATUS =
+          interp_local->PROCTAB[process->PROCESSOR].STATUS =
               InterpLocal::PROCTAB::STATUS::FULL;
-          il->PROCTAB[proc->PROCESSOR].NUMPROC += 1;
+          interp_local->PROCTAB[process->PROCESSOR].NUMPROC += 1;
         }
-        CURPR->T = CURPR->T - 1;
-        if (proc->T > 0) {
-          el.J = 0;
-          while (proc->FORLEVEL > el.J) {
-            proc->T = proc->T + 1;
-            el.H1 = CURPR->BASE + el.J;
-            il->S[proc->T] = il->S[el.H1];
-            il->SLOCATION[proc->T] = il->SLOCATION[el.H1];
-            il->RS[proc->T] = il->RS[el.H1];
-            el.J = el.J + 1;
+        current_process->T = current_process->T - 1;
+        if (process->T > 0) {
+          executor.J = 0;
+          while (process->FORLEVEL > executor.J) {
+            process->T = process->T + 1;
+            executor.H1 = current_process->BASE + executor.J;
+            interp_local->S[process->T] = interp_local->S[executor.H1];
+            interp_local->SLOCATION[process->T] =
+                interp_local->SLOCATION[executor.H1];
+            interp_local->RS[process->T] = interp_local->RS[executor.H1];
+            executor.J = executor.J + 1;
           }
-          if (el.IR.F == 74) {
-            proc->FORLEVEL = proc->FORLEVEL + 1;
-            el.H1 = il->S[CURPR->T - 2];
-            el.H2 = il->S[CURPR->T - 1];
-            el.H3 = il->S[CURPR->T];
-            el.H4 = il->S[CURPR->T - 3];
-            proc->T = proc->T + 1;
-            il->S[proc->T] = el.H1;
-            il->SLOCATION[proc->T] = el.H4;
-            il->RS[proc->T] = proc->PC;
-            proc->T = proc->T + 1;
-            if (el.H1 + el.H3 <= el.H2) {
-              il->S[proc->T] = el.H1 + el.H3 - 1;
+          if (executor.IR.F == 74) {
+            process->FORLEVEL = process->FORLEVEL + 1;
+            executor.H1 = interp_local->S[current_process->T - 2];
+            executor.H2 = interp_local->S[current_process->T - 1];
+            executor.H3 = interp_local->S[current_process->T];
+            executor.H4 = interp_local->S[current_process->T - 3];
+            process->T = process->T + 1;
+            interp_local->S[process->T] = executor.H1;
+            interp_local->SLOCATION[process->T] = executor.H4;
+            interp_local->RS[process->T] = process->PC;
+            process->T = process->T + 1;
+            if (executor.H1 + executor.H3 <= executor.H2) {
+              interp_local->S[process->T] = executor.H1 + executor.H3 - 1;
             } else {
-              il->S[proc->T] = el.H2;
+              interp_local->S[process->T] = executor.H2;
             }
           }
         }
-        el.J = 1;
-        while (proc->DISPLAY[el.J] != -1) {
-          il->S[proc->DISPLAY[el.J] + 5] += 1;
+        executor.J = 1;
+        while (process->DISPLAY[executor.J] != -1) {
+          interp_local->S[process->DISPLAY[executor.J] + 5] += 1;
           if (debug & DBGRELEASE) {
-            fprintf(STDOUT, "%d ref ct %d ct=%d\n", el.IR.F, CURPR->PID,
-                    il->S[proc->DISPLAY[el.J] + 5]);
+            fprintf(STDOUT, "%d ref ct %d ct=%d\n", executor.IR.F,
+                    current_process->PID,
+                    interp_local->S[process->DISPLAY[executor.J] + 5]);
           }
-          el.J = el.J + 1;
+          executor.J = executor.J + 1;
         }
-        if (el.IR.Y == 1) {
-          proc->STATE = PRD::STATE::RUNNING;
-          CURPR->STATE = PRD::STATE::BLOCKED;
-          proc->TIME = CURPR->TIME;
-          proc->PRIORITY = PRD::PRIORITY::HIGH;
-          proc->ALTPROC = proc->PROCESSOR;
-          proc->PROCESSOR = CURPR->PROCESSOR;
-          il->PROCTAB[proc->PROCESSOR].RUNPROC = proc;
-          il->PROCTAB[proc->PROCESSOR].NUMPROC += 1;
+        if (executor.IR.Y == 1) {
+          process->STATE = PRD::STATE::RUNNING;
+          current_process->STATE = PRD::STATE::BLOCKED;
+          process->TIME = current_process->TIME;
+          process->PRIORITY = PRD::PRIORITY::HIGH;
+          process->ALTPROC = process->PROCESSOR;
+          process->PROCESSOR = current_process->PROCESSOR;
+          interp_local->PROCTAB[process->PROCESSOR].RUNPROC = process;
+          interp_local->PROCTAB[process->PROCESSOR].NUMPROC += 1;
         }
-        if (el.IR.F == 74) {
-          if (CURPR->NUMCHILDREN == 0)
-            CURPR->MAXCHILDTIME = CURPR->TIME;
-          CURPR->NUMCHILDREN += 1;
+        if (executor.IR.F == 74) {
+          if (current_process->NUMCHILDREN == 0)
+            current_process->MAXCHILDTIME = current_process->TIME;
+          current_process->NUMCHILDREN += 1;
         } else {
-          CURPR->FORKCOUNT += 1;
+          current_process->FORKCOUNT += 1;
         }
         if (debug & DBGPROC) {
-          fprintf(STDOUT, "opc %d newproc pid %d\n", el.IR.F, proc->PID);
+          fprintf(STDOUT, "opc %d newproc pid %d\n", executor.IR.F,
+                  process->PID);
         }
         //                        fprintf(STDOUT, "fork processsor %d alt %d
         //                        status %s\n", proc->PROCESSOR, proc->ALTPROC,
@@ -2195,88 +2376,93 @@ void EXECUTE(InterpLocal *il) {
       }
       case 69:
       case 70: {
-        if (CURPR->FORKCOUNT > 1) {
-          CURPR->FORKCOUNT -= 1;
-          CURPR->STATE = PRD::STATE::BLOCKED;
-          il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-          CURPR->PC = CURPR->PC - 1;
+        if (current_process->FORKCOUNT > 1) {
+          current_process->FORKCOUNT -= 1;
+          current_process->STATE = PRD::STATE::BLOCKED;
+          interp_local->PROCTAB[current_process->PROCESSOR].RUNPROC = nullptr;
+          current_process->PC = current_process->PC - 1;
         } else {
           for (int i = LMAX; i > 0; i--) {
-            el.J = CURPR->DISPLAY[i];
-            if (el.J != -1) {
-              il->S[el.J + 5] = il->S[el.J + 5] - 1;
-              if (il->S[el.J + 5] == 0) {
+            executor.J = current_process->DISPLAY[i];
+            if (executor.J != -1) {
+              interp_local->S[executor.J + 5] =
+                  interp_local->S[executor.J + 5] - 1;
+              if (interp_local->S[executor.J + 5] == 0) {
                 if (debug & DBGRELEASE) {
-                  println(STDOUT, "{} releas1 {} fm={} ln={}", el.IR.F,
-                          CURPR->PID, el.J, il->S[el.J + 6]);
+                  println(STDOUT, "{} releas1 {} fm={} ln={}", executor.IR.F,
+                          current_process->PID, executor.J,
+                          interp_local->S[executor.J + 6]);
                 }
-                RELEASE(il, el.J, il->S[el.J + 6]);
+                RELEASE(interp_local, executor.J,
+                        interp_local->S[executor.J + 6]);
               } else {
                 if (debug & DBGRELEASE) {
-                  println(STDOUT, "{} ref ct {} ct={}", el.IR.F, CURPR->PID,
-                          il->S[el.J + 5]);
+                  println(STDOUT, "{} ref ct {} ct={}", executor.IR.F,
+                          current_process->PID,
+                          interp_local->S[executor.J + 5]);
                 }
               }
             }
           }
           if (!mpi_mode) {
             if (debug & DBGRELEASE) {
-              println(STDOUT, "{} releas2 {} fm={} ln={}", el.IR.F, CURPR->PID,
-                      CURPR->BASE, WORKSIZE);
+              println(STDOUT, "{} releas2 {} fm={} ln={}", executor.IR.F,
+                      current_process->PID, current_process->BASE, WORKSIZE);
             }
-            RELEASE(il, CURPR->BASE, WORKSIZE);
+            RELEASE(interp_local, current_process->BASE, WORKSIZE);
           }
-          if (mpi_mode && il->MPIINIT[CURPR->PROCESSOR] &&
-              !il->MPIFIN[CURPR->PROCESSOR]) {
-            il->PS = InterpLocal::PS::MPIFINCHK;
+          if (mpi_mode && interp_local->MPIINIT[current_process->PROCESSOR] &&
+              !interp_local->MPIFIN[current_process->PROCESSOR]) {
+            interp_local->PS = InterpLocal::PS::MPIFINCHK;
           }
           for (int i = 1; i <= OPCHMAX; i++) {
-            if (il->CHAN[i].READER == CURPR->PID) {
-              il->CHAN[i].READER = -1;
+            if (interp_local->CHAN[i].READER == current_process->PID) {
+              interp_local->CHAN[i].READER = -1;
             }
           }
 
-          CURPR->SEQON = false;
-          TIMEINC(il, CREATETIME - 1, "cs69");
-          el.H1 = COMMDELAY(il, CURPR->PROCESSOR, CURPR->PARENT->PROCESSOR, 1);
-          il->R1 = el.H1 + CURPR->TIME;
+          current_process->SEQON = false;
+          TIMEINC(interp_local, CREATETIME - 1, "cs69");
+          executor.H1 = COMMDELAY(interp_local, current_process->PROCESSOR,
+                                  current_process->PARENT->PROCESSOR, 1);
+          interp_local->R1 = executor.H1 + current_process->TIME;
           // with CURPR->PARENT
-          proc = CURPR->PARENT;
+          process = current_process->PARENT;
 
-          switch (el.IR.F) {
+          switch (executor.IR.F) {
           case 70: {
-            proc->NUMCHILDREN = proc->NUMCHILDREN - 1;
-            if (proc->MAXCHILDTIME < il->R1) {
-              proc->MAXCHILDTIME = il->R1;
+            process->NUMCHILDREN = process->NUMCHILDREN - 1;
+            if (process->MAXCHILDTIME < interp_local->R1) {
+              process->MAXCHILDTIME = interp_local->R1;
             }
-            if (proc->NUMCHILDREN == 0) {
-              proc->STATE = PRD::STATE::DELAYED;
-              proc->WAKETIME = proc->MAXCHILDTIME;
+            if (process->NUMCHILDREN == 0) {
+              process->STATE = PRD::STATE::DELAYED;
+              process->WAKETIME = process->MAXCHILDTIME;
             }
             break;
           }
 
           case 69: {
-            proc->FORKCOUNT = proc->FORKCOUNT - 1;
-            if (proc->MAXFORKTIME < il->R1) {
-              proc->MAXFORKTIME = il->R1;
+            process->FORKCOUNT = process->FORKCOUNT - 1;
+            if (process->MAXFORKTIME < interp_local->R1) {
+              process->MAXFORKTIME = interp_local->R1;
             }
-            if (proc->JOINSEM == -1) {
-              if (il->R1 > proc->TIME) {
-                proc->WAKETIME = il->R1;
-                proc->STATE = PRD::STATE::DELAYED;
+            if (process->JOINSEM == -1) {
+              if (interp_local->R1 > process->TIME) {
+                process->WAKETIME = interp_local->R1;
+                process->STATE = PRD::STATE::DELAYED;
               } else {
-                proc->STATE = PRD::STATE::READY;
+                process->STATE = PRD::STATE::READY;
               }
             }
 
-            proc->JOINSEM = proc->JOINSEM + 1;
-            if (proc->FORKCOUNT == 0) {
-              if (proc->MAXFORKTIME > proc->TIME) {
-                proc->WAKETIME = proc->MAXFORKTIME;
-                proc->STATE = PRD::STATE::DELAYED;
+            process->JOINSEM = process->JOINSEM + 1;
+            if (process->FORKCOUNT == 0) {
+              if (process->MAXFORKTIME > process->TIME) {
+                process->WAKETIME = process->MAXFORKTIME;
+                process->STATE = PRD::STATE::DELAYED;
               } else {
-                proc->STATE = PRD::STATE::READY;
+                process->STATE = PRD::STATE::READY;
               }
             }
 
@@ -2285,28 +2471,30 @@ void EXECUTE(InterpLocal *il) {
           }
 
           if ((debug & DBGPROC) != 0) {
-            println(STDOUT, "opc {} terminated pid {}", el.IR.F, CURPR->PID);
+            println(STDOUT, "opc {} terminated pid {}", executor.IR.F,
+                    current_process->PID);
           }
-          CURPR->STATE = PRD::STATE::TERMINATED;
-          prtb = &il->PROCTAB[CURPR->PROCESSOR];
-          prtb->NUMPROC -= 1;
-          prtb->RUNPROC = nullptr;
-          if (prtb->NUMPROC == 0) {
-            prtb->STATUS = InterpLocal::PROCTAB::STATUS::EMPTY;
+          current_process->STATE = PRD::STATE::TERMINATED;
+          process_metadata = &interp_local->PROCTAB[current_process->PROCESSOR];
+          process_metadata->NUMPROC -= 1;
+          process_metadata->RUNPROC = nullptr;
+          if (process_metadata->NUMPROC == 0) {
+            process_metadata->STATUS = InterpLocal::PROCTAB::STATUS::EMPTY;
           }
         }
         break;
       }
       case 73: {
-        CURPR->T = CURPR->T + 1;
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        current_process->T = current_process->T + 1;
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          el.H1 = CURPR->DISPLAY[el.IR.X] + el.IR.Y;
-          for (int i = CURPR->BASE; i <= CURPR->BASE + CURPR->FORLEVEL - 1;
+          executor.H1 = current_process->DISPLAY[executor.IR.X] + executor.IR.Y;
+          for (int i = current_process->BASE;
+               i <= current_process->BASE + current_process->FORLEVEL - 1;
                i++) {
-            if (il->SLOCATION[i] == el.H1) {
-              il->S[CURPR->T] = il->S[i];
+            if (interp_local->SLOCATION[i] == executor.H1) {
+              interp_local->S[current_process->T] = interp_local->S[i];
             }
           }
         }
@@ -2317,14 +2505,15 @@ void EXECUTE(InterpLocal *il) {
         // [T-1] = processes
         // [T-2] = initial for index
         // [T-3] = index stk loc
-        CURPR->FORINDEX = CURPR->T - 2;
-        if (il->S[CURPR->T] <= 0) {
-          il->PS = InterpLocal::PS::GRPCHK;
-        } else if (il->S[CURPR->T - 2] > il->S[CURPR->T - 1]) {
-          CURPR->T = CURPR->T - 4;
-          CURPR->PC = el.IR.Y;
+        current_process->FORINDEX = current_process->T - 2;
+        if (interp_local->S[current_process->T] <= 0) {
+          interp_local->PS = InterpLocal::PS::GRPCHK;
+        } else if (interp_local->S[current_process->T - 2] >
+                   interp_local->S[current_process->T - 1]) {
+          current_process->T = current_process->T - 4;
+          current_process->PC = executor.IR.Y;
         } else {
-          CURPR->PRIORITY = PRD::PRIORITY::HIGH;
+          current_process->PRIORITY = PRD::PRIORITY::HIGH;
         }
         break;
       }
@@ -2336,563 +2525,617 @@ void EXECUTE(InterpLocal *il) {
         // [T-2] += [T]
         // if [T-2] <= [T-1] jmp IR.Y
         // else pop 4 off stack, priority = LOW
-        il->S[CURPR->T - 2] += il->S[CURPR->T];
-        if (il->S[CURPR->T - 2] <= il->S[CURPR->T - 1]) {
-          CURPR->PC = el.IR.Y;
+        interp_local->S[current_process->T - 2] +=
+            interp_local->S[current_process->T];
+        if (interp_local->S[current_process->T - 2] <=
+            interp_local->S[current_process->T - 1]) {
+          current_process->PC = executor.IR.Y;
         } else {
-          CURPR->T = CURPR->T - 4;
-          CURPR->PRIORITY = PRD::PRIORITY::LOW;
+          current_process->T = current_process->T - 4;
+          current_process->PRIORITY = PRD::PRIORITY::LOW;
         }
         break;
       }
       case 78: { // wakepar
-        if (CURPR->GROUPREP) {
-          CURPR->ALTPROC = -1;
+        if (current_process->GROUPREP) {
+          current_process->ALTPROC = -1;
         } else {
           // with CURPR->PARENT
-          CURPR->PARENT->STATE = PRD::STATE::RUNNING;
-          CURPR->PARENT->TIME = CURPR->TIME;
+          current_process->PARENT->STATE = PRD::STATE::RUNNING;
+          current_process->PARENT->TIME = current_process->TIME;
           if (debug & DBGTIME)
-            procTime(CURPR->PARENT, 0.0, "case 78");
-          il->PROCTAB[CURPR->PROCESSOR].NUMPROC -= 1;
-          il->PROCTAB[CURPR->PROCESSOR].RUNPROC = CURPR->PARENT;
-          CURPR->WAKETIME =
-              CURPR->TIME +
-              COMMDELAY(il, CURPR->PROCESSOR, CURPR->ALTPROC, 1 + el.IR.Y);
-          if (CURPR->WAKETIME > CURPR->TIME) {
-            CURPR->STATE = PRD::STATE::DELAYED;
+            procTime(current_process->PARENT, 0.0, "case 78");
+          interp_local->PROCTAB[current_process->PROCESSOR].NUMPROC -= 1;
+          interp_local->PROCTAB[current_process->PROCESSOR].RUNPROC =
+              current_process->PARENT;
+          current_process->WAKETIME =
+              current_process->TIME +
+              COMMDELAY(interp_local, current_process->PROCESSOR,
+                        current_process->ALTPROC, 1 + executor.IR.Y);
+          if (current_process->WAKETIME > current_process->TIME) {
+            current_process->STATE = PRD::STATE::DELAYED;
           } else {
-            CURPR->STATE = PRD::STATE::READY;
+            current_process->STATE = PRD::STATE::READY;
           }
-          CURPR->PROCESSOR = CURPR->ALTPROC;
-          CURPR->ALTPROC = -1;
-          CURPR->PRIORITY = PRD::PRIORITY::LOW;
+          current_process->PROCESSOR = current_process->ALTPROC;
+          current_process->ALTPROC = -1;
+          current_process->PRIORITY = PRD::PRIORITY::LOW;
         }
         break;
       }
       case 79: {
-        CURPR->T = CURPR->T + 1;
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        current_process->T = current_process->T + 1;
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
           // il->S[T] = RTAG;
           // il->RS[T] = CONTABLE[el.IR.Y];
-          el.I = -1;
-          el.J = -1;
-          el.B1 = false;
-          el.H1 = MAXINT;
-          el.H2 = -1; // ?? added DE
+          executor.I = -1;
+          executor.J = -1;
+          executor.B1 = false;
+          executor.H1 = MAXINT;
+          executor.H2 = -1; // ?? added DE
           do {
-            el.I += 1;
-            prtb = &il->PROCTAB[el.I];
+            executor.I += 1;
+            process_metadata = &interp_local->PROCTAB[executor.I];
             // with PROCTAB[I]
-            switch (prtb->STATUS) {
+            switch (process_metadata->STATUS) {
             case InterpLocal::PROCTAB::STATUS::EMPTY:
-              el.B1 = true;
+              executor.B1 = true;
               break;
             case InterpLocal::PROCTAB::STATUS::NEVERUSED:
-              if (el.J == -1)
-                el.J = el.I;
+              if (executor.J == -1)
+                executor.J = executor.I;
               break;
             case InterpLocal::PROCTAB::STATUS::FULL:
-              if (prtb->NUMPROC < el.H1) {
-                el.H2 = el.I;
-                el.H1 = prtb->NUMPROC;
+              if (process_metadata->NUMPROC < executor.H1) {
+                executor.H2 = executor.I;
+                executor.H1 = process_metadata->NUMPROC;
               }
               break;
             case InterpLocal::PROCTAB::STATUS::RESERVED:
-              if (prtb->NUMPROC + 1 < el.H1) // +1 fixed dde
+              if (process_metadata->NUMPROC + 1 < executor.H1) // +1 fixed dde
               {
-                el.H2 = el.I;
-                el.H1 = prtb->NUMPROC + 1;
+                executor.H2 = executor.I;
+                executor.H1 = process_metadata->NUMPROC + 1;
               }
               break;
             }
-          } while (!el.B1 && el.I != HighestProcessor);
-          if (el.B1) {
-            il->S[CURPR->T] = el.I;
-          } else if (el.J > -1) {
-            il->S[CURPR->T] = el.J;
-            il->USEDPROCS += 1;
+          } while (!executor.B1 && executor.I != highest_processor);
+          if (executor.B1) {
+            interp_local->S[current_process->T] = executor.I;
+          } else if (executor.J > -1) {
+            interp_local->S[current_process->T] = executor.J;
+            interp_local->USEDPROCS += 1;
           } else
-            il->S[CURPR->T] = el.H2;
+            interp_local->S[current_process->T] = executor.H2;
           // fprintf(STDOUT, "find processsor %d status %s\n", il->S[CURPR->T],
           //         prcsrStatus(il->PROCTAB[il->S[CURPR->T]].STATUS));
-          il->PROCTAB[il->S[CURPR->T]].STATUS =
+          interp_local->PROCTAB[interp_local->S[current_process->T]].STATUS =
               InterpLocal::PROCTAB::STATUS::RESERVED;
         }
         break;
       }
       case 80: {
-        il->SLOCATION[il->S[CURPR->T]] = il->S[CURPR->T - 1];
-        CURPR->T = CURPR->T - 1;
+        interp_local->SLOCATION[interp_local->S[current_process->T]] =
+            interp_local->S[current_process->T - 1];
+        current_process->T = current_process->T - 1;
         break;
       }
       case 81: {
-        ++CURPR->T;
-        TIMEINC(il, -1, "cs81");
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        ++current_process->T;
+        TIMEINC(interp_local, -1, "cs81");
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          il->S[CURPR->T] = il->S[CURPR->FORINDEX];
+          interp_local->S[current_process->T] =
+              interp_local->S[current_process->FORINDEX];
         }
         break;
       }
       case 82: { // initarray initialization
-        for (int i = el.IR.X; i < el.IR.Y; i++) {
-          el.H1 = il->S[CURPR->T];
-          il->S[el.H1] = INITABLE[i].IVAL;
+        for (int i = executor.IR.X; i < executor.IR.Y; i++) {
+          executor.H1 = interp_local->S[current_process->T];
+          interp_local->S[executor.H1] = INITABLE[i].IVAL;
           // fprintf(STDOUT, "initarray stack %d val %d", el.H1,
           // INITABLE[i].IVAL);
           if (INITABLE[i].IVAL == RTAG) {
-            il->RS[el.H1] = INITABLE[i].RVAL;
+            interp_local->RS[executor.H1] = INITABLE[i].RVAL;
             // fprintf(STDOUT, " real val %f", INITABLE[i].RVAL);
           }
           // fprintf(STDOUT, "\n");
-          il->S[CURPR->T] = il->S[CURPR->T] + 1;
+          interp_local->S[current_process->T] =
+              interp_local->S[current_process->T] + 1;
         }
-        TIMEINC(il, el.IR.Y - el.IR.X / 5, "cs82");
+        TIMEINC(interp_local, executor.IR.Y - executor.IR.X / 5, "cs82");
         break;
       }
       case 83: { // zeroarr
-        el.H1 = il->S[CURPR->T];
-        for (int i = el.H1; i < el.H1 + el.IR.X; i++) {
-          if (el.IR.Y == 2) {
-            il->S[i] = RTAG;
-            il->RS[i] = 0.0;
+        executor.H1 = interp_local->S[current_process->T];
+        for (int i = executor.H1; i < executor.H1 + executor.IR.X; i++) {
+          if (executor.IR.Y == 2) {
+            interp_local->S[i] = RTAG;
+            interp_local->RS[i] = 0.0;
           } else {
-            il->S[i] = 0;
+            interp_local->S[i] = 0;
           }
         }
-        CURPR->T--;
-        TIMEINC(il, el.IR.X / 10, "cs83");
+        current_process->T--;
+        TIMEINC(interp_local, executor.IR.X / 10, "cs83");
         break;
       }
       case 84: { // dup
-        ++CURPR->T;
-        TIMEINC(il, -1, "cs84");
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        ++current_process->T;
+        TIMEINC(interp_local, -1, "cs84");
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          il->S[CURPR->T] = il->S[CURPR->T - 1];
+          interp_local->S[current_process->T] =
+              interp_local->S[current_process->T - 1];
         }
         break;
       }
       case 85: { // join?
-        if (CURPR->JOINSEM > 0) {
-          CURPR->JOINSEM -= 1;
+        if (current_process->JOINSEM > 0) {
+          current_process->JOINSEM -= 1;
         } else {
-          CURPR->JOINSEM = -1;
-          CURPR->STATE = PRD::STATE::BLOCKED;
-          il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
+          current_process->JOINSEM = -1;
+          current_process->STATE = PRD::STATE::BLOCKED;
+          interp_local->PROCTAB[current_process->PROCESSOR].RUNPROC = nullptr;
         }
         break;
       }
       case 86: {
-        if (Topology != Symbol::SHAREDSY) {
-          TESTVAR(il, il->S[CURPR->T]);
+        if (topology != Symbol::SHAREDSY) {
+          TESTVAR(interp_local, interp_local->S[current_process->T]);
         }
         break;
       }
       case 87: { // push real constant from constant table
-        CURPR->T = CURPR->T + 1;
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        current_process->T = current_process->T + 1;
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          il->S[CURPR->T] = RTAG;
-          il->RS[CURPR->T] = CONTABLE[el.IR.Y];
+          interp_local->S[current_process->T] = RTAG;
+          interp_local->RS[current_process->T] = CONTABLE[executor.IR.Y];
         }
         break;
       }
       case 88: {
-        CURPR->T = CURPR->T - 1;
-        if (il->S[CURPR->T] != RTAG) {
-          il->RS[CURPR->T] = il->S[CURPR->T];
-          il->S[CURPR->T] = RTAG;
+        current_process->T = current_process->T - 1;
+        if (interp_local->S[current_process->T] != RTAG) {
+          interp_local->RS[current_process->T] =
+              interp_local->S[current_process->T];
+          interp_local->S[current_process->T] = RTAG;
         }
-        if (il->S[CURPR->T + 1] != RTAG) {
-          il->RS[CURPR->T + 1] = il->S[CURPR->T + 1];
-          il->S[CURPR->T + 1] = RTAG;
+        if (interp_local->S[current_process->T + 1] != RTAG) {
+          interp_local->RS[current_process->T + 1] =
+              interp_local->S[current_process->T + 1];
+          interp_local->S[current_process->T + 1] = RTAG;
         }
-        if (il->RS[CURPR->T + 1] == 0) {
-          il->PS = InterpLocal::PS::DIVCHK;
+        if (interp_local->RS[current_process->T + 1] == 0) {
+          interp_local->PS = InterpLocal::PS::DIVCHK;
         } else {
-          il->RS[CURPR->T] = il->RS[CURPR->T] / il->RS[CURPR->T + 1];
-          if (il->RS[CURPR->T] != 0) {
-            el.RH1 = log(fabs(il->RS[CURPR->T])) / el.log10;
-            if (el.RH1 >= 292.5 || el.RH1 <= -292.5) {
-              il->PS = InterpLocal::PS::OVRCHK;
+          interp_local->RS[current_process->T] =
+              interp_local->RS[current_process->T] /
+              interp_local->RS[current_process->T + 1];
+          if (interp_local->RS[current_process->T] != 0) {
+            executor.RH1 = log(fabs(interp_local->RS[current_process->T])) /
+                           executor.log10;
+            if (executor.RH1 >= 292.5 || executor.RH1 <= -292.5) {
+              interp_local->PS = InterpLocal::PS::OVRCHK;
             }
           }
         }
         break;
       }
       case 89:
-        il->NOSWITCH = true;
+        interp_local->NOSWITCH = true;
         break;
       case 90:
-        il->NOSWITCH = false;
+        interp_local->NOSWITCH = false;
         break;
       case 91: {
-        el.H1 = il->S[CURPR->T - 1];
-        if (Topology != Symbol::SHAREDSY) {
-          if (el.IR.Y == 0) {
-            TESTVAR(il, el.H1);
-          } else if (il->CONGESTION) {
-            el.H1 = COMMDELAY(il, CURPR->PROCESSOR, il->SLOCATION[el.H1], 1);
+        executor.H1 = interp_local->S[current_process->T - 1];
+        if (topology != Symbol::SHAREDSY) {
+          if (executor.IR.Y == 0) {
+            TESTVAR(interp_local, executor.H1);
+          } else if (interp_local->CONGESTION) {
+            executor.H1 = COMMDELAY(interp_local, current_process->PROCESSOR,
+                                    interp_local->SLOCATION[executor.H1], 1);
           }
         }
-        if (il->NUMTRACE > 0) {
-          CHKVAR(il, el.H1);
+        if (interp_local->NUMTRACE > 0) {
+          CHKVAR(interp_local, executor.H1);
         }
-        il->RS[el.H1] = il->S[CURPR->T];
-        il->S[el.H1] = RTAG;
-        il->RS[CURPR->T - 1] = il->S[CURPR->T];
-        il->S[CURPR->T - 1] = RTAG;
-        CURPR->T = CURPR->T - 1;
+        interp_local->RS[executor.H1] = interp_local->S[current_process->T];
+        interp_local->S[executor.H1] = RTAG;
+        interp_local->RS[current_process->T - 1] =
+            interp_local->S[current_process->T];
+        interp_local->S[current_process->T - 1] = RTAG;
+        current_process->T = current_process->T - 1;
         break;
       }
       case 93: { // duration
-        el.H1 = il->S[CURPR->T];
-        CURPR->T -= 1;
-        if (CURPR->TIME + el.H1 > il->CLOCK) {
-          CURPR->STATE = PRD::STATE::DELAYED;
-          CURPR->WAKETIME = CURPR->TIME + el.H1;
-          il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
+        executor.H1 = interp_local->S[current_process->T];
+        current_process->T -= 1;
+        if (current_process->TIME + executor.H1 > interp_local->CLOCK) {
+          current_process->STATE = PRD::STATE::DELAYED;
+          current_process->WAKETIME = current_process->TIME + executor.H1;
+          interp_local->PROCTAB[current_process->PROCESSOR].RUNPROC = nullptr;
         } else {
           if (debug & DBGTIME)
-            procTime(CURPR, (float)el.H1, "case 93");
-          CURPR->TIME += el.H1;
+            procTime(current_process, (float)executor.H1, "case 93");
+          current_process->TIME += executor.H1;
         }
         break;
       }
       case 94:
       case 95:
       case 96: {
-        switch (el.IR.F) {
+        switch (executor.IR.F) {
         case 94:
-          el.H1 = il->S[CURPR->T];
-          CURPR->T = CURPR->T - 1;
+          executor.H1 = interp_local->S[current_process->T];
+          current_process->T = current_process->T - 1;
           break;
         case 95:
-          el.H1 = CURPR->DISPLAY[el.IR.X] + el.IR.Y;
+          executor.H1 = current_process->DISPLAY[executor.IR.X] + executor.IR.Y;
           break;
         case 96:
-          el.H1 = il->S[CURPR->DISPLAY[el.IR.X] + el.IR.Y];
+          executor.H1 =
+              interp_local
+                  ->S[current_process->DISPLAY[executor.IR.X] + executor.IR.Y];
           break;
         }
-        il->CNUM = il->S[el.H1];
-        if (il->NUMTRACE > 0) {
-          CHKVAR(il, el.H1);
+        interp_local->CNUM = interp_local->S[executor.H1];
+        if (interp_local->NUMTRACE > 0) {
+          CHKVAR(interp_local, executor.H1);
         }
-        if (il->CNUM == 0) {
-          il->CNUM = FIND(il);
-          il->S[el.H1] = il->CNUM;
+        if (interp_local->CNUM == 0) {
+          interp_local->CNUM = FIND(interp_local);
+          interp_local->S[executor.H1] = interp_local->CNUM;
         }
-        if (!il->CHAN[il->CNUM].MOVED && il->CHAN[il->CNUM].READER < 0) {
-          il->SLOCATION[el.H1] = CURPR->PROCESSOR;
-          il->CHAN[il->CNUM].READER = CURPR->PID;
+        if (!interp_local->CHAN[interp_local->CNUM].MOVED &&
+            interp_local->CHAN[interp_local->CNUM].READER < 0) {
+          interp_local->SLOCATION[executor.H1] = current_process->PROCESSOR;
+          interp_local->CHAN[interp_local->CNUM].READER = current_process->PID;
         }
-        if (Topology != Symbol::SHAREDSY) {
-          TESTVAR(il, el.H1);
+        if (topology != Symbol::SHAREDSY) {
+          TESTVAR(interp_local, executor.H1);
         }
-        CURPR->T = CURPR->T + 1;
-        if (CURPR->T > CURPR->STACKSIZE) {
-          il->PS = InterpLocal::PS::STKCHK;
+        current_process->T = current_process->T + 1;
+        if (current_process->T > current_process->STACKSIZE) {
+          interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
-          il->S[CURPR->T] = 1;
-          if (il->CNUM == 0 || il->CHAN[il->CNUM].SEM == 0 ||
-              il->DATE[il->CHAN[il->CNUM].HEAD] > CURPR->TIME) {
-            il->S[CURPR->T] = 0;
+          interp_local->S[current_process->T] = 1;
+          if (interp_local->CNUM == 0 ||
+              interp_local->CHAN[interp_local->CNUM].SEM == 0 ||
+              interp_local->DATE[interp_local->CHAN[interp_local->CNUM].HEAD] >
+                  current_process->TIME) {
+            interp_local->S[current_process->T] = 0;
           }
         }
         break;
       }
       case 97: {
-        el.H1 = il->S[CURPR->T];
-        el.H2 = el.IR.Y;
-        for (el.I = el.H1; el.I <= el.H1 + el.H2 - 1; el.I++) {
-          il->SLOCATION[el.I] = il->S[CURPR->T - 1];
+        executor.H1 = interp_local->S[current_process->T];
+        executor.H2 = executor.IR.Y;
+        for (executor.I = executor.H1;
+             executor.I <= executor.H1 + executor.H2 - 1; executor.I++) {
+          interp_local->SLOCATION[executor.I] =
+              interp_local->S[current_process->T - 1];
         }
-        CURPR->T = CURPR->T - 1;
+        current_process->T = current_process->T - 1;
         break;
       }
       case 98:
       case 113: { // send copy msg
-        el.H2 = il->S[CURPR->T];
-        el.H1 = FINDFRAME(il, el.IR.Y);
+        executor.H2 = interp_local->S[current_process->T];
+        executor.H1 = FINDFRAME(interp_local, executor.IR.Y);
         if (debug & DBGSEND) {
           fprintf(STDOUT, "send findframe %d pid %d from %d to %d len %d\n",
-                  el.IR.F, CURPR->PID, el.H2, el.H1, el.IR.Y);
+                  executor.IR.F, current_process->PID, executor.H2, executor.H1,
+                  executor.IR.Y);
         }
-        if (el.H2 <= 0 || el.H2 >= STMAX) {
-          il->PS = InterpLocal::PS::REFCHK;
-        } else if (el.H1 < 0) {
-          il->PS = InterpLocal::PS::STORCHK;
+        if (executor.H2 <= 0 || executor.H2 >= STMAX) {
+          interp_local->PS = InterpLocal::PS::REFCHK;
+        } else if (executor.H1 < 0) {
+          interp_local->PS = InterpLocal::PS::STORCHK;
         } else {
-          el.H3 = el.H1 + el.IR.Y;
-          if (Topology != Symbol::SHAREDSY) {
-            TESTVAR(il, el.H2);
+          executor.H3 = executor.H1 + executor.IR.Y;
+          if (topology != Symbol::SHAREDSY) {
+            TESTVAR(interp_local, executor.H2);
           }
           if (debug & DBGSEND) {
             fprintf(STDOUT, "copymsg");
           }
-          while (el.H1 < el.H3) {
-            if (il->NUMTRACE > 0) {
-              CHKVAR(il, el.H2);
+          while (executor.H1 < executor.H3) {
+            if (interp_local->NUMTRACE > 0) {
+              CHKVAR(interp_local, executor.H2);
             }
-            il->S[el.H1] = il->S[el.H2];
-            il->SLOCATION[el.H1] = -1;
-            if (il->S[el.H2] == RTAG) {
-              il->RS[el.H1] = il->RS[el.H2];
+            interp_local->S[executor.H1] = interp_local->S[executor.H2];
+            interp_local->SLOCATION[executor.H1] = -1;
+            if (interp_local->S[executor.H2] == RTAG) {
+              interp_local->RS[executor.H1] = interp_local->RS[executor.H2];
             }
             if (debug & DBGSEND) {
-              if (il->S[el.H2] != RTAG)
-                fprintf(STDOUT, ":%d", il->S[el.H2]);
+              if (interp_local->S[executor.H2] != RTAG)
+                fprintf(STDOUT, ":%d", interp_local->S[executor.H2]);
               else
-                fprintf(STDOUT, ":%.1f", il->RS[el.H2]);
+                fprintf(STDOUT, ":%.1f", interp_local->RS[executor.H2]);
             }
-            el.H1 = el.H1 + 1;
-            el.H2 = el.H2 + 1;
+            executor.H1 = executor.H1 + 1;
+            executor.H2 = executor.H2 + 1;
           }
           if (debug & DBGSEND) {
             fprintf(STDOUT, "\n");
           }
-          el.H2 = il->S[CURPR->T];
-          il->S[CURPR->T] = el.H3 - el.IR.Y;
-          if (el.IR.F == 98 && il->SLOCATION[el.H2] == -1) {
+          executor.H2 = interp_local->S[current_process->T];
+          interp_local->S[current_process->T] = executor.H3 - executor.IR.Y;
+          if (executor.IR.F == 98 &&
+              interp_local->SLOCATION[executor.H2] == -1) {
             if (debug & DBGSEND) {
-              fprintf(STDOUT, "send(rel) %d pid % d from %d len %d\n", el.IR.F,
-                      CURPR->PID, el.H2, el.IR.Y);
+              fprintf(STDOUT, "send(rel) %d pid % d from %d len %d\n",
+                      executor.IR.F, current_process->PID, executor.H2,
+                      executor.IR.Y);
             }
             if (debug & DBGSEND) {
-              fprintf(STDOUT, "%d send release fm=%d ln=%d\n", el.IR.F, el.H2,
-                      el.IR.Y);
+              fprintf(STDOUT, "%d send release fm=%d ln=%d\n", executor.IR.F,
+                      executor.H2, executor.IR.Y);
             }
-            RELEASE(il, el.H2, el.IR.Y);
+            RELEASE(interp_local, executor.H2, executor.IR.Y);
           }
-          TIMEINC(il, el.IR.Y / 5, "cs98");
+          TIMEINC(interp_local, executor.IR.Y / 5, "cs98");
           if (debug & DBGSEND) {
             fprintf(STDOUT, "send(x) %d pid %d var [T] %d chan [T-1] %d\n",
-                    el.IR.F, CURPR->PID, il->S[CURPR->T],
-                    il->S[il->S[CURPR->T - 1]]);
+                    executor.IR.F, current_process->PID,
+                    interp_local->S[current_process->T],
+                    interp_local->S[interp_local->S[current_process->T - 1]]);
           }
         }
         break;
       }
       case 101: { // lock
-        if (Topology != Symbol::SHAREDSY) {
-          il->PS = InterpLocal::PS::LOCKCHK;
+        if (topology != Symbol::SHAREDSY) {
+          interp_local->PS = InterpLocal::PS::LOCKCHK;
         }
-        if (il->NUMTRACE > 0) {
-          CHKVAR(il, il->S[CURPR->T]);
+        if (interp_local->NUMTRACE > 0) {
+          CHKVAR(interp_local, interp_local->S[current_process->T]);
         }
-        if (il->S[il->S[CURPR->T]] == 0) {
-          il->S[il->S[CURPR->T]] = 1;
-          CURPR->T = CURPR->T - 1;
+        if (interp_local->S[interp_local->S[current_process->T]] == 0) {
+          interp_local->S[interp_local->S[current_process->T]] = 1;
+          current_process->T = current_process->T - 1;
         } else {
-          CURPR->STATE = PRD::STATE::SPINNING;
-          CURPR->PC = CURPR->PC - 1;
+          current_process->STATE = PRD::STATE::SPINNING;
+          current_process->PC = current_process->PC - 1;
         }
         break;
       }
       case 102: { // unlock
-        if (Topology != Symbol::SHAREDSY) {
-          il->PS = InterpLocal::PS::LOCKCHK;
+        if (topology != Symbol::SHAREDSY) {
+          interp_local->PS = InterpLocal::PS::LOCKCHK;
         }
-        if (il->NUMTRACE > 0) {
-          CHKVAR(il, il->S[CURPR->T]);
+        if (interp_local->NUMTRACE > 0) {
+          CHKVAR(interp_local, interp_local->S[current_process->T]);
         }
-        il->S[il->S[CURPR->T]] = 0;
-        CURPR->T = CURPR->T - 1;
+        interp_local->S[interp_local->S[current_process->T]] = 0;
+        current_process->T = current_process->T - 1;
         break;
       }
       case 104: {
-        if (il->S[CURPR->T - 1] < il->S[CURPR->T]) {
-          il->S[CURPR->T - 1] += 1;
-          CURPR->PC = el.IR.X;
-          if (el.IR.Y == 1) {
-            CURPR->ALTPROC = CURPR->PARENT->PROCESSOR;
-            CURPR->GROUPREP = true;
+        if (interp_local->S[current_process->T - 1] <
+            interp_local->S[current_process->T]) {
+          interp_local->S[current_process->T - 1] += 1;
+          current_process->PC = executor.IR.X;
+          if (executor.IR.Y == 1) {
+            current_process->ALTPROC = current_process->PARENT->PROCESSOR;
+            current_process->GROUPREP = true;
           }
         }
         break;
       }
       case 105: {
-        if (il->S[CURPR->B + 5] == 1) {
+        if (interp_local->S[current_process->B + 5] == 1) {
           if (debug & DBGRELEASE) {
-            fprintf(STDOUT, "%d release %d fm=%d ln=%d\n", el.IR.F, CURPR->PID,
-                    CURPR->B, il->S[CURPR->B + 6]);
+            fprintf(STDOUT, "%d release %d fm=%d ln=%d\n", executor.IR.F,
+                    current_process->PID, current_process->B,
+                    interp_local->S[current_process->B + 6]);
           }
-          RELEASE(il, CURPR->B, il->S[CURPR->B + 6]);
+          RELEASE(interp_local, current_process->B,
+                  interp_local->S[current_process->B + 6]);
         } else {
-          il->S[CURPR->B + 5] = il->S[CURPR->B + 5] - 1;
+          interp_local->S[current_process->B + 5] =
+              interp_local->S[current_process->B + 5] - 1;
           if (debug & DBGRELEASE) {
-            fprintf(STDOUT, "%d fm ref ct %d ct=%d\n", el.IR.F, CURPR->PID,
-                    il->S[CURPR->B + 5]);
+            fprintf(STDOUT, "%d fm ref ct %d ct=%d\n", executor.IR.F,
+                    current_process->PID,
+                    interp_local->S[current_process->B + 5]);
           }
         }
-        el.H1 = TAB[il->S[CURPR->B + 4]].LEV;
-        CURPR->DISPLAY[el.H1 + 1] = -1;
-        CURPR->T = il->S[CURPR->B + 7];
-        CURPR->B = il->S[CURPR->B + 3];
-        if (CURPR->T >= CURPR->BASE - 1 && CURPR->T < CURPR->BASE + WORKSIZE) {
-          CURPR->STACKSIZE = CURPR->BASE + WORKSIZE - 1;
+        executor.H1 = TAB[interp_local->S[current_process->B + 4]].LEV;
+        current_process->DISPLAY[executor.H1 + 1] = -1;
+        current_process->T = interp_local->S[current_process->B + 7];
+        current_process->B = interp_local->S[current_process->B + 3];
+        if (current_process->T >= current_process->BASE - 1 &&
+            current_process->T < current_process->BASE + WORKSIZE) {
+          current_process->STACKSIZE = current_process->BASE + WORKSIZE - 1;
         } else {
-          CURPR->STACKSIZE = CURPR->B + il->S[CURPR->B + 6] - 1;
+          current_process->STACKSIZE =
+              current_process->B + interp_local->S[current_process->B + 6] - 1;
         }
         break;
       }
       case 106: {
-        TIMEINC(il, -1, "c106");
-        CURPR->SEQON = false;
+        TIMEINC(interp_local, -1, "c106");
+        current_process->SEQON = false;
         break;
       }
       case 107: {
-        TIMEINC(il, -1, "c107");
-        CURPR->SEQON = true;
+        TIMEINC(interp_local, -1, "c107");
+        current_process->SEQON = true;
         break;
       }
       case 108: { // increment
-        el.H1 = il->S[CURPR->T];
-        if (el.H1 <= 0 || el.H1 >= STMAX) {
-          il->PS = InterpLocal::PS::REFCHK;
+        executor.H1 = interp_local->S[current_process->T];
+        if (executor.H1 <= 0 || executor.H1 >= STMAX) {
+          interp_local->PS = InterpLocal::PS::REFCHK;
         } else {
-          if (Topology != Symbol::SHAREDSY) {
-            TESTVAR(il, el.H1);
+          if (topology != Symbol::SHAREDSY) {
+            TESTVAR(interp_local, executor.H1);
           }
-          if (il->NUMTRACE > 0) {
-            CHKVAR(il, el.H1);
+          if (interp_local->NUMTRACE > 0) {
+            CHKVAR(interp_local, executor.H1);
           }
-          switch (el.IR.Y) {
+          switch (executor.IR.Y) {
           case 0:
-            if (il->S[el.H1] == RTAG) {
-              il->RS[el.H1] = il->RS[el.H1] + el.IR.X;
-              il->RS[CURPR->T] = il->RS[el.H1];
-              il->S[CURPR->T] = RTAG;
+            if (interp_local->S[executor.H1] == RTAG) {
+              interp_local->RS[executor.H1] =
+                  interp_local->RS[executor.H1] + executor.IR.X;
+              interp_local->RS[current_process->T] =
+                  interp_local->RS[executor.H1];
+              interp_local->S[current_process->T] = RTAG;
             } else {
-              il->S[el.H1] = il->S[el.H1] + el.IR.X;
-              il->S[CURPR->T] = il->S[el.H1];
-              if (abs(il->S[CURPR->T]) > NMAX) {
-                il->PS = InterpLocal::PS::INTCHK;
+              interp_local->S[executor.H1] =
+                  interp_local->S[executor.H1] + executor.IR.X;
+              interp_local->S[current_process->T] =
+                  interp_local->S[executor.H1];
+              if (abs(interp_local->S[current_process->T]) > NMAX) {
+                interp_local->PS = InterpLocal::PS::INTCHK;
               }
             }
             break;
           case 1:
-            if (il->S[el.H1] == RTAG) {
-              il->RS[CURPR->T] = il->RS[el.H1];
-              il->S[CURPR->T] = RTAG;
-              il->RS[el.H1] = il->RS[el.H1] + el.IR.X;
+            if (interp_local->S[executor.H1] == RTAG) {
+              interp_local->RS[current_process->T] =
+                  interp_local->RS[executor.H1];
+              interp_local->S[current_process->T] = RTAG;
+              interp_local->RS[executor.H1] =
+                  interp_local->RS[executor.H1] + executor.IR.X;
             } else {
-              il->S[CURPR->T] = il->S[el.H1];
-              il->S[el.H1] = il->S[el.H1] + el.IR.X;
-              if (abs(il->S[el.H1]) > NMAX) {
-                il->PS = InterpLocal::PS::INTCHK;
+              interp_local->S[current_process->T] =
+                  interp_local->S[executor.H1];
+              interp_local->S[executor.H1] =
+                  interp_local->S[executor.H1] + executor.IR.X;
+              if (abs(interp_local->S[executor.H1]) > NMAX) {
+                interp_local->PS = InterpLocal::PS::INTCHK;
               }
             }
             break;
           }
-          if (il->STARTMEM[el.H1] <= 0) {
-            il->PS = InterpLocal::PS::REFCHK;
+          if (interp_local->STARTMEM[executor.H1] <= 0) {
+            interp_local->PS = InterpLocal::PS::REFCHK;
           }
         }
         break;
       }
       case 109: { // decrement
-        el.H1 = il->S[CURPR->T];
-        if (el.H1 <= 0 || el.H1 >= STMAX) {
-          il->PS = InterpLocal::PS::REFCHK;
+        executor.H1 = interp_local->S[current_process->T];
+        if (executor.H1 <= 0 || executor.H1 >= STMAX) {
+          interp_local->PS = InterpLocal::PS::REFCHK;
         } else {
-          if (Topology != Symbol::SHAREDSY) {
-            TESTVAR(il, el.H1);
+          if (topology != Symbol::SHAREDSY) {
+            TESTVAR(interp_local, executor.H1);
           }
-          if (il->NUMTRACE > 0) {
-            CHKVAR(il, el.H1);
+          if (interp_local->NUMTRACE > 0) {
+            CHKVAR(interp_local, executor.H1);
           }
-          switch (el.IR.Y) {
+          switch (executor.IR.Y) {
           case 0:
-            if (il->S[el.H1] == RTAG) {
-              il->RS[el.H1] = il->RS[el.H1] - el.IR.X;
-              il->RS[CURPR->T] = il->RS[el.H1];
-              il->S[CURPR->T] = RTAG;
+            if (interp_local->S[executor.H1] == RTAG) {
+              interp_local->RS[executor.H1] =
+                  interp_local->RS[executor.H1] - executor.IR.X;
+              interp_local->RS[current_process->T] =
+                  interp_local->RS[executor.H1];
+              interp_local->S[current_process->T] = RTAG;
             } else {
-              il->S[el.H1] = il->S[el.H1] - el.IR.X;
-              il->S[CURPR->T] = il->S[el.H1];
-              if (abs(il->S[CURPR->T]) > NMAX) {
-                il->PS = InterpLocal::PS::INTCHK;
+              interp_local->S[executor.H1] =
+                  interp_local->S[executor.H1] - executor.IR.X;
+              interp_local->S[current_process->T] =
+                  interp_local->S[executor.H1];
+              if (abs(interp_local->S[current_process->T]) > NMAX) {
+                interp_local->PS = InterpLocal::PS::INTCHK;
               }
             }
             break;
           case 1:
-            if (il->S[el.H1] == RTAG) {
-              il->RS[CURPR->T] = il->RS[el.H1];
-              il->S[CURPR->T] = RTAG;
-              il->RS[el.H1] = il->RS[el.H1] - el.IR.X;
+            if (interp_local->S[executor.H1] == RTAG) {
+              interp_local->RS[current_process->T] =
+                  interp_local->RS[executor.H1];
+              interp_local->S[current_process->T] = RTAG;
+              interp_local->RS[executor.H1] =
+                  interp_local->RS[executor.H1] - executor.IR.X;
             } else {
-              il->S[CURPR->T] = il->S[el.H1];
-              il->S[el.H1] = il->S[el.H1] - el.IR.X;
-              if (abs(il->S[el.H1]) > NMAX) {
-                il->PS = InterpLocal::PS::INTCHK;
+              interp_local->S[current_process->T] =
+                  interp_local->S[executor.H1];
+              interp_local->S[executor.H1] =
+                  interp_local->S[executor.H1] - executor.IR.X;
+              if (abs(interp_local->S[executor.H1]) > NMAX) {
+                interp_local->PS = InterpLocal::PS::INTCHK;
               }
             }
             break;
           }
-          if (il->STARTMEM[el.H1] <= 0) {
-            il->PS = InterpLocal::PS::REFCHK;
+          if (interp_local->STARTMEM[executor.H1] <= 0) {
+            interp_local->PS = InterpLocal::PS::REFCHK;
           }
         }
         break;
       }
       case 110: {
-        if (el.IR.Y == 0) {
-          el.H1 = il->S[CURPR->T];
-          el.H2 = il->S[CURPR->T - 1];
+        if (executor.IR.Y == 0) {
+          executor.H1 = interp_local->S[current_process->T];
+          executor.H2 = interp_local->S[current_process->T - 1];
         } else {
-          el.H1 = il->S[CURPR->T - 1];
-          el.H2 = il->S[CURPR->T];
+          executor.H1 = interp_local->S[current_process->T - 1];
+          executor.H2 = interp_local->S[current_process->T];
         }
-        CURPR->T = CURPR->T - 1;
-        il->S[CURPR->T] = el.H2 + el.IR.X * el.H1;
+        current_process->T = current_process->T - 1;
+        interp_local->S[current_process->T] =
+            executor.H2 + executor.IR.X * executor.H1;
         break;
       }
       case 111: // pop
-        CURPR->T = CURPR->T - 1;
+        current_process->T = current_process->T - 1;
         break;
       case 112: { // release if SLOC[T] == -1 no processor
-        if (il->SLOCATION[il->S[CURPR->T]] == -1) {
+        if (interp_local->SLOCATION[interp_local->S[current_process->T]] ==
+            -1) {
           if (debug & DBGRELEASE) {
-            fprintf(STDOUT, "%d release %d fm=%d ln=%d\n", el.IR.F, CURPR->PID,
-                    il->S[CURPR->T], el.IR.Y);
+            fprintf(STDOUT, "%d release %d fm=%d ln=%d\n", executor.IR.F,
+                    current_process->PID, interp_local->S[current_process->T],
+                    executor.IR.Y);
           }
-          RELEASE(il, il->S[CURPR->T], el.IR.Y);
+          RELEASE(interp_local, interp_local->S[current_process->T],
+                  executor.IR.Y);
         }
         break;
       }
       case 114: {
-        if (il->S[CURPR->T] != 0) {
-          il->S[CURPR->T] = 1;
+        if (interp_local->S[current_process->T] != 0) {
+          interp_local->S[current_process->T] = 1;
         }
       }
       case 115: {
-        el.H1 = il->S[CURPR->T - 1];
-        il->SLOCATION[el.H1] = il->S[CURPR->T];
-        il->CNUM = il->S[el.H1];
-        if (il->CNUM == 0) {
-          il->CNUM = FIND(il);
-          il->S[el.H1] = il->CNUM;
+        executor.H1 = interp_local->S[current_process->T - 1];
+        interp_local->SLOCATION[executor.H1] =
+            interp_local->S[current_process->T];
+        interp_local->CNUM = interp_local->S[executor.H1];
+        if (interp_local->CNUM == 0) {
+          interp_local->CNUM = FIND(interp_local);
+          interp_local->S[executor.H1] = interp_local->CNUM;
         }
-        il->CHAN[il->CNUM].MOVED = true;
-        CURPR->T = CURPR->T - 2;
+        interp_local->CHAN[interp_local->CNUM].MOVED = true;
+        current_process->T = current_process->T - 2;
         break;
       }
 
         /* instruction cases go here */
       default:
-        fprintf(STDOUT, "Missing Code %d\n", el.IR.F);
+        fprintf(STDOUT, "Missing Code %d\n", executor.IR.F);
         break;
       }
     }
-  } while (il->PS == InterpLocal::PS::RUN);
+  } while (interp_local->PS == InterpLocal::PS::RUN);
   // label_999:
   fprintf(STDOUT, "\n");
 } // EXECUTE

@@ -236,6 +236,11 @@ cstar: CMakeFiles/cstar.dir/exec.cpp.o
 cstar: CMakeFiles/cstar.dir/execlib.cpp.o
 cstar: CMakeFiles/cstar.dir/displays.cpp.o
 cstar: CMakeFiles/cstar.dir/build.make
+cstar: /usr/lib/libftxui-screen.a
+cstar: /usr/lib/libftxui-dom.a
+cstar: /usr/lib/libftxui-component.a
+cstar: /usr/lib/libftxui-dom.a
+cstar: /usr/lib/libftxui-screen.a
 cstar: CMakeFiles/cstar.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking CXX executable cstar"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/cstar.dir/link.txt --verbose=$(VERBOSE)

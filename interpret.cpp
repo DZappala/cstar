@@ -18,6 +18,8 @@
 #define COMMAX 30
 
 namespace Cstar {
+using std::cout;
+using std::getc;
 using std::print;
 
 extern void dumpCode();
@@ -34,7 +36,7 @@ extern void showCodeList(bool flg);
 extern void showConsoleList(bool flg);
 extern void EXECUTE(InterpLocal *il);
 extern void ENTERBLOCK();
-extern bool INCLUDEDIRECTIVE();
+extern auto INCLUDEDIRECTIVE() -> bool;
 extern void BLOCK(InterpLocal *, SymbolSet, bool, int, int);
 extern void NEXTCHAR();
 extern void WRMPIBUF(InterpLocal *, int PNUM);
@@ -42,10 +44,10 @@ void QUALIFY(InterpLocal *);
 void PARTWRITE(InterpLocal *, int START, Types PTYP, Index PREF, int PADR,
                bool &DONE);
 static void READLINE();
-int NUM(InterpLocal *);
+auto NUM(InterpLocal * /*il*/) -> int;
 void REMOVEBL();
-bool INWORD();
-int FINDFRAME(InterpLocal *, int);
+auto INWORD() -> bool;
+auto FINDFRAME(InterpLocal * /*il*/, int /*LENGTH*/) -> int;
 int MAINFUNC;
 ALFA PROGNAME;
 char FNAME[FILMAX + 1];
@@ -95,7 +97,7 @@ COMTYP COMJMP[COMMAX + 1] = {
     COMTYP::OUTPUTF, COMTYP::VIEW,     COMTYP::SHORT,  COMTYP::RESETP,
     COMTYP::MPI,     COMTYP::VERSION};
 
-PreBuffer *prebuf;
+PreBuffer *pre_buf;
 void QUALIFY(InterpLocal *il) {
   int J;
 L50:;
@@ -143,7 +145,7 @@ L50:;
         goto L50;
       } else {
         atab_index = il->REF;
-        strcpy(TAB[0].name, ID);
+        strcpy(TAB[0].name.data(), ID.data());
         while (TAB[atab_index].name != ID) {
           atab_index = TAB[atab_index].link;
         }
@@ -180,15 +182,15 @@ L50:;
   std::cout << std::endl;
 }
 
-bool INCRLINE(InterpLocal *il) {
+auto INCRLINE(InterpLocal *il) -> bool {
   bool rtn;
   rtn = false;
   il->LINECNT = il->LINECNT + 1;
   if (il->LINECNT > 200) {
-    std::cout << std::endl;
-    std::cout << "  Do you want to see more MPI Buffer Data? (Y or N): ";
-    char input;
-    input = (char)std::getc(stdin);
+    cout << '\n';
+    cout << "  Do you want to see more MPI Buffer Data? (Y or N): ";
+    char input = 0;
+    input = static_cast<char>(getc(stdin));
     if (!INWORD()) {
       rtn = true;
     } else if (input == 'Y') {
@@ -253,7 +255,7 @@ void RECORDWRITE(PartwriteLocal *pl) {
     for (J = 1; J <= pl->START - 5; J++) {
       std::cout << " ";
     }
-    strcpy(TNAME, TAB[SAVEREF[I]].name);
+    strcpy(TNAME.data(), TAB[SAVEREF[I]].name.data());
     for (K = 0; K <= ALNG - 1; K++) {
       if (TNAME[ALNG] == ' ') {
         for (L = ALNG; L >= 2; L--) {
@@ -298,7 +300,7 @@ void CHANNELWRITE(PartwriteLocal *pl) {
           std::cout << " ";
         }
         if (il->DATE[PNT] <= il->CLOCK + TIMESTEP ||
-            Topology == Symbol::SHAREDSY) {
+            topology == Symbol::SHAREDSY) {
           std::cout << "     >";
         } else {
           std::cout << "   **>";
@@ -672,9 +674,9 @@ void INITINTERP(InterpLocal *il) {
   for (int I = 1; I <= VARMAX; I++) {
     il->TRCTAB[I].MEMLOC = -1;
   }
-  strcpy(il->LISTDEFNAME, "LISTFILE.TXT");
+  strcpy(il->LISTDEFNAME.data(), "LISTFILE.TXT");
   // LIS = fopen(LISTDEFNAME, "w");   Pascal ASSIGN
-  strcpy(il->LISTFNAME, il->LISTDEFNAME);
+  strcpy(il->LISTFNAME.data(), il->LISTDEFNAME.data());
   LISTDEF = true;
   INPUTFILE = false;
   OUTPUTFILE = false;
@@ -688,7 +690,7 @@ void GETVAR(InterpLocal *il) {
   PROCPNT KDES;
   int I, J;
   il->ERR = false;
-  strcpy(il->PROMPT, "Process:  ");
+  strcpy(il->PROMPT.data(), "Process:  ");
   il->K = NUM(il);
   if (il->K < 0) {
     std::cout << "Invalid Process Number" << std::endl;
@@ -733,7 +735,7 @@ void GETVAR(InterpLocal *il) {
   for (J = 1; J <= NAMELEN; J++) {
     I = CC + J - 1;
     if (I <= LL) {
-      il->VARNAME[J] = line[I];
+      il->VARNAME[J] = line.str().at(I);
     } else {
       il->VARNAME[J] = ' ';
     }
@@ -748,7 +750,7 @@ void GETVAR(InterpLocal *il) {
     il->LEVEL = il->LEVEL - 1;
   }
   I = il->LEVEL;
-  strcpy(TAB[0].name, &ID[1]);
+  strcpy(TAB[0].name.data(), &ID[1]);
   do {
     if (I > 1) {
       il->VAL = KDES->DISPLAY[I];
@@ -757,7 +759,7 @@ void GETVAR(InterpLocal *il) {
     } else {
       J = BTAB[2].LAST;
     }
-    while (strcmp(TAB[J].name, &ID[1]) != 0) {
+    while (strcmp(TAB[J].name.data(), &ID[1]) != 0) {
       J = TAB[J].link;
     }
     I = I - 1;
@@ -845,14 +847,14 @@ static void READLINE() {
     } else {
       CONVERT();
       LL = LL + 1;
-      line[LL] = CH;
+      line.str().at(LL) = CH;
     }
   }
   // READLN(STDIN);
   if (LL > 0) {
     ENDFLAG = false;
     CC = 1;
-    CH = line[CC];
+    CH = line.str().at(CC);
   } else {
     ENDFLAG = true;
     CH = ' ';
@@ -871,14 +873,14 @@ static void FREADLINE() {
       }
     } else {
       LL = LL + 1;
-      line[LL] = CH;
+      line.str().at(LL) = CH;
     }
   }
   // READLN(STDIN);
   if (LL > 0) {
     ENDFLAG = false;
     CC = 1;
-    CH = line[CC];
+    CH = line.str().at(CC);
   } else {
     ENDFLAG = true;
     CH = ' ';
@@ -891,7 +893,7 @@ void Freadline(PreBuffer *pbp) {
   LL = 0;
   ch = pbp->getc();
   while (ch >= 0 && ch != '\n' && ch != '\r') {
-    line[++LL] = (char)ch;
+    line.str().at(++LL) = static_cast<char>(ch);
     ch = pbp->getc();
   }
   if (ch == '\r')
@@ -899,7 +901,7 @@ void Freadline(PreBuffer *pbp) {
   if (LL > 0) {
     ENDFLAG = false;
     CC = 1;
-    CH = line[CC];
+    CH = line.str().at(CC);
   } else {
     ENDFLAG = true;
     CH = ' ';
@@ -912,7 +914,7 @@ void NEXTCHAR() {
     CH = ' ';
   } else {
     CC = CC + 1;
-    CH = line[CC];
+    CH = line.str().at(CC);
   }
 }
 
@@ -1359,7 +1361,7 @@ void INITIALIZE(InterpLocal *il) {
       TBP = TBP->NEXT;
       free(SBP);
     }
-    if (Topology != Symbol::SHAREDSY) {
+    if (topology != Symbol::SHAREDSY) {
       for (int I = 0; I <= PMAX; I++) {
         BUSYPNT TCP = il->PROCTAB[I].BUSYLIST;
         while (TCP != nullptr) {
@@ -1554,7 +1556,7 @@ void INTERPRET() {
       // std::cout << "*";
       fputc('*', STDOUT);
       //                FREADLINE();
-      Freadline(prebuf);
+      Freadline(pre_buf);
       //                print(STDOUT, "%s\n", &LINE[1]);
       if (++cct > 3) {
         printf("prompt loop may be infinite\n");
@@ -1564,9 +1566,9 @@ void INTERPRET() {
     il->TEMP = INWORD();
     il->COMMLABEL = COMTYP::ERRC;
     for (I = 0; I < COMMAX; I++) {
-      if (strcmp(COMTAB[I], &ID[1]) == 0 ||
-          (strcmp(ABBREVTAB[I], &ID[1]) == 0 &&
-           strcmp(ABBREVTAB[I], "NONE") != 0)) {
+      if (strcmp(COMTAB[I].data(), &ID[1]) == 0 ||
+          (strcmp(ABBREVTAB[I].data(), &ID[1]) == 0 &&
+           strcmp(ABBREVTAB[I].data(), "NONE") != 0)) {
         il->COMMLABEL = COMJMP[I];
       }
     }
@@ -1584,7 +1586,7 @@ void INTERPRET() {
               ll -= 1;
             if (ll++ > 0)
               il->INPUTFNAME[ll] = '\0';
-            INP = fopen(il->INPUTFNAME, "r");
+            INP = fopen(il->INPUTFNAME.data(), "r");
             il->INPUTFNAME[ll] = ' ';
           }
           // RESET(INP);
@@ -1601,7 +1603,7 @@ void INTERPRET() {
               ll -= 1;
             if (ll++ > 0)
               il->INPUTFNAME[ll] = '\0';
-            OUTP = fopen(il->OUTPUTFNAME, "w");
+            OUTP = fopen(il->OUTPUTFNAME.c_str(), "w");
             il->INPUTFNAME[ll] = ' ';
           }
           // REprint(stdout, OUTP);
@@ -1667,7 +1669,7 @@ void INTERPRET() {
         if (il->PS == InterpLocal::PS::BREAK) {
           if (INWORD()) {
             if (strcmp(&ID[1], "PROCESS       ") == 0) {
-              strcpy(il->PROMPT, "Number:   ");
+              strcpy(il->PROMPT.data(), "Number:   ");
               K = NUM(il);
               il->PTEMP = il->ACPHEAD;
               il->TEMP = false;
@@ -1689,7 +1691,7 @@ void INTERPRET() {
               goto L200;
             }
           } else {
-            strcpy(il->PROMPT, "Number:   ");
+            strcpy(il->PROMPT.data(), "Number:   ");
             K = NUM(il);
             if (K < 0) {
               print(stdout, "Error in Number");
@@ -1736,7 +1738,7 @@ void INTERPRET() {
       if (J == 0) {
         print(stdout, "Too Many Breakpoints");
       } else {
-        strcpy(il->PROMPT, "At Line:  ");
+        strcpy(il->PROMPT.data(), "At Line:  ");
         K = NUM(il);
         if (K < 0 || K > LNUM) {
           print(stdout, "Out of Bounds");
@@ -1811,7 +1813,7 @@ void INTERPRET() {
       }
       if (strcmp(&ID[1], "BREAK         ") == 0 ||
           strcmp(&ID[1], "B             ") == 0) {
-        strcpy(il->PROMPT, "From Line: ");
+        strcpy(il->PROMPT.data(), "From Line: ");
         K = NUM(il);
         if (K < 0 || K > LNUM) {
           print(stdout, "Not Valid Line Number");
@@ -1827,7 +1829,7 @@ void INTERPRET() {
         }
       } else if (strcmp(&ID[1], "TRACE         ") == 0 ||
                  strcmp(&ID[1], "T             ") == 0) {
-        strcpy(il->PROMPT, "Memory Lc: ");
+        strcpy(il->PROMPT.data(), "Memory Lc: ");
         K = NUM(il);
         if (K < 0 || K > STMAX - 1) {
           print(stdout, "Not Valid Memory Location");
@@ -1886,7 +1888,7 @@ void INTERPRET() {
           print(stdout, "\n");
           print(stdout, "Alarm is Set at Time %f\n", il->ALARMTIME);
         }
-        if (Topology != Symbol::SHAREDSY) {
+        if (topology != Symbol::SHAREDSY) {
           print(stdout, "\n");
           print(stdout, "Communication Link Delay: %d\n", il->TOPDELAY);
           if (il->CONGESTION) {
@@ -1944,7 +1946,7 @@ void INTERPRET() {
           print(stdout, "Maximum of 40 Processes Allowed in Profile");
           goto L200;
         }
-        strcpy(il->PROMPT, "Time Step:");
+        strcpy(il->PROMPT.data(), "Time Step:");
         il->PROSTEP = NUM(il);
         if (il->PROSTEP < 0) {
           print(stdout, "Not Valid Time Step");
@@ -1974,7 +1976,7 @@ void INTERPRET() {
           goto L200;
         }
       } else {
-        strcpy(il->PROMPT, "  Time:   ");
+        strcpy(il->PROMPT.data(), "  Time:   ");
         il->ALARMTIME = NUM(il);
         if (il->ALARMTIME < 0) {
           print(stdout, "Not a Valid Alarm Time");
@@ -2017,7 +2019,7 @@ void INTERPRET() {
         print(stdout, "Too Many Trace Variables");
         goto L200;
       }
-      strcpy(il->TRCTAB[J].NAME, &il->VARNAME[1]);
+      strcpy(il->TRCTAB[J].NAME.data(), &il->VARNAME[1]);
       il->TRCTAB[J].MEMLOC = il->ADR;
       il->NUMTRACE++;
       print(stdout, "\n");
@@ -2250,10 +2252,10 @@ void INTERPRET() {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
-      if (Topology == Symbol::SHAREDSY) {
+      if (topology == Symbol::SHAREDSY) {
         std::cout << "Not allowed in shared memory multiprocessor" << std::endl;
       } else {
-        strcpy(il->PROMPT, "   Size:  ");
+        strcpy(il->PROMPT.data(), "   Size:  ");
         K = NUM(il);
         if (K < 0) {
           std::cout << "Invalid Communication Delay" << std::endl;
@@ -2268,7 +2270,7 @@ void INTERPRET() {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
-      if (Topology == Symbol::SHAREDSY) {
+      if (topology == Symbol::SHAREDSY) {
         std::cout << "Not allowed in shared memory multiprocessor" << std::endl;
       } else {
         if (INWORD()) {
@@ -2408,12 +2410,12 @@ void INTERPRET() {
           fputc('\n', STDOUT);
         } else {
           J = LOCATION[I];
-          print(STDOUT, "%6d%6d%6d\n", CODE[J].F, CODE[J].X, CODE[J].Y);
+          print(STDOUT, "%6d%6d%6d\n", code[J].F, code[J].X, code[J].Y);
           for (J = LOCATION[I] + 1; J <= LOCATION[I + 1] - 1; J++) {
             // std::cout << CODE[J].F << " " << CODE[J].X << " " << CODE[J].Y <<
             // std::endl;
-            print(STDOUT, "           %6d%6d%6d\n", CODE[J].F, CODE[J].X,
-                  CODE[J].Y);
+            print(STDOUT, "           %6d%6d%6d\n", code[J].F, code[J].X,
+                  code[J].Y);
           }
         }
       }
@@ -2453,7 +2455,7 @@ void INTERPRET() {
         std::cout << std::endl;
         goto L200;
       }
-      LIS = fopen(il->LISTFNAME, "w");
+      LIS = fopen(il->LISTFNAME.c_str(), "w");
       if (LIS == nullptr) {
         std::cout << "Cannot Open the Program Listing File " << il->LISTFNAME
                   << std::endl;
@@ -2463,7 +2465,7 @@ void INTERPRET() {
       }
       // fclose(LIS);
       if (INPUTFILE) {
-        FILE *inp = fopen(il->INPUTFNAME, "r");
+        FILE *inp = fopen(il->INPUTFNAME.c_str(), "re");
         if (!inp) {
           // std::cout << "Cannot Open the Input File " << INPUTFNAME <<
           // std::endl;
@@ -2475,7 +2477,7 @@ void INTERPRET() {
         fclose(inp);
       }
       if (OUTPUTFILE) {
-        FILE *outp = fopen(il->OUTPUTFNAME, "w");
+        FILE *outp = fopen(il->OUTPUTFNAME.c_str(), "we");
         if (outp == nullptr) {
           std::cout << "Cannot Open the Output File " << il->OUTPUTFNAME
                     << std::endl;
@@ -2487,18 +2489,18 @@ void INTERPRET() {
       }
       //                    showCodeList(true);
       //                    showConsoleList(true);
-      INITCOMPILER();
-      strcpy(PROGNAME, "PROGRAM       ");
+      initialize_compiler();
+      strcpy(PROGNAME.data(), "PROGRAM       ");
       MAINFUNC = -1;
-      BLOCK(il, DECLBEGSYS, false, 1, Tx);
-      if (SY != Symbol::EOFSY)
-        ERROR(22);
+      BLOCK(il, DECLBEGSYS, false, 1, tab_index);
+      if (symbol != Symbol::EOFSY)
+        error(22);
       if (BTAB[2].VSIZE + WORKSIZE > STMAX)
-        ERROR(49);
+        error(49);
       if (MAINFUNC < 0)
-        ERROR(100);
+        error(100);
       else {
-        if (MPIMODE) {
+        if (mpi_mode) {
           EMIT(9);
           EMIT1(18, MAINFUNC);
           EMIT1(19, BTAB[TAB[MAINFUNC].reference].PSIZE - 1);
@@ -2508,11 +2510,11 @@ void INTERPRET() {
         EMIT1(19, BTAB[TAB[MAINFUNC].reference].PSIZE - 1);
       }
       EMIT(31);
-      il->ENDLOC = LC;
-      LOCATION[LNUM + 1] = LC;
-      std::cout << std::endl;
+      il->ENDLOC = line_count;
+      LOCATION[LNUM + 1] = line_count;
+      std::cout << '\n';
       //                    dumpCode();
-      if (ERRS.none()) {
+      if (errors.none()) {
         // std::cout << std::endl;
         // std::cout << "Program Successfully Compiled" << std::endl;
         print(STDOUT, "\n%s Successfully Compiled\n", FNAME);
@@ -2528,7 +2530,7 @@ void INTERPRET() {
         if (real_list)
           dumpReals();
       } else {
-        ERRORMSG();
+        error_message();
         std::cout << std::endl;
         fclose(SRC);
         std::cout << "PROGRAM SOURCE FILE IS NOW CLOSED TO ALLOW EDITING"
@@ -2586,7 +2588,7 @@ void INTERPRET() {
         } else {
           fclose(inp);
           INPUTFILE = true;
-          strcpy(il->INPUTFNAME, FNAME);
+          strcpy(il->INPUTFNAME.data(), FNAME);
           INPUTOPEN = false;
           MUSTRUN = true;
         }
@@ -2609,7 +2611,7 @@ void INTERPRET() {
         } else {
           fclose(outp);
           OUTPUTFILE = true;
-          strcpy(il->OUTPUTFNAME, FNAME);
+          strcpy(il->OUTPUTFNAME.data(), FNAME);
           OUTPUTOPEN = false;
           MUSTRUN = true;
         }
@@ -2620,7 +2622,7 @@ void INTERPRET() {
       EQINFNAME();
       if (0 == strlen(FNAME)) {
         LISTDEF = true;
-        FILE *lis = fopen(il->LISTDEFNAME, "w");
+        FILE *lis = fopen(il->LISTDEFNAME.data(), "w");
         if (lis == nullptr) {
           std::cout << "Cannot Open the Default Program Listing File "
                     << il->LISTDEFNAME << std::endl;
@@ -2636,7 +2638,7 @@ void INTERPRET() {
         } else {
           fclose(lis);
           LISTDEF = false;
-          strcpy(il->LISTFNAME, FNAME);
+          strcpy(il->LISTFNAME.data(), FNAME);
         }
       }
       break;
@@ -2644,7 +2646,7 @@ void INTERPRET() {
     case COMTYP::RESETP: {
       INITINTERP(il);
       if (!SRCOPEN) {
-        MPIMODE = false;
+        mpi_mode = false;
       }
       std::cout << "All Debugger Settings are now reset to Default values"
                 << std::endl;

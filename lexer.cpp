@@ -10,6 +10,8 @@
 #include "cs_global.h"
 
 namespace Cstar {
+using std::isdigit;
+using std::print;
 using std::println;
 using std::string;
 
@@ -193,7 +195,7 @@ void INCLUDEDIRECTIVE() {
       //                if (INSRC != nullptr) // || IOResult() != 0)
       //                    error(149);
       else {
-        INSRC = fopen(FILENAME.c_str(), "r");
+        INSRC = fopen(FILENAME.c_str(), "re");
         if (INSRC == nullptr) {
           error(150);
         } else {
@@ -208,18 +210,20 @@ void INCLUDEDIRECTIVE() {
           INSYMBOL();
         }
       }
-    } else
+    } else {
       error(6);
-  } else
+    }
+  } else {
     error(6);
+  }
 }
 void MAINNEXTCH() {
   if (CC == LL) {
     // end of the buffered line
     // read and buffer another line
     // if ((*SRC).eof())
-    if (feof(SRC)) {
-      CH = (char)(28);
+    if (feof(SRC) != 0) {
+      CH = static_cast<char>(28);
       goto label37;
     }
     if (error_position != 0) {
@@ -239,9 +243,10 @@ void MAINNEXTCH() {
     symbol_count = 0;
     execution_count = 0;
     // std::cout << LNUM << "     ";
-    if (console_list)
-      fprintf(STDOUT, "%5d ", LNUM);
-    fprintf(LIS, "%5d ", LNUM);
+    if (console_list) {
+      print(STDOUT, "{:5} ", LNUM);
+    }
+    print(LIS, "{:5} ", LNUM);
     LOCATION[LNUM] = line_count;
     BREAKALLOW[LNUM] = OKBREAK;
     LL = 0;
@@ -249,33 +254,35 @@ void MAINNEXTCH() {
     while (!eoln(SRC)) {
       LL++;
       // CH = (*SRC).get();
-      CH = (char)fgetc(SRC);
+      CH = static_cast<char>(fgetc(SRC));
       // std::cout << CH;
-      if (console_list)
+      if (console_list) {
         fputc(CH, STDOUT);
+      }
       fputc(CH, LIS);
       if (CH == 9) {
         CH = ' ';
       }
-      line[LL] = CH;
+      line.str().at(LL) = CH;
     }
-    if (console_list)
+    if (console_list) {
       fputc('\n', STDOUT);
+    }
     // std::cout << std::endl;
     fputc('\n', LIS);
     LL++;
     // do_eoln(SRC);
-    line[LL] = ' ';
+    line.str().at(LL) = ' ';
   }
   CC++;
-  CH = line[CC];
+  CH = line.str().at(CC);
 label37:;
 }
 
 void ALTNEXTCH() {
   if (CC2 == LL2) {
     // if ((*INSRC).eof())
-    if (feof(INSRC)) {
+    if (feof(INSRC) != 0) {
       //(*INSRC).close();
       fclose(INSRC);
       if (--i_stack_index < 0) {
@@ -295,18 +302,18 @@ void ALTNEXTCH() {
     while (!eoln(INSRC)) {
       LL2++;
       // CH = (*INSRC).get();
-      CH = (int)fgetc(INSRC);
+      CH = fgetc(INSRC);
       if (CH == '\x09') {
         CH = ' ';
       }
-      line2[LL2] = CH;
+      line2.str().at(LL2) = CH;
     }
     LL2++;
     //(*INSRC).ignore();
-    line2[LL2] = ' ';
+    line2.str().at(LL2) = ' ';
   }
   CC2++;
-  CH = line2[CC2];
+  CH = line2.str().at(CC2);
 }
 
 void NEXTCH() {
@@ -318,13 +325,14 @@ void NEXTCH() {
 }
 
 void ADJUSTSCALE(struct InsymbolLocal *nl) {
-  int S;
-  float D, T;
-  if (nl->K + nl->E > EMAX)
+  int S = 0;
+  float D = NAN;
+  float T = NAN;
+  if (nl->K + nl->E > EMAX) {
     error(21);
-  else if (nl->K + nl->E < EMIN)
+  } else if (nl->K + nl->E < EMIN) {
     RNUM = 0.0;
-  else {
+  } else {
     S = abs(nl->E);
     T = 1.0;
     D = 10.0;
@@ -336,15 +344,17 @@ void ADJUSTSCALE(struct InsymbolLocal *nl) {
       S -= 1;
       T *= D;
     } while (S != 0);
-    if (nl->E >= 0)
+    if (nl->E >= 0) {
       RNUM = RNUM * T;
-    else
+    } else {
       RNUM = RNUM / T;
+    }
   }
 }
 
 void READSCALE(struct InsymbolLocal *nl) {
-  int S, SIGN;
+  int S = 0;
+  int SIGN = 0;
   NEXTCH();
   SIGN = 1;
   S = 0;
@@ -354,26 +364,28 @@ void READSCALE(struct InsymbolLocal *nl) {
     NEXTCH();
     SIGN = -1;
   }
-  while (isdigit(CH)) {
+  while (isdigit(CH) != 0) {
     S = 10 * S + (CH - '0');
     NEXTCH();
   }
   nl->E = S * SIGN + nl->E;
 }
 
-void FRACTION(struct InsymbolLocal *nl) {
+void FRACTION(struct InsymbolLocal *symbol_local) {
   symbol = Symbol::REALCON;
   RNUM = INUM;
-  nl->E = 0;
-  while (isdigit(CH)) {
-    nl->E -= 1;
+  symbol_local->E = 0;
+  while (isdigit(CH) != 0) {
+    symbol_local->E -= 1;
     RNUM = RNUM * 10.0 + (CH - '0');
     NEXTCH();
   }
-  if (CH == 'E')
-    READSCALE(nl);
-  if (nl->E != 0)
-    ADJUSTSCALE(nl);
+  if (CH == 'E') {
+    READSCALE(symbol_local);
+  }
+  if (symbol_local->E != 0) {
+    ADJUSTSCALE(symbol_local);
+  }
 }
 
 void ESCAPECHAR() {
@@ -410,7 +422,7 @@ void ESCAPECHAR() {
   }
 }
 
-static bool isoctal(char ch) { return ch >= '0' && ch <= '7'; }
+static auto isoctal(char ltr) -> bool { return ltr >= '0' && ltr <= '7'; }
 
 void ESCAPECHAR2() {
   NEXTCH();
@@ -421,7 +433,7 @@ void ESCAPECHAR2() {
       NEXTCH();
     }
     if (INUM < 128) {
-      STAB[SX] = (char)INUM;
+      STAB[SX] = static_cast<char>(INUM);
       SX += 1;
       if (CH == '\'')
         NEXTCH();
@@ -449,106 +461,108 @@ void ESCAPECHAR2() {
 void INSYMBOL() {
   // int I, J, K, E;
   // bool ISDEC;
-  struct InsymbolLocal nl = {0, 0, 0, 0, false};
+  struct InsymbolLocal symbol_local = {0, 0, 0, 0, false};
 label1:
-  while (CH == ' ')
+  while (CH == ' ') {
     NEXTCH();
-  if (isalpha(CH) || CH == '#') {
-    nl.K = -1;
-    strcpy(ID, "              ");
+  }
+
+  if ((isalpha(CH) != 0) || CH == '#') {
+    symbol_local.K = -1;
+    strcpy(ID.data(), "              ");
     do {
-      if (nl.K < ALNG - 1) {
-        nl.K++;
-        if (islower(CH)) {
+      if (symbol_local.K < ALNG - 1) {
+        symbol_local.K++;
+        if (islower(CH) != 0) {
           CH = toupper(CH);
         }
-        ID[nl.K] = CH;
+        ID[symbol_local.K] = CH;
       } else {
         // fprintf(STDOUT, "long symbol %s\n", ID);
       }
       NEXTCH();
     } while (isalnum(CH) || CH == '_');
-    nl.I = 1;
-    nl.J = NKW;
+    symbol_local.I = 1;
+    symbol_local.J = NKW;
     do {
-      nl.K = (nl.I + nl.J) / 2;
-      if (strcmp(ID, key[nl.K]) <= 0) {
-        nl.J = nl.K - 1;
+      symbol_local.K = (symbol_local.I + symbol_local.J) / 2;
+      if (strcmp(ID.data(), Cstar::key[symbol_local.K]) <= 0) {
+        symbol_local.J = symbol_local.K - 1;
       }
-      if (strcmp(ID, key[nl.K]) >= 0) {
-        nl.I = nl.K + 1;
+      if (strcmp(ID.data(), Cstar::key[symbol_local.K]) >= 0) {
+        symbol_local.I = symbol_local.K + 1;
       }
-    } while (nl.I <= nl.J);
-    if (nl.I - 1 > nl.J) {
-      symbol = ksy[nl.K];
+    } while (symbol_local.I <= symbol_local.J);
+    if (symbol_local.I - 1 > symbol_local.J) {
+      symbol = ksy[symbol_local.K];
     } else {
       symbol = Symbol::IDENT;
     }
-    if (mpi_mode && (NONMPISYS[SY] == 1)) {
+    if (mpi_mode && (NONMPISYS.test(static_cast<int>(symbol)))) {
       error(145);
     }
-  } else if (isdigit(CH)) {
-    nl.K = 0;
+  } else if (isdigit(CH) != 0) {
+    symbol_local.K = 0;
     INUM = 0;
-    nl.ISDEC = true;
+    symbol_local.ISDEC = true;
     symbol = Symbol::INTCON;
     if (CH == '0') {
-      nl.ISDEC = false;
+      symbol_local.ISDEC = false;
       NEXTCH();
       if (CH == 'X' || CH == 'x') {
         NEXTCH();
-        while (isxdigit(CH)) {
-          if (nl.K <= KMAX) {
+        while (isxdigit(CH) != 0) {
+          if (symbol_local.K <= KMAX) {
             INUM = INUM * 16;
-            if (isdigit(CH)) {
+            if (isdigit(CH) != 0) {
               INUM += CH - '0';
-            } else if (isupper(CH)) {
+            } else if (isupper(CH) != 0) {
               INUM += CH - 'A' + 10;
-            } else if (islower(CH)) {
+            } else if (islower(CH) != 0) {
               INUM += CH - 'a' + 10;
             }
           }
-          nl.K++;
+          symbol_local.K++;
           NEXTCH();
         }
       } else {
-        while (isdigit(CH)) {
-          if (nl.K <= KMAX) {
+        while (isdigit(CH) != 0) {
+          if (symbol_local.K <= KMAX) {
             INUM = INUM * 8 + CH - '0';
           }
-          nl.K++;
+          symbol_local.K++;
           NEXTCH();
         }
       }
     } else {
       do {
-        if (nl.K <= KMAX) {
+        if (symbol_local.K <= KMAX) {
           INUM = INUM * 10 + CH - '0';
         }
-        nl.K++;
+        symbol_local.K++;
         NEXTCH();
-      } while (isdigit(CH));
+      } while (isdigit(CH) != 0);
     }
-    if (nl.K > KMAX || abs(INUM) > NMAX) {
+    if (symbol_local.K > KMAX || abs(INUM) > NMAX) {
       error(21);
       INUM = 0;
-      nl.K = 0;
+      symbol_local.K = 0;
     }
-    if (nl.ISDEC || INUM == 0) {
+    if (symbol_local.ISDEC || INUM == 0) {
       if (CH == '.') {
         NEXTCH();
         if (CH == '.') {
           CH = ':';
         } else {
-          FRACTION(&nl);
+          FRACTION(&symbol_local);
         }
       } else if (CH == 'E') {
         symbol = Symbol::REALCON;
         RNUM = INUM;
-        nl.E = 0;
-        READSCALE(&nl);
-        if (nl.E != 0) {
-          ADJUSTSCALE(&nl);
+        symbol_local.E = 0;
+        READSCALE(&symbol_local);
+        if (symbol_local.E != 0) {
+          ADJUSTSCALE(&symbol_local);
         }
       }
     }
@@ -585,77 +599,77 @@ label1:
   } else if (CH == '&') {
     NEXTCH();
     if (CH == '&') {
-      SY = Symbol::ANDSY;
+      symbol = Symbol::ANDSY;
       NEXTCH();
     } else if (CH == ' ') {
-      SY = Symbol::BITANDSY;
+      symbol = Symbol::BITANDSY;
     } else {
-      SY = Symbol::ADDRSY;
+      symbol = Symbol::ADDRSY;
     }
   } else if (CH == '|') {
     NEXTCH();
     if (CH == '|') {
-      SY = Symbol::ORSY;
+      symbol = Symbol::ORSY;
       NEXTCH();
     } else {
-      SY = Symbol::BITINCLSY;
+      symbol = Symbol::BITINCLSY;
     }
   } else if (CH == '>') {
     NEXTCH();
     if (CH == '=') {
-      SY = Symbol::GEQ;
+      symbol = Symbol::GEQ;
       NEXTCH();
     } else if (CH == '>') {
-      SY = Symbol::INSTR;
+      symbol = Symbol::INSTR;
       NEXTCH();
     } else if (CH == ';') {
-      SY = Symbol::GRSEMI;
+      symbol = Symbol::GRSEMI;
       NEXTCH();
     } else {
-      SY = Symbol::GTR;
+      symbol = Symbol::GTR;
     }
   } else if (CH == '+') {
     NEXTCH();
     if (CH == '+') {
-      SY = Symbol::INCREMENT;
+      symbol = Symbol::INCREMENT;
       NEXTCH();
     } else if (CH == '=') {
-      SY = Symbol::PLUSEQ;
+      symbol = Symbol::PLUSEQ;
       NEXTCH();
     } else {
-      SY = Symbol::PLUS;
+      symbol = Symbol::PLUS;
     }
   } else if (CH == '-') {
     NEXTCH();
     if (CH == '-') {
-      SY = Symbol::DECREMENT;
+      symbol = Symbol::DECREMENT;
       NEXTCH();
     } else if (CH == '>') {
-      SY = Symbol::RARROW;
+      symbol = Symbol::RARROW;
       NEXTCH();
     } else if (CH == '=') {
-      SY = Symbol::MINUSEQ;
+      symbol = Symbol::MINUSEQ;
       NEXTCH();
     } else {
-      SY = Symbol::MINUS;
+      symbol = Symbol::MINUS;
     }
   } else if (CH == '.') {
     NEXTCH();
     if (CH == '.') {
-      SY = Symbol::COLON;
+      symbol = Symbol::COLON;
       NEXTCH();
-    } else if (isdigit(CH)) {
+    } else if (isdigit(CH) != 0) {
       INUM = 0;
-      nl.K = 0;
-      FRACTION(&nl);
+      symbol_local.K = 0;
+      FRACTION(&symbol_local);
     } else {
-      SY = Symbol::PERIOD;
+      symbol = Symbol::PERIOD;
     }
   } else if (CH == '\'') {
     NEXTCH();
     if (CH == '\'') {
       error(38);
-      SY = Symbol::CHARCON;
+      symbol = Symbol::CHARCON;
       INUM = 0;
     } else {
       if (SX + 1 == SMAX) {
@@ -665,8 +679,8 @@ label1:
         ESCAPECHAR2();
       } else {
         STAB[SX] = CH;
-        SY = Symbol::CHARCON;
-        INUM = (unsigned char)STAB[SX];
+        symbol = Symbol::CHARCON;
+        INUM = static_cast<unsigned char>(STAB[SX]);
         SX++;
         NEXTCH();
         if (CH == '\'') {
@@ -677,7 +691,7 @@ label1:
       }
     }
   } else if (CH == '"') {
-    nl.K = 0;
+    symbol_local.K = 0;
   label4:
     NEXTCH();
     if (CH == '"') {
@@ -686,42 +700,42 @@ label1:
         goto label5;
       }
     }
-    if (SX + nl.K == SMAX) {
+    if (SX + symbol_local.K == SMAX) {
       fatal(3);
     }
     if (CH == '\\') {
       NEXTCH();
       ESCAPECHAR();
     }
-    STAB[SX + nl.K] = CH;
-    nl.K++;
+    STAB[SX + symbol_local.K] = CH;
+    symbol_local.K++;
     if (CC == 1) {
-      nl.K = 0;
+      symbol_local.K = 0;
     } else {
       goto label4;
     }
   label5:
-    if (nl.K == 0) {
+    if (symbol_local.K == 0) {
       error(38);
-      SY = Symbol::CHARCON;
+      symbol = Symbol::CHARCON;
       INUM = 0;
     } else {
-      SY = Symbol::STRNG;
+      symbol = Symbol::STRNG;
       INUM = SX;
-      SLENG = nl.K;
-      SX += nl.K;
+      SLENG = symbol_local.K;
+      SX += symbol_local.K;
     }
   } else if (CH == '/') {
     NEXTCH();
     if (CH == '*') {
       NEXTCH();
       do {
-        while (CH != '*' && CH != char(28)) {
+        while (CH != '*' && CH != static_cast<char>(28)) {
           NEXTCH();
         }
         NEXTCH();
-      } while (CH != '/' && CH != char(28));
-      if (CH == char(28)) {
+      } while (CH != '/' && CH != static_cast<char>(28));
+      if (CH == static_cast<char>(28)) {
         //                    std::cout << std::endl;
         //                    std::cout << std::endl;
         //                    std::cout << " FAILURE TO END A COMMENT" <<
@@ -737,34 +751,34 @@ label1:
       NEXTCH();
       goto label1;
     } else if (CH == '=') {
-      SY = Symbol::RDIVEQ;
+      symbol = Symbol::RDIVEQ;
       NEXTCH();
     } else {
-      SY = Symbol::RDIV;
+      symbol = Symbol::RDIV;
     }
   } else if (CH == '?') {
     NEXTCH();
     if (CH == '?') {
-      SY = Symbol::DBLQUEST;
+      symbol = Symbol::DBLQUEST;
       NEXTCH();
     } else {
-      SY = Symbol::QUEST;
+      symbol = Symbol::QUEST;
     }
   } else if (CH == '*') {
     NEXTCH();
     if (CH == '=') {
-      SY = Symbol::TIMESEQ;
+      symbol = Symbol::TIMESEQ;
       NEXTCH();
     } else {
-      SY = Symbol::TIMES;
+      symbol = Symbol::TIMES;
     }
   } else if (CH == '%') {
     NEXTCH();
     if (CH == '=') {
-      SY = Symbol::IMODEQ;
+      symbol = Symbol::IMODEQ;
       NEXTCH();
     } else {
-      SY = Symbol::IMOD;
+      symbol = Symbol::IMOD;
     }
   } else if (CH == '(' || CH == ')' || CH == ':' || CH == ',' || CH == '[' ||
              CH == ']' || CH == ';' || CH == '@' || CH == '{' || CH == '}' ||
@@ -772,7 +786,7 @@ label1:
     symbol = SPS[CH];
     NEXTCH();
   } else if (CH == static_cast<char>(28)) {
-    SY = Symbol::EOFSY;
+    symbol = Symbol::EOFSY;
     eof_count++;
     if (eof_count > 5) {
       //                std::cout << std::endl;
@@ -792,20 +806,20 @@ label1:
     goto label1;
   }
   symbol_count++;
-  if (EXECSYS[SY] == 1) {
+  if (EXECSYS.test(static_cast<int>(symbol))) {
     execution_count++;
   }
-  if (SY == Symbol::UNIONSY) {
+  if (symbol == Symbol::UNIONSY) {
     error(154);
   }
-  if (SY == Symbol::ENUMSY) {
+  if (symbol == Symbol::ENUMSY) {
     error(155);
   }
-  if (SY == Symbol::BITCOMPSY || SY == Symbol::BITANDSY ||
-      SY == Symbol::BITXORSY || SY == Symbol::BITINCLSY) {
+  if (symbol == Symbol::BITCOMPSY || symbol == Symbol::BITANDSY ||
+      symbol == Symbol::BITXORSY || symbol == Symbol::BITINCLSY) {
     error(156);
   }
-  if (SY == Symbol::QUEST) {
+  if (symbol == Symbol::QUEST) {
     error(157);
   }
 }

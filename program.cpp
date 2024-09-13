@@ -9,7 +9,7 @@
 #include <string>
 #include <unistd.h>
 
-#include "ftxui/components/screen_interactive.hpp"
+// #include <ftxui/component/screen_interactive.hpp>
 
 #define EXPORT_CS_GLOBAL
 #include "cs_errors.h"
@@ -19,8 +19,10 @@
 #include "cs_compile.h"
 
 using Cstar::PreBuffer, Cstar::STDIN;
+using std::exit;
 using std::make_unique, std::snprintf, std::string, std::cout, std::expected,
     std::unexpected;
+using std::println;
 
 namespace Cstar {
 extern void INTERPRET();
@@ -32,6 +34,7 @@ extern void showArrayList(bool);
 extern void showRealList(bool);
 extern void showInstTrace(bool);
 extern std::unique_ptr<PreBuffer> pre_buf;
+
 bool interactive = false;
 
 static void enter(const char *X0, OBJECTS X1, Types X2, int X3) {
@@ -39,20 +42,20 @@ static void enter(const char *X0, OBJECTS X1, Types X2, int X3) {
   if (tab_index == TMAX) {
     fatal(1);
   } else {
-    strcpy(TAB[tab_index].NAME, X0);
-    TAB[tab_index].LINK = tab_index - 1;
-    TAB[tab_index].OBJ = X1;
-    TAB[tab_index].TYP = X2;
-    TAB[tab_index].REF = 0;
-    TAB[tab_index].NORMAL = true;
+    strcpy(TAB[tab_index].name.data(), X0);
+    TAB[tab_index].link = tab_index - 1;
+    TAB[tab_index].object = X1;
+    TAB[tab_index].types = X2;
+    TAB[tab_index].reference = 0;
+    TAB[tab_index].normal = true;
     TAB[tab_index].LEV = 0;
-    TAB[tab_index].ADR = X3;
+    TAB[tab_index].address = X3;
     TAB[tab_index].FORLEV = 0;
     TAB[tab_index].PNTPARAM = false;
   }
 }
 void LIBFINIT(int index, const char *name, int idnum) {
-  strcpy(LIBFUNC[index].NAME, name);
+  strcpy(LIBFUNC[index].NAME.data(), name);
   LIBFUNC[index].IDNUM = idnum;
 }
 void initialize_compiler() {
@@ -106,113 +109,113 @@ void initialize_compiler() {
   SPS[28] = Symbol::EOFSY;
   SPS[':'] = Symbol::COLON;
   // CONSTBEGSYS = {PLUS, MINUS, INTCON, CHARCON, REALCON, IDENT};
-  CONSTBEGSYS[Symbol::PLUS] = true;
-  CONSTBEGSYS[Symbol::MINUS] = true;
-  CONSTBEGSYS[Symbol::INTCON] = true;
-  CONSTBEGSYS[Symbol::CHARCON] = true;
-  CONSTBEGSYS[Symbol::REALCON] = true;
-  CONSTBEGSYS[Symbol::IDENT] = true;
+  CONSTBEGSYS.set(static_cast<int>(Symbol::PLUS), true);
+  CONSTBEGSYS.set(static_cast<int>(Symbol::MINUS), true);
+  CONSTBEGSYS.set(static_cast<int>(Symbol::INTCON), true);
+  CONSTBEGSYS.set(static_cast<int>(Symbol::CHARCON), true);
+  CONSTBEGSYS.set(static_cast<int>(Symbol::REALCON), true);
+  CONSTBEGSYS.set(static_cast<int>(Symbol::IDENT), true);
   // TYPEBEGSYS  = {IDENT, STRUCTSY, CONSTSY, SHORTSY, LONGSY, UNSIGNEDSY};
-  TYPEBEGSYS[Symbol::IDENT] = true;
-  TYPEBEGSYS[Symbol::STRUCTSY] = true;
-  TYPEBEGSYS[Symbol::CONSTSY] = true;
-  TYPEBEGSYS[Symbol::SHORTSY] = true;
-  TYPEBEGSYS[Symbol::LONGSY] = true;
-  TYPEBEGSYS[Symbol::UNSIGNEDSY] = true;
+  TYPEBEGSYS.set(static_cast<int>(Symbol::IDENT), true);
+  TYPEBEGSYS.set(static_cast<int>(Symbol::STRUCTSY), true);
+  TYPEBEGSYS.set(static_cast<int>(Symbol::CONSTSY), true);
+  TYPEBEGSYS.set(static_cast<int>(Symbol::SHORTSY), true);
+  TYPEBEGSYS.set(static_cast<int>(Symbol::LONGSY), true);
+  TYPEBEGSYS.set(static_cast<int>(Symbol::UNSIGNEDSY), true);
   // DECLBEGSYS  = {IDENT, STRUCTSY, CONSTSY, SHORTSY, LONGSY, UNSIGNEDSY,
   // TYPESY, DEFINESY, INCLUDESY}; //+ TYPEBEGSYS;
   DECLBEGSYS = TYPEBEGSYS;
-  DECLBEGSYS[Symbol::TYPESY] = true;
-  DECLBEGSYS[Symbol::DEFINESY] = true;
-  DECLBEGSYS[Symbol::INCLUDESY] = true;
+  DECLBEGSYS.set(static_cast<int>(Symbol::TYPESY), true);
+  DECLBEGSYS.set(static_cast<int>(Symbol::DEFINESY), true);
+  DECLBEGSYS.set(static_cast<int>(Symbol::INCLUDESY), true);
   // BLOCKBEGSYS = {IDENT, STRUCTSY, CONSTSY, SHORTSY, LONGSY, UNSIGNEDSY,
   // TYPESY, DEFINESY}; // + TYPEBEGSYS;
   BLOCKBEGSYS = DECLBEGSYS;
-  BLOCKBEGSYS[Symbol::INCLUDESY] = false;
+  BLOCKBEGSYS.set(static_cast<int>(Symbol::INCLUDESY), false);
   // FACBEGSYS = {INTCON, CHARCON, REALCON, IDENT, LPARENT, NOTSY, DECREMENT,
   // INCREMENT, PLUS, MINUS, TIMES, STRNG};
-  FACBEGSYS[Symbol::INTCON] = true;
-  FACBEGSYS[Symbol::CHARCON] = true;
-  FACBEGSYS[Symbol::REALCON] = true;
-  FACBEGSYS[Symbol::IDENT] = true;
-  FACBEGSYS[Symbol::LPARENT] = true;
-  FACBEGSYS[Symbol::NOTSY] = true;
-  FACBEGSYS[Symbol::DECREMENT] = true;
-  FACBEGSYS[Symbol::INCREMENT] = true;
-  FACBEGSYS[Symbol::PLUS] = true;
-  FACBEGSYS[Symbol::MINUS] = true;
-  FACBEGSYS[Symbol::TIMES] = true;
-  FACBEGSYS[Symbol::STRNG] = true;
+  FACBEGSYS.set(static_cast<int>(Symbol::INTCON), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::CHARCON), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::REALCON), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::IDENT), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::LPARENT), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::NOTSY), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::DECREMENT), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::INCREMENT), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::PLUS), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::MINUS), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::TIMES), true);
+  FACBEGSYS.set(static_cast<int>(Symbol::STRNG), true);
   //        STATBEGSYS = {IFSY, WHILESY, DOSY, FORSY, FORALLSY, SEMICOLON,
   //        FORKSY, JOINSY, SWITCHSY, LSETBRACK, RETURNSY,
   //                      BREAKSY, CONTSY, MOVESY, CINSY, COUTSY};
-  STATBEGSYS[Symbol::IFSY] = true;
-  STATBEGSYS[Symbol::WHILESY] = true;
-  STATBEGSYS[Symbol::DOSY] = true;
-  STATBEGSYS[Symbol::FORSY] = true;
-  STATBEGSYS[Symbol::FORALLSY] = true;
-  STATBEGSYS[Symbol::SEMICOLON] = true;
-  STATBEGSYS[Symbol::FORKSY] = true;
-  STATBEGSYS[Symbol::JOINSY] = true;
-  STATBEGSYS[Symbol::SWITCHSY] = true;
-  STATBEGSYS[Symbol::LSETBRACK] = true;
-  STATBEGSYS[Symbol::RETURNSY] = true;
-  STATBEGSYS[Symbol::BREAKSY] = true;
-  STATBEGSYS[Symbol::CONTSY] = true;
-  STATBEGSYS[Symbol::MOVESY] = true;
-  STATBEGSYS[Symbol::CINSY] = true;
-  STATBEGSYS[Symbol::COUTSY] = true;
+  STATBEGSYS.set(static_cast<int>(Symbol::IFSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::WHILESY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::DOSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::FORSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::FORALLSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::SEMICOLON), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::FORKSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::JOINSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::SWITCHSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::LSETBRACK), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::RETURNSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::BREAKSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::CONTSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::MOVESY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::CINSY), true);
+  STATBEGSYS.set(static_cast<int>(Symbol::COUTSY), true);
   // ASSIGNBEGSYS = {IDENT, LPARENT, DECREMENT, INCREMENT, TIMES};
-  ASSIGNBEGSYS[Symbol::IDENT] = true;
-  ASSIGNBEGSYS[Symbol::LPARENT] = true;
-  ASSIGNBEGSYS[Symbol::DECREMENT] = true;
-  ASSIGNBEGSYS[Symbol::INCREMENT] = true;
-  ASSIGNBEGSYS[Symbol::TIMES] = true;
+  ASSIGNBEGSYS.set(static_cast<int>(Symbol::IDENT), true);
+  ASSIGNBEGSYS.set(static_cast<int>(Symbol::LPARENT), true);
+  ASSIGNBEGSYS.set(static_cast<int>(Symbol::DECREMENT), true);
+  ASSIGNBEGSYS.set(static_cast<int>(Symbol::INCREMENT), true);
+  ASSIGNBEGSYS.set(static_cast<int>(Symbol::TIMES), true);
   // COMPASGNSYS = {PLUSEQ, MINUSEQ, TIMESEQ, RDIVEQ, IMODEQ};
-  COMPASGNSYS[Symbol::PLUSEQ] = true;
-  COMPASGNSYS[Symbol::MINUSEQ] = true;
-  COMPASGNSYS[Symbol::TIMESEQ] = true;
-  COMPASGNSYS[Symbol::RDIVEQ] = true;
-  COMPASGNSYS[Symbol::IMODEQ] = true;
+  COMPASGNSYS.set(static_cast<int>(Symbol::PLUSEQ), true);
+  COMPASGNSYS.set(static_cast<int>(Symbol::MINUSEQ), true);
+  COMPASGNSYS.set(static_cast<int>(Symbol::TIMESEQ), true);
+  COMPASGNSYS.set(static_cast<int>(Symbol::RDIVEQ), true);
+  COMPASGNSYS.set(static_cast<int>(Symbol::IMODEQ), true);
   // SELECTSYS = {LBRACK, PERIOD, RARROW};
-  SELECTSYS[Symbol::LBRACK] = true;
-  SELECTSYS[Symbol::PERIOD] = true;
-  SELECTSYS[Symbol::RARROW] = true;
+  SELECTSYS.set(static_cast<int>(Symbol::LBRACK), true);
+  SELECTSYS.set(static_cast<int>(Symbol::PERIOD), true);
+  SELECTSYS.set(static_cast<int>(Symbol::RARROW), true);
   // EXECSYS = {IFSY, WHILESY, DOSY, FORSY, FORALLSY, SEMICOLON, FORKSY, JOINSY,
   // SWITCHSY, LSETBRACK, RETURNSY,
   //            BREAKSY, CONTSY, MOVESY, CINSY, COUTSY, ELSESY, TOSY, DOSY,
   //            CASESY, DEFAULTSY};
-  EXECSYS[Symbol::IFSY] = true;
-  EXECSYS[Symbol::WHILESY] = true;
-  EXECSYS[Symbol::DOSY] = true;
-  EXECSYS[Symbol::FORSY] = true;
-  EXECSYS[Symbol::FORALLSY] = true;
-  EXECSYS[Symbol::SEMICOLON] = true;
-  EXECSYS[Symbol::FORKSY] = true;
-  EXECSYS[Symbol::JOINSY] = true;
-  EXECSYS[Symbol::SWITCHSY] = true;
-  EXECSYS[Symbol::LSETBRACK] = true;
-  EXECSYS[Symbol::RETURNSY] = true;
-  EXECSYS[Symbol::BREAKSY] = true;
-  EXECSYS[Symbol::CONTSY] = true;
-  EXECSYS[Symbol::MOVESY] = true;
-  EXECSYS[Symbol::CINSY] = true;
-  EXECSYS[Symbol::COUTSY] = true;
-  EXECSYS[Symbol::ELSESY] = true;
-  EXECSYS[Symbol::TOSY] = true;
-  EXECSYS[Symbol::CASESY] = true;
-  EXECSYS[Symbol::DEFAULTSY] = true;
+  EXECSYS.set(static_cast<int>(Symbol::IFSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::WHILESY), true);
+  EXECSYS.set(static_cast<int>(Symbol::DOSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::FORSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::FORALLSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::SEMICOLON), true);
+  EXECSYS.set(static_cast<int>(Symbol::FORKSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::JOINSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::SWITCHSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::LSETBRACK), true);
+  EXECSYS.set(static_cast<int>(Symbol::RETURNSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::BREAKSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::CONTSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::MOVESY), true);
+  EXECSYS.set(static_cast<int>(Symbol::CINSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::COUTSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::ELSESY), true);
+  EXECSYS.set(static_cast<int>(Symbol::TOSY), true);
+  EXECSYS.set(static_cast<int>(Symbol::CASESY), true);
+  EXECSYS.set(static_cast<int>(Symbol::DEFAULTSY), true);
   // NONMPISYS = {CHANSY, FORKSY, JOINSY, FORALLSY};
-  NONMPISYS[Symbol::CHANSY] = true;
-  NONMPISYS[Symbol::FORKSY] = true;
-  NONMPISYS[Symbol::JOINSY] = true;
-  NONMPISYS[Symbol::FORALLSY] = true;
+  NONMPISYS.set(static_cast<int>(Symbol::CHANSY), true);
+  NONMPISYS.set(static_cast<int>(Symbol::FORKSY), true);
+  NONMPISYS.set(static_cast<int>(Symbol::JOINSY), true);
+  NONMPISYS.set(static_cast<int>(Symbol::FORALLSY), true);
   // STANTYPS = {NOTYP, REALS, INTS, BOOLS, CHARS};
-  STANTYPS[Types::NOTYP] = true;
-  STANTYPS[Types::REALS] = true;
-  STANTYPS[Types::INTS] = true;
-  STANTYPS[Types::BOOLS] = true;
-  STANTYPS[Types::CHARS] = true;
+  STANTYPS.set(static_cast<int>(Types::NOTYP), true);
+  STANTYPS.set(static_cast<int>(Types::REALS), true);
+  STANTYPS.set(static_cast<int>(Types::INTS), true);
+  STANTYPS.set(static_cast<int>(Types::BOOLS), true);
+  STANTYPS.set(static_cast<int>(Types::CHARS), true);
   line_count = 0;
   LL = 0;
   LL2 = 0;
@@ -237,10 +240,10 @@ void initialize_compiler() {
   BREAKPNT = 0;
   ITPNT = 1;
   DISPLAY[0] = 1;
-  strcpy(DUMMYNAME, "************00");
+  strcpy(dummy_name.data(), "************00");
   INCLUDEFLAG = false;
   fatal_error = false;
-  PROTOINDEX = -1;
+  proto_index = -1;
   enter("              ", OBJECTS::VARIABLE, Types::NOTYP, 0);
   enter("FALSE         ", OBJECTS::KONSTANT, Types::BOOLS, 0);
   enter("TRUE          ", OBJECTS::KONSTANT, Types::BOOLS, 1);
@@ -334,11 +337,10 @@ void initialize_compiler() {
 
 enum class ProgramError { GeneralError };
 
-auto program() -> std::expected<void, ProgramError> {
+// auto program() -> std::expected<void, ProgramError> {
+auto program() -> void {
   if (interactive) {
-    string welcome{
-
-    };
+    string welcome{};
 
     std::cout << std::endl;
     std::cout << "                          C* COMPILER AND" << std::endl;
@@ -390,25 +392,29 @@ auto program() -> std::expected<void, ProgramError> {
   }
 }
 } // namespace Cstar
+
+using Cstar::program;
+using std::exception;
+
 static const char cfile[] = {'.', 'C', 's', 't', 'a', 'r',
                              '.', 'c', 'm', 'd', '\0'};
 static bool mpi = false;
 static void usage(string pgm) {
-  printf("usage: %s [-i] [-h] [-l] [-m] [-Xabcrst] [file]\n", pgm);
-  printf("     no operands implies -i\n");
-  printf("  i  interactive - if file is specified, it will be OPEN'ed\n");
-  printf("  h  display this help and exit\n");
-  printf("  l  display listing on the console\n");
-  printf("  m  set MPI ON\n");
-  printf("  file  compile and execute a C* file (no -i switch)\n");
-  printf("  X  execution options, combined in any order after X (no spaces)\n");
-  printf("     a  display the array table\n");
-  printf("     b  display the block table\n");
-  printf("     c  display the generated interpreter code\n");
-  printf("     r  display the real constant table\n");
-  printf("     s  display the symbol table\n");
-  printf("     t  trace interpreter instruction execution\n");
-  std::exit(1);
+  println("usage: {} [-i] [-h] [-l] [-m] [-Xabcrst] [file]", pgm);
+  println("     no operands implies -i");
+  println("  i  interactive - if file is specified, it will be OPEN'ed");
+  println("  h  display this help and exit");
+  println("  l  display listing on the console");
+  println("  m  set MPI ON");
+  println("  file  compile and execute a C* file (no -i switch)");
+  println("  X  execution options, combined in any order after X (no spaces)");
+  println("     a  display the array table");
+  println("     b  display the block table");
+  println("     c  display the generated interpreter code");
+  println("     r  display the real constant table");
+  println("     s  display the symbol table");
+  println("     t  trace interpreter instruction execution");
+  exit(1);
 }
 static void doOption(const char *opt, const char *pgm) {
   int ix;
@@ -458,16 +464,20 @@ static void doOption(const char *opt, const char *pgm) {
 
 static void cs_error(const char *p, int ern = 0, const char *p2 = "") {
   // std::cerr << p << " " << p2 << "\n";
-  fprintf(stderr, "cs%03d %s %s\n", ern, p, p2);
-  std::exit(1);
+  println(stderr, "cs{:03} {} {}", ern, p, p2);
+  exit(1);
 }
 
-int main(int argc, const char *argv[]) {
-  auto screen = ScreenInteractive::Fullscreen();
-  FILE *from = nullptr, *to = nullptr, *cmds = nullptr;
+auto main(int argc, const char *argv[]) -> int {
+  // auto screen = ftxui::ScreenInteractive::Fullscreen();
+
+  FILE *from = nullptr;
+  FILE *to = nullptr;
+  FILE *cmds = nullptr;
   const char *from_file = nullptr;
-  char *tbuf;
-  int ix, jx;
+  char *tbuf = nullptr;
+  int ix = 0;
+  int jx = 0;
 
   // overhead for longest prebuf command sequences
   const int prebuffer_overhead = 25;
@@ -481,16 +491,18 @@ int main(int argc, const char *argv[]) {
   Cstar::STDOUT = stdout;
 #endif
 
-  if (argc == 1)
+  if (argc == 1) {
     Cstar::interactive = true;
+  }
 
   for (ix = 1; ix < argc; ++ix) {
     if (argv[ix][0] == '-') {
       doOption(&argv[ix][1], argv[0]);
     } else if (from_file == nullptr) {
       from_file = argv[ix];
-    } else
+    } else {
       usage(argv[0]);
+    }
   }
 
 #if defined(__APPLE__)
@@ -503,9 +515,10 @@ int main(int argc, const char *argv[]) {
   if (from_file != nullptr) {
     // if file present, open it to see if it exists, error out otherwise
     // close it because the interpreter will open it again
-    from = fopen(from_file, "r");
-    if (!from)
+    from = fopen(from_file, "re");
+    if (from == nullptr) {
       cs_error("cannot open input file", 1, from_file);
+    }
     fclose(from);
   }
   if (Cstar::interactive) {
@@ -516,8 +529,9 @@ int main(int argc, const char *argv[]) {
       tbuf = static_cast<char *>(malloc(ix));
       jx =
           snprintf(tbuf, ix, "%sOPEN %s\n", (mpi) ? "MPI ON\n" : "", from_file);
-      if (jx > ix)
+      if (jx > ix) {
         cs_error("command buffer length issue");
+      }
       Cstar::pre_buf->setBuffer(tbuf, jx);
       free(tbuf);
     }
@@ -527,12 +541,13 @@ int main(int argc, const char *argv[]) {
     //        if (!cmds)
     //            error("cannot open command file", cfile);
     ix = static_cast<int>(std::strlen(from_file)) + prebuffer_overhead;
-    tbuf = (char *)malloc(ix);
+    tbuf = static_cast<char *>(malloc(ix));
     // fprintf(cmds, "OPEN %s\nRUN\nEXIT\n", from_file);
-    jx = std::snprintf(tbuf, ix, "%sOPEN %s\nRUN\nEXIT\n",
-                       (mpi) ? "MPI ON\n" : "", from_file);
-    if (jx > ix)
+    jx = snprintf(tbuf, ix, "%sOPEN %s\nRUN\nEXIT\n", (mpi) ? "MPI ON\n" : "",
+                  from_file);
+    if (jx > ix) {
       cs_error("command buffer length issue");
+    }
     Cstar::pre_buf->setBuffer(tbuf, jx);
     free(tbuf);
     //        fclose(cmds);
@@ -543,13 +558,14 @@ int main(int argc, const char *argv[]) {
     //        Cstar::STDIN = cmds;
   }
   try {
-    Cstar::program();
-  } catch (std::exception &exc) {
+    program();
+  } catch (exception &exc) {
     cs_error(exc.what());
     return_code = 2;
   }
-  if (to != nullptr)
+  if (to != nullptr) {
     fclose(to);
+  }
   if (cmds != nullptr) {
     fclose(cmds);
     unlink(cfile);

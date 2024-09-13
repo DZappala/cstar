@@ -64,87 +64,29 @@ CMAKE_BINARY_DIR = /home/dom/projects/pace/parallel/cstar
 
 # The main recursive "all" target.
 all: CMakeFiles/cstar.dir/all
-all: _deps/ftxui-build/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
-preinstall: _deps/ftxui-build/preinstall
+preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
 clean: CMakeFiles/cstar.dir/clean
-clean: _deps/ftxui-build/clean
 .PHONY : clean
-
-#=============================================================================
-# Directory level rules for directory _deps/ftxui-build
-
-# Recursive "all" directory target.
-_deps/ftxui-build/all: _deps/ftxui-build/CMakeFiles/screen.dir/all
-_deps/ftxui-build/all: _deps/ftxui-build/CMakeFiles/dom.dir/all
-_deps/ftxui-build/all: _deps/ftxui-build/CMakeFiles/component.dir/all
-_deps/ftxui-build/all: _deps/ftxui-build/examples/all
-_deps/ftxui-build/all: _deps/ftxui-build/doc/all
-.PHONY : _deps/ftxui-build/all
-
-# Recursive "preinstall" directory target.
-_deps/ftxui-build/preinstall: _deps/ftxui-build/examples/preinstall
-_deps/ftxui-build/preinstall: _deps/ftxui-build/doc/preinstall
-.PHONY : _deps/ftxui-build/preinstall
-
-# Recursive "clean" directory target.
-_deps/ftxui-build/clean: _deps/ftxui-build/CMakeFiles/screen.dir/clean
-_deps/ftxui-build/clean: _deps/ftxui-build/CMakeFiles/dom.dir/clean
-_deps/ftxui-build/clean: _deps/ftxui-build/CMakeFiles/component.dir/clean
-_deps/ftxui-build/clean: _deps/ftxui-build/examples/clean
-_deps/ftxui-build/clean: _deps/ftxui-build/doc/clean
-.PHONY : _deps/ftxui-build/clean
-
-#=============================================================================
-# Directory level rules for directory _deps/ftxui-build/doc
-
-# Recursive "all" directory target.
-_deps/ftxui-build/doc/all:
-.PHONY : _deps/ftxui-build/doc/all
-
-# Recursive "preinstall" directory target.
-_deps/ftxui-build/doc/preinstall:
-.PHONY : _deps/ftxui-build/doc/preinstall
-
-# Recursive "clean" directory target.
-_deps/ftxui-build/doc/clean:
-.PHONY : _deps/ftxui-build/doc/clean
-
-#=============================================================================
-# Directory level rules for directory _deps/ftxui-build/examples
-
-# Recursive "all" directory target.
-_deps/ftxui-build/examples/all:
-.PHONY : _deps/ftxui-build/examples/all
-
-# Recursive "preinstall" directory target.
-_deps/ftxui-build/examples/preinstall:
-.PHONY : _deps/ftxui-build/examples/preinstall
-
-# Recursive "clean" directory target.
-_deps/ftxui-build/examples/clean:
-.PHONY : _deps/ftxui-build/examples/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/cstar.dir
 
 # All Build rule for target.
-CMakeFiles/cstar.dir/all: _deps/ftxui-build/CMakeFiles/screen.dir/all
-CMakeFiles/cstar.dir/all: _deps/ftxui-build/CMakeFiles/dom.dir/all
-CMakeFiles/cstar.dir/all: _deps/ftxui-build/CMakeFiles/component.dir/all
+CMakeFiles/cstar.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cstar.dir/build.make CMakeFiles/cstar.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cstar.dir/build.make CMakeFiles/cstar.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=26,27,28,29,30,31,32,33,34,35,36 "Built target cstar"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11 "Built target cstar"
 .PHONY : CMakeFiles/cstar.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/cstar.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 83
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 11
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/cstar.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 0
 .PHONY : CMakeFiles/cstar.dir/rule
@@ -157,85 +99,6 @@ cstar: CMakeFiles/cstar.dir/rule
 CMakeFiles/cstar.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cstar.dir/build.make CMakeFiles/cstar.dir/clean
 .PHONY : CMakeFiles/cstar.dir/clean
-
-#=============================================================================
-# Target rules for target _deps/ftxui-build/CMakeFiles/screen.dir
-
-# All Build rule for target.
-_deps/ftxui-build/CMakeFiles/screen.dir/all:
-	$(MAKE) $(MAKESILENT) -f _deps/ftxui-build/CMakeFiles/screen.dir/build.make _deps/ftxui-build/CMakeFiles/screen.dir/depend
-	$(MAKE) $(MAKESILENT) -f _deps/ftxui-build/CMakeFiles/screen.dir/build.make _deps/ftxui-build/CMakeFiles/screen.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=77,78,79,80,81,82,83 "Built target screen"
-.PHONY : _deps/ftxui-build/CMakeFiles/screen.dir/all
-
-# Build rule for subdir invocation for target.
-_deps/ftxui-build/CMakeFiles/screen.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 7
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/ftxui-build/CMakeFiles/screen.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 0
-.PHONY : _deps/ftxui-build/CMakeFiles/screen.dir/rule
-
-# Convenience name for target.
-screen: _deps/ftxui-build/CMakeFiles/screen.dir/rule
-.PHONY : screen
-
-# clean rule for target.
-_deps/ftxui-build/CMakeFiles/screen.dir/clean:
-	$(MAKE) $(MAKESILENT) -f _deps/ftxui-build/CMakeFiles/screen.dir/build.make _deps/ftxui-build/CMakeFiles/screen.dir/clean
-.PHONY : _deps/ftxui-build/CMakeFiles/screen.dir/clean
-
-#=============================================================================
-# Target rules for target _deps/ftxui-build/CMakeFiles/dom.dir
-
-# All Build rule for target.
-_deps/ftxui-build/CMakeFiles/dom.dir/all: _deps/ftxui-build/CMakeFiles/screen.dir/all
-	$(MAKE) $(MAKESILENT) -f _deps/ftxui-build/CMakeFiles/dom.dir/build.make _deps/ftxui-build/CMakeFiles/dom.dir/depend
-	$(MAKE) $(MAKESILENT) -f _deps/ftxui-build/CMakeFiles/dom.dir/build.make _deps/ftxui-build/CMakeFiles/dom.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76 "Built target dom"
-.PHONY : _deps/ftxui-build/CMakeFiles/dom.dir/all
-
-# Build rule for subdir invocation for target.
-_deps/ftxui-build/CMakeFiles/dom.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 47
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/ftxui-build/CMakeFiles/dom.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 0
-.PHONY : _deps/ftxui-build/CMakeFiles/dom.dir/rule
-
-# Convenience name for target.
-dom: _deps/ftxui-build/CMakeFiles/dom.dir/rule
-.PHONY : dom
-
-# clean rule for target.
-_deps/ftxui-build/CMakeFiles/dom.dir/clean:
-	$(MAKE) $(MAKESILENT) -f _deps/ftxui-build/CMakeFiles/dom.dir/build.make _deps/ftxui-build/CMakeFiles/dom.dir/clean
-.PHONY : _deps/ftxui-build/CMakeFiles/dom.dir/clean
-
-#=============================================================================
-# Target rules for target _deps/ftxui-build/CMakeFiles/component.dir
-
-# All Build rule for target.
-_deps/ftxui-build/CMakeFiles/component.dir/all: _deps/ftxui-build/CMakeFiles/screen.dir/all
-_deps/ftxui-build/CMakeFiles/component.dir/all: _deps/ftxui-build/CMakeFiles/dom.dir/all
-	$(MAKE) $(MAKESILENT) -f _deps/ftxui-build/CMakeFiles/component.dir/build.make _deps/ftxui-build/CMakeFiles/component.dir/depend
-	$(MAKE) $(MAKESILENT) -f _deps/ftxui-build/CMakeFiles/component.dir/build.make _deps/ftxui-build/CMakeFiles/component.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25 "Built target component"
-.PHONY : _deps/ftxui-build/CMakeFiles/component.dir/all
-
-# Build rule for subdir invocation for target.
-_deps/ftxui-build/CMakeFiles/component.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 72
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _deps/ftxui-build/CMakeFiles/component.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 0
-.PHONY : _deps/ftxui-build/CMakeFiles/component.dir/rule
-
-# Convenience name for target.
-component: _deps/ftxui-build/CMakeFiles/component.dir/rule
-.PHONY : component
-
-# clean rule for target.
-_deps/ftxui-build/CMakeFiles/component.dir/clean:
-	$(MAKE) $(MAKESILENT) -f _deps/ftxui-build/CMakeFiles/component.dir/build.make _deps/ftxui-build/CMakeFiles/component.dir/clean
-.PHONY : _deps/ftxui-build/CMakeFiles/component.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

@@ -34,9 +34,9 @@ GLOBAL_CS_EXPORT bool ENDFLAG;
 GLOBAL_CS_EXPORT int LNUM;
 
 struct ORDER {
-  int F;
-  int X;
-  int Y;
+  int F = 0;
+  int X = 0;
+  int Y = 0;
 } __attribute__((aligned(16)));
 
 enum class OBJECTS : std::uint8_t {
@@ -62,17 +62,17 @@ using MESSAGEALFA = std::string;
 using Index = int;
 
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT std::vector<int> LOCATION(LINELIMIT + 1);
+GLOBAL_CS_EXPORT std::vector<int> LOCATION;
 #else
 GLOBAL_CS_EXPORT std::vector<int> LOCATION;
 #endif
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT std::vector<bool> BREAKALLOW(LINELIMIT + 1);
+GLOBAL_CS_EXPORT std::vector<bool> BREAKALLOW;
 #else
 GLOBAL_CS_EXPORT std::vector<bool> BREAKALLOW;
 #endif
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT std::vector<int> BREAKLOC(LOOPMAX + 1);
+GLOBAL_CS_EXPORT std::vector<int> BREAKLOC;
 #else
 GLOBAL_CS_EXPORT std::vector<int> BREAKLOC;
 #endif
@@ -82,12 +82,12 @@ GLOBAL_CS_EXPORT int BREAKPNT;
 
 // std::vector<char> STAB(SMAX + 1);
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT ORDER CODE[CMAX + 1];
+GLOBAL_CS_EXPORT std::array<ORDER, CMAX + 1> code;
 #else
 GLOBAL_CS_EXPORT std::array<ORDER, CMAX + 1> code;
 #endif
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT std::vector<INDEX> WITHTAB(WMAX + 1);
+GLOBAL_CS_EXPORT std::vector<Index> WITHTAB;
 #else
 GLOBAL_CS_EXPORT std::vector<Index> WITHTAB;
 #endif

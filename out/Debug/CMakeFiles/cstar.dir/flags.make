@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = 
 
-CXX_FLAGS =  -DMAC -std=c++23 -stdlib=libc++ -g
+CXX_FLAGS =  -stdlib=libc++ -g -std=gnu++23
 

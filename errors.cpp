@@ -3,174 +3,187 @@
 //
 #include "cs_compile.h"
 #include "cs_global.h"
+
+#include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <print>
 #include <string>
+
 #define EXPORT_CS_ERRORS
 #include "cs_errors.h"
 namespace Cstar {
-extern bool inCLUDEFLAG();
-extern std::FILE *LIS;
-std::string MSG[] = {"Undefined Identifier     ",
-                     "Multiple Definitions     ",
-                     "Identifier Expected      ",
-                     "{                        ",
-                     ")                        ",
-                     ":                        ",
-                     "Syntax Error             ",
-                     "}                        ",
-                     "Expression Error         ",
-                     "(                        ",
-                     "Identifier or Struct     ",
-                     "Stream Error             ",
-                     "]                        ",
-                     "Pointer Expected         ",
-                     ";                        ",
-                     "Lock Variable required   ",
-                     "Pointer Required         ",
-                     "Boolean Required         ",
-                     "Forall Index Type        ",
-                     "Wrong Type               ",
-                     "",
-                     "Number too big           ",
-                     "Improper Termination     ",
-                     "Type error after Switch  ",
-                     "Illegal character        ",
-                     "Invalid constant defn    ",
-                     "Index Type Mismatch      ",
-                     "Illegal Index Bound      ",
-                     "Not an Array             ",
-                     "Type Identifier Expected   ",
-                     "Undefined Type Identifier",
-                     "Not a Structure          ",
-                     "Boolean Type Required    ",
-                     "Expression Type          ",
-                     "Integer Type Required    ",
-                     "Types                    ",
-                     "Parameter Type           ",
-                     "Variable Identifier      ",
-                     "String Empty             ",
-                     "Number of Parameters     ",
-                     "Type Error               ",
-                     "Type Error               ",
-                     "Topology Not Found       ",
-                     "Type Error               ",
-                     "Variable or Constant     ",
-                     "Integer Required         ",
-                     "Types Incompatible (=)   ",
-                     "Struct Type Error        ",
-                     "Parameter Type           ",
-                     "Storage Overflow         ",
-                     "Constant Expected        ",
-                     "=                        ",
-                     "",
-                     "While Expected           ",
-                     "Do Expected              ",
-                     "To Expected              ",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "",
-                     "No Main Function         ",
-                     "Function Body            ",
-                     "Program Start Error      ",
-                     "Stream                   ",
-                     "}                        ",
-                     "Parameter Type Error     ",
-                     "{                        ",
-                     "Identifier               ",
-                     "Struct Type Expected     ",
-                     "Component Declaration    ",
-                     "Increment Error          ",
-                     "Decrement Error          ",
-                     "Pointer Expected         ",
-                     "Pointer Arithmetic       ",
-                     "Assignment Error         ",
-                     "Improper Type            ",
-                     "Parameter Error          ",
-                     "Array Parameter          ",
-                     "Return Type              ",
-                     "Function Return Type     ",
-                     "Pointer Required         ",
-                     "Type Cast                ",
-                     "Function within Function ",
-                     "Statement Start          ",
-                     "Case Expected            ",
-                     "Case End                 ",
-                     "Integer Required         ",
-                     "@                        ",
-                     "<<                       ",
-                     ">>                       ",
-                     "'                       ",
-                     "Input Expression Invalid ",
-                     "\\                        ",
-                     "Invalid Cout Method      ",
-                     "Integer Required         ",
-                     ",                        ",
-                     "Initializer Not Allowed  ",
-                     "Array Type               ",
-                     "Initializer Type         ",
-                     "Too Many Values          ",
-                     "Stream Type Expected     ",
-                     "Types Incompatible       ",
-                     "Recv Parameter Invalid   ",
-                     "Stream Error             ",
-                     "Shared Memory Not Allowed",
-                     "MPI Errror               ",
-                     "MPI Mode Requried        ",
-                     "Communicator Type        ",
-                     "MPI Parameter Type       ",
-                     "File Error               ",
-                     "Include File Error       ",
-                     "Improper Use of Void     ",
-                     "Funct Prototype Mismatch ",
-                     "Prototype Duplication    ",
-                     "No Union Type Allowed    ",
-                     "No Enumeration Allowed   ",
-                     "No Bitwise Ops Allowed   ",
-                     "No Cond Expressions      "};
+using std::cin;
+using std::cout;
+using std::exit;
+using std::fputc;
+using std::print;
+using std::println;
+using std::string;
 
-void ERRORMSG() {
+extern auto inCLUDEFLAG() -> bool;
+extern FILE *LIS;
+
+string MSG[] = {"Undefined Identifier     ",
+                "Multiple Definitions     ",
+                "Identifier Expected      ",
+                "{                        ",
+                ")                        ",
+                ":                        ",
+                "Syntax Error             ",
+                "}                        ",
+                "Expression Error         ",
+                "(                        ",
+                "Identifier or Struct     ",
+                "Stream Error             ",
+                "]                        ",
+                "Pointer Expected         ",
+                ";                        ",
+                "Lock Variable required   ",
+                "Pointer Required         ",
+                "Boolean Required         ",
+                "Forall Index Type        ",
+                "Wrong Type               ",
+                "",
+                "Number too big           ",
+                "Improper Termination     ",
+                "Type error after Switch  ",
+                "Illegal character        ",
+                "Invalid constant defn    ",
+                "Index Type Mismatch      ",
+                "Illegal Index Bound      ",
+                "Not an Array             ",
+                "Type Identifier Expected   ",
+                "Undefined Type Identifier",
+                "Not a Structure          ",
+                "Boolean Type Required    ",
+                "Expression Type          ",
+                "Integer Type Required    ",
+                "Types                    ",
+                "Parameter Type           ",
+                "Variable Identifier      ",
+                "String Empty             ",
+                "Number of Parameters     ",
+                "Type Error               ",
+                "Type Error               ",
+                "Topology Not Found       ",
+                "Type Error               ",
+                "Variable or Constant     ",
+                "Integer Required         ",
+                "Types Incompatible (=)   ",
+                "Struct Type Error        ",
+                "Parameter Type           ",
+                "Storage Overflow         ",
+                "Constant Expected        ",
+                "=                        ",
+                "",
+                "While Expected           ",
+                "Do Expected              ",
+                "To Expected              ",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "No Main Function         ",
+                "Function Body            ",
+                "Program Start Error      ",
+                "Stream                   ",
+                "}                        ",
+                "Parameter Type Error     ",
+                "{                        ",
+                "Identifier               ",
+                "Struct Type Expected     ",
+                "Component Declaration    ",
+                "Increment Error          ",
+                "Decrement Error          ",
+                "Pointer Expected         ",
+                "Pointer Arithmetic       ",
+                "Assignment Error         ",
+                "Improper Type            ",
+                "Parameter Error          ",
+                "Array Parameter          ",
+                "Return Type              ",
+                "Function Return Type     ",
+                "Pointer Required         ",
+                "Type Cast                ",
+                "Function within Function ",
+                "Statement Start          ",
+                "Case Expected            ",
+                "Case End                 ",
+                "Integer Required         ",
+                "@                        ",
+                "<<                       ",
+                ">>                       ",
+                "'                       ",
+                "Input Expression Invalid ",
+                "\\                        ",
+                "Invalid Cout Method      ",
+                "Integer Required         ",
+                ",                        ",
+                "Initializer Not Allowed  ",
+                "Array Type               ",
+                "Initializer Type         ",
+                "Too Many Values          ",
+                "Stream Type Expected     ",
+                "Types Incompatible       ",
+                "Recv Parameter Invalid   ",
+                "Stream Error             ",
+                "Shared Memory Not Allowed",
+                "MPI Errror               ",
+                "MPI Mode Requried        ",
+                "Communicator Type        ",
+                "MPI Parameter Type       ",
+                "File Error               ",
+                "Include File Error       ",
+                "Improper Use of Void     ",
+                "Funct Prototype Mismatch ",
+                "Prototype Duplication    ",
+                "No Union Type Allowed    ",
+                "No Enumeration Allowed   ",
+                "No Bitwise Ops Allowed   ",
+                "No Cond Expressions      "};
+
+void error_message() {
   int K;
   int ei;
   //        MSG[0] = "Undefined Identifier     ";
@@ -287,91 +300,94 @@ void ERRORMSG() {
   //        MSG[157] = "No Cond Expressions      ";
 
   // WRITELN(LIS); WRITELN(LIS, ' COMPILATION ERRORS');
-  fprintf(LIS, "\n COMPILATION ERRORS\n");
+  println(LIS, "\n COMPILATION ERRORS");
   // WRITELN(LIS); WRITELN(LIS, ' ERROR CODES');
-  fprintf(LIS, "\n ERROR CODES\n");
+  println(LIS, "\n ERROR CODES");
   // WRITELN; WRITELN(' COMPILATION ERRORS');
   // WRITELN; WRITELN(' ERROR CODES');
-  fprintf(stdout, "\n COMPILATION ERRORS\n");
-  fprintf(stdout, "\n ERROR CODES\n");
-  for (K = 0; K < SYMBOL::ERRS.size(); ++K) {
-    if (!ERRS[K])
+  println(stdout, "\n COMPILATION ERRORS");
+  println(stdout, "\n ERROR CODES");
+  for (K = 0; K < errors.size(); ++K) {
+    if (!errors[K]) {
       continue;
+    }
     // WRITE(LIS, K);
-    fprintf(LIS, "%d", K);
-    if (K < 10)
+    print(LIS, "{}", K);
+    if (K < 10) {
       fputc(' ', LIS);
+    }
     if (K < 100)
       fputc(' ', LIS);
-    fprintf(LIS, "  %s", MSG[K].c_str());
-    fprintf(stdout, "%d", K);
-    if (K < 10)
+    print(LIS, "  {}", MSG[K]);
+    print(stdout, "{}", K);
+    if (K < 10) {
       fputc(' ', stdout);
-    if (K < 100)
+    }
+    if (K < 100) {
       fputc(' ', stdout);
-    fprintf(stdout, "  %s\n", MSG[K].c_str());
+    }
+    println(stdout, "  {}", MSG[K]);
   }
 }
 
-void ERROREXIT() {
-  float A, B;
-  std::cout << "PROGRAM SOURCE FILE IS NOW CLOSED TO ALLOW EDITING"
-            << std::endl;
-  std::cout << std::endl;
-  std::cout
-      << "To continue, press ENTER key, then Restart the C* Software System"
-      << std::endl;
-  std::cin.ignore(1);
-  std::exit(1);
+void error_exit() {
+  float A = NAN;
+  float B = NAN;
+  cout << "PROGRAM SOURCE FILE IS NOW CLOSED TO ALLOW EDITING" << '\n';
+  cout << '\n';
+  cout << "To continue, press ENTER key, then Restart the C* Software System"
+       << '\n';
+  cin.ignore(1);
+  exit(1);
   //        A = 0;
   //        B = B / A;
 }
 
-void ERROR(int N) {
+void error(int N) {
   int I;
   if (inCLUDEFLAG()) {
-    if (ERRORCOUNT == 0) {
-      std::fprintf(stdout, "\n");
-      std::fprintf(stdout, "%5d ", LNUM);
+    if (error_count == 0) {
+      println(stdout, "");
+      print(stdout, "{:5} ", LNUM);
       for (I = 1; I <= LL; ++I) {
-        std::fputc(LINE[I], stdout);
+        fputc(line.str().at(I), stdout);
       }
-      std::fprintf(stdout, "\n");
-      std::fprintf(stdout, " ****                   ^150\n");
-      std::fprintf(LIS, " ****                   ^150\n");
-      ERRS[150] = true;
+      println(stdout, "");
+      println(stdout, " ****                   ^150");
+      println(LIS, " ****                   ^150");
+      errors[150] = true;
     }
   } else {
-    if (ERRPOS == 0) {
-      std::fprintf(stdout, "\n");
-      std::fprintf(stdout, "%5d ", LNUM);
+    if (error_position == 0) {
+      println(stdout, "");
+      print(stdout, "{:5} ", LNUM);
       for (I = 1; I <= LL; ++I) {
-        std::fputc(LINE[I], stdout);
+        fputc(line.str().at(I), stdout);
       }
-      std::fprintf(stdout, "\n");
+      println(stdout, "");
     }
-    if (ERRPOS == 0) {
-      std::fprintf(stdout, " ****");
-      std::fprintf(LIS, " ****");
+    if (error_position == 0) {
+      print(stdout, " ****");
+      print(LIS, " ****");
     }
-    if (CC > ERRPOS && ERRPOS == 0) {
-      for (I = 0; I < CC - ERRPOS; ++I) {
-        std::fputc(' ', stdout);
-        std::fputc(' ', LIS);
+    if (CC > error_position && error_position == 0) {
+      for (I = 0; I < CC - error_position; ++I) {
+        fputc(' ', stdout);
+        fputc(' ', LIS);
       }
-      std::fprintf(stdout, "^%2d\n", N);
-      std::fprintf(LIS, "^%2d\n", N);
-      ERRPOS = CC + 3;
-      ERRS[N] = true;
+      println(stdout, "^{:2}", N);
+      println(LIS, "^{:2}", N);
+      error_position = CC + 3;
+      errors[N] = true;
     }
   }
-  ERRORCOUNT += 1;
-  // if (ERRORCOUNT > 1000)
-  if (ERRORCOUNT > 10) {
-    std::fprintf(stdout, "\n");
-    ERRORMSG();
-    FATALERROR = true;
-    ERROREXIT();
+  error_count += 1;
+  // if (error_count > 1000)
+  if (error_count > 10) {
+    println(stdout, "");
+    error_message();
+    fatal_error = true;
+    error_exit();
   }
 }
 
@@ -381,11 +397,11 @@ static char MSGF[][11] = {
     "WITHS     ", "STREAMS   ", "FLOATS    ",
 };
 
-void FATAL(int N) {
-  std::cout << std::endl;
-  FATALERROR = true;
-  // std::cout << " COMPILER TABLE FOR %s IS TOO SMALL" << MSGF[N];
-  fprintf(stdout, " COMPILER TABLE FOR %s IS TOO SMALL", MSGF[N]);
-  ERROREXIT();
+void fatal(int N) {
+  cout << '\n';
+  fatal_error = true;
+  // cout << " COMPILER TABLE FOR %s IS TOO SMALL" << MSGF[N];
+  print(stdout, " COMPILER TABLE FOR {} IS TOO SMALL", MSGF[N]);
+  error_exit();
 }
 } // namespace Cstar

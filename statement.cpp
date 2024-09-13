@@ -11,12 +11,13 @@ extern void NEXTCH();
 extern void VARIABLEDECLARATION(BlockLocal *);
 extern void CONSTANTDECLARATION(BlockLocal *);
 extern void TYPEDECLARATION(BlockLocal *);
-extern auto LOC(BlockLocal *, ALFA ID) -> int64_t;
+extern auto LOC(BlockLocal *bl, const ALFA &ID) -> int64_t;
 extern void SKIP(SymbolSet, int);
 extern void TEST(SymbolSet &, SymbolSet &, int N);
 extern void CALL(BlockLocal *, SymbolSet &, int);
 extern void STANDPROC(BlockLocal *, int);
-extern void ENTER(BlockLocal *, ALFA, OBJECTS);
+extern void ENTER(BlockLocal *block_local, const ALFA &identifier,
+                  OBJECTS objects);
 extern void ENTERBLOCK();
 extern auto TYPE_COMPATIBLE(Item X, Item Y) -> bool;
 extern void BASICEXPRESSION(BlockLocal *, SymbolSet, Item &);
@@ -55,7 +56,8 @@ void STATEMENT(BlockLocal *block_local, SymbolSet &FSYS) {
   SymbolSet sv;
   SYMSAV = symbol;
   // INSYMBOL();
-  if (STATBEGSYS[SY] || ASSIGNBEGSYS[SY]) {
+  if (STATBEGSYS.test(static_cast<int>(symbol)) ||
+      ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
     if (symbol == Symbol::LSETBRACK) // BEGINSY ??
     {
       COMPOUNDSTATEMENT(block_local);
@@ -105,29 +107,29 @@ void STATEMENT(BlockLocal *block_local, SymbolSet &FSYS) {
         }
       } else
         INSYMBOL();
-    } else if (SY == Symbol::LPARENT || SY == Symbol::INCREMENT ||
-               SY == Symbol::DECREMENT || SY == Symbol::TIMES) {
+    } else if (symbol == Symbol::LPARENT || symbol == Symbol::INCREMENT ||
+               symbol == Symbol::DECREMENT || symbol == Symbol::TIMES) {
       EXPRESSION(block_local, FSYS, X);
       EMIT(111);
     }
   }
-  if (ASSIGNBEGSYS[SYMSAV] ||
-      (SYMSAV == SYMBOL::DOSY || SYMSAV == SYMBOL::JOINSY ||
-       SYMSAV == SYMBOL::RETURNSY || SYMSAV == SYMBOL::BREAKSY ||
-       SYMSAV == SYMBOL::CONTSY || SYMSAV == SYMBOL::SEMICOLON ||
-       SYMSAV == SYMBOL::MOVESY || SYMSAV == SYMBOL::CINSY ||
-       SYMSAV == SYMBOL::COUTSY ||
-       SYMSAV == SYMBOL::RSETBRACK)) // RSETBRACK added for while missing
+  if (ASSIGNBEGSYS.test(static_cast<int>(SYMSAV)) ||
+      (SYMSAV == Symbol::DOSY || SYMSAV == Symbol::JOINSY ||
+       SYMSAV == Symbol::RETURNSY || SYMSAV == Symbol::BREAKSY ||
+       SYMSAV == Symbol::CONTSY || SYMSAV == Symbol::SEMICOLON ||
+       SYMSAV == Symbol::MOVESY || SYMSAV == Symbol::CINSY ||
+       SYMSAV == Symbol::COUTSY ||
+       SYMSAV == Symbol::RSETBRACK)) // RSETBRACK added for while missing
                                      // statement DDE
   {
-    if (SY == Symbol::SEMICOLON)
+    if (symbol == Symbol::SEMICOLON)
       INSYMBOL();
     else
       error(14);
   }
   su = 0;
   sv = FSYS;
-  sv[symbol::ELSESY] = true; // added to fix else DDE
+  sv.set(static_cast<int>(Symbol::ELSESY), true); // added to fix else DDE
   // TEST(FSYS, su, 14);
   TEST(sv, su, 14);
 }
@@ -137,48 +139,51 @@ void COMPOUNDSTATEMENT(BlockLocal *bl) {
   SymbolSet su, sv;
   INSYMBOL();
   su = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
-  // su[RSETBRACK] = true;  ??
+  // su.set(static_cast<int>(RSETBRACK), true);  ??
   sv = bl->FSYS;
-  sv[RSETBRACK] = true;
+  sv.set(static_cast<int>(Symbol::RSETBRACK), true);
   TEST(su, sv, 123);
-  while (DECLBEGSYS[SY] || STATBEGSYS[SY] || ASSIGNBEGSYS[SY]) {
-    if (SY == SYMBOL::DEFINESY) {
+  while (DECLBEGSYS.test(static_cast<int>(symbol)) ||
+         STATBEGSYS.test(static_cast<int>(symbol)) ||
+         ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
+    if (symbol == Symbol::DEFINESY) {
       CONSTANTDECLARATION(bl);
     }
-    if (SY == SYMBOL::TYPESY) {
+    if (symbol == Symbol::TYPESY) {
       TYPEDECLARATION(bl);
     }
-    if (SY == SYMBOL::STRUCTSY) {
+    if (symbol == Symbol::STRUCTSY) {
       VARIABLEDECLARATION(bl);
     }
-    if (SY == SYMBOL::IDENT) {
+    if (symbol == Symbol::IDENT) {
       X = LOC(bl, ID);
       if (X != 0) {
-        if (TAB[X].OBJ == OBJECTS::TYPE1) {
+        if (TAB[X].object == OBJECTS::TYPE1) {
           VARIABLEDECLARATION(bl);
         } else {
           su = bl->FSYS;
-          su[SYMBOL::RSETBRACK] = true;
-          su[SYMBOL::SEMICOLON] = true;
+          su.set(static_cast<int>(Symbol::RSETBRACK), true);
+          su.set(static_cast<int>(Symbol::SEMICOLON), true);
           STATEMENT(bl, su);
         }
       } else {
         INSYMBOL();
       }
-    } else if (STATBEGSYS[SY] || ASSIGNBEGSYS[SY]) {
+    } else if (STATBEGSYS.test(static_cast<int>(symbol)) ||
+               ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
       su = bl->FSYS;
-      su[SYMBOL::RSETBRACK] = true;
-      su[SYMBOL::SEMICOLON] = true;
+      su.set(static_cast<int>(Symbol::RSETBRACK), true);
+      su.set(static_cast<int>(Symbol::SEMICOLON), true);
       STATEMENT(bl, su);
     }
     su = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
-    su[SYMBOL::RSETBRACK] = true;
+    su.set(static_cast<int>(Symbol::RSETBRACK), true);
     TEST(su, bl->FSYS, 6);
   }
   if (symbol_count == 1) {
     LOCATION[LNUM] = line_count;
   }
-  if (SY == SYMBOL::RSETBRACK) {
+  if (symbol == Symbol::RSETBRACK) {
     INSYMBOL();
   } else {
     error(104);
@@ -210,10 +215,10 @@ void IFSTATEMENT(BlockLocal *bl) {
   int LC1, LC2;
   SymbolSet su;
   INSYMBOL();
-  if (SY == Symbol::LPARENT) {
+  if (symbol == Symbol::LPARENT) {
     INSYMBOL();
     su = bl->FSYS;
-    su[symbol::RPARENT] = true;
+    su.set(static_cast<int>(Symbol::RPARENT), true);
     EXPRESSION(bl, su, X);
     if (!(X.types == Types::BOOLS || X.types == Types::INTS ||
           X.types == Types::NOTYP)) {
@@ -224,15 +229,15 @@ void IFSTATEMENT(BlockLocal *bl) {
     if (LOCATION[LNUM] == line_count - 1) {
       LOCATION[LNUM] = line_count;
     }
-    if (SY == Symbol::RPARENT) {
+    if (symbol == Symbol::RPARENT) {
       INSYMBOL();
     } else {
       error(4);
     }
     su = bl->FSYS;
-    su[symbol::ELSESY] = true;
+    su.set(static_cast<int>(Symbol::ELSESY), true);
     STATEMENT(bl, su);
-    if (SY == Symbol::ELSESY) {
+    if (symbol == Symbol::ELSESY) {
       LC2 = line_count;
       EMIT(10);
       if (symbol_count == 1) {
@@ -261,28 +266,28 @@ void DOSTATEMENT(BlockLocal *bl) {
   CONTPNT = CONTPNT + 1;
   CONTLOC[CONTPNT] = 0;
   su = bl->FSYS;
-  su[symbol::SEMICOLON] = true;
-  su[symbol::WHILESY] = true;
+  su.set(static_cast<int>(Symbol::SEMICOLON), true);
+  su.set(static_cast<int>(Symbol::WHILESY), true);
   STATEMENT(bl, su);
   LC2 = line_count;
-  if (SY == Symbol::WHILESY) {
+  if (symbol == Symbol::WHILESY) {
     if (symbol_count == 1) {
       LOCATION[LNUM] = line_count;
     }
     INSYMBOL();
-    if (SY == Symbol::LPARENT) {
+    if (symbol == Symbol::LPARENT) {
       INSYMBOL();
     } else {
       error(9);
     }
     su = bl->FSYS;
-    su[symbol::RPARENT] = true;
+    su.set(static_cast<int>(Symbol::RPARENT), true);
     EXPRESSION(bl, su, X);
     if (!(X.types == Types::BOOLS || X.types == Types::INTS ||
           X.types == Types::NOTYP)) {
       error(17);
     }
-    if (SY == Symbol::RPARENT) {
+    if (symbol == Symbol::RPARENT) {
       INSYMBOL();
     } else {
       error(4);
@@ -301,7 +306,7 @@ void WHILESTATEMENT(BlockLocal *bl) {
   int LC1, LC2, LC3;
   SymbolSet su;
   INSYMBOL();
-  if (SY == Symbol::LPARENT) {
+  if (symbol == Symbol::LPARENT) {
     INSYMBOL();
   } else {
     error(9);
@@ -312,7 +317,7 @@ void WHILESTATEMENT(BlockLocal *bl) {
   CONTPNT = CONTPNT + 1;
   CONTLOC[CONTPNT] = 0;
   su = bl->FSYS;
-  su[symbol::RPARENT] = true;
+  su.set(static_cast<int>(Symbol::RPARENT), true);
   EXPRESSION(bl, su, X);
   if (!(X.types == Types::BOOLS || X.types == Types::INTS ||
         X.types == Types::NOTYP)) {
@@ -320,7 +325,7 @@ void WHILESTATEMENT(BlockLocal *bl) {
   }
   LC2 = line_count;
   EMIT(11);
-  if (SY == Symbol::RPARENT) {
+  if (symbol == Symbol::RPARENT) {
     INSYMBOL();
   } else {
     error(4);
@@ -339,18 +344,18 @@ void COMMAEXPR(BlockLocal *bl, Symbol TESTSY) {
   Item X;
   SymbolSet su;
   su = bl->FSYS;
-  su[symbol::COMMA] = true;
-  su[TESTSY] = true;
+  su.set(static_cast<int>(Symbol::COMMA), true);
+  su.set(static_cast<int>(TESTSY), true);
   EXPRESSION(bl, su, X);
-  if (X.Size > 1) {
-    EMIT1(112, X.Size);
+  if (X.size > 1) {
+    EMIT1(112, X.size);
   }
   EMIT(111);
-  while (SY == Symbol::COMMA) {
+  while (symbol == Symbol::COMMA) {
     INSYMBOL();
     EXPRESSION(bl, su, X);
-    if (X.Size > 1) {
-      EMIT1(112, X.Size);
+    if (X.size > 1) {
+      EMIT1(112, X.size);
     }
     EMIT(111);
   }
@@ -361,7 +366,7 @@ void FORSTATEMENT(BlockLocal *bl) {
   int LC1, LC2, LC3;
   SymbolSet su;
   INSYMBOL();
-  if (SY == Symbol::LPARENT) {
+  if (symbol == Symbol::LPARENT) {
     INSYMBOL();
   } else {
     error(9);
@@ -370,18 +375,18 @@ void FORSTATEMENT(BlockLocal *bl) {
   BREAKLOC[BREAKPNT] = 0;
   CONTPNT = CONTPNT + 1;
   CONTLOC[CONTPNT] = 0;
-  if (SY != Symbol::SEMICOLON) {
+  if (symbol != Symbol::SEMICOLON) {
     COMMAEXPR(bl, Symbol::SEMICOLON);
   }
-  if (SY == Symbol::SEMICOLON) {
+  if (symbol == Symbol::SEMICOLON) {
     INSYMBOL();
   } else {
     error(14);
   }
   LC1 = line_count;
-  if (SY != Symbol::SEMICOLON) {
+  if (symbol != Symbol::SEMICOLON) {
     su = bl->FSYS;
-    su[symbol::SEMICOLON] = true;
+    su.set(static_cast<int>(Symbol::SEMICOLON), true);
     EXPRESSION(bl, su, X);
     if (!(X.types == Types::BOOLS || X.types == Types::INTS ||
           X.types == Types::NOTYP)) {
@@ -390,7 +395,7 @@ void FORSTATEMENT(BlockLocal *bl) {
   } else {
     EMIT1(24, 1);
   }
-  if (SY == Symbol::SEMICOLON) {
+  if (symbol == Symbol::SEMICOLON) {
     INSYMBOL();
   } else {
     error(14);
@@ -399,11 +404,11 @@ void FORSTATEMENT(BlockLocal *bl) {
   EMIT(11);
   EMIT(10);
   LC3 = line_count;
-  if (SY != Symbol::RPARENT) {
+  if (symbol != Symbol::RPARENT) {
     COMMAEXPR(bl, Symbol::RPARENT);
   }
   EMIT1(10, LC1);
-  if (SY == Symbol::RPARENT) {
+  if (symbol == Symbol::RPARENT) {
     INSYMBOL();
   } else {
     error(4);
@@ -452,47 +457,48 @@ void BLOCKSTATEMENT(BlockLocal *bl) {
   BTAB[PRB].LASTPAR = tab_index;
   BTAB[PRB].PSIZE = bl->DX;
   su = 0;
-  su[symbol::LSETBRACK] = true;
+  su.set(static_cast<int>(Symbol::LSETBRACK), true);
   sv = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
   TEST(su, sv, 3);
   INSYMBOL();
   EMIT1(18, PRT);
   EMIT1(19, BTAB[PRB].PSIZE - 1);
-  TAB[PRT].ADR = line_count;
+  TAB[PRT].address = line_count;
   su = bl->FSYS;
-  su[symbol::RSETBRACK] = true;
+  su.set(static_cast<int>(Symbol::RSETBRACK), true);
   // sv = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
   TEST(sv, su, 101);
   // while (DECLBEGSYS[SY] || STATBEGSYS[SY] || ASSIGNBEGSYS[SY])
-  while (sv[SY]) {
-    if (SY == Symbol::DEFINESY) {
+  while (sv.test(static_cast<int>(symbol))) {
+    if (symbol == Symbol::DEFINESY) {
       CONSTANTDECLARATION(bl);
-    } else if (SY == Symbol::TYPESY) {
+    } else if (symbol == Symbol::TYPESY) {
       TYPEDECLARATION(bl);
-    } else if (SY == Symbol::STRUCTSY) {
+    } else if (symbol == Symbol::STRUCTSY) {
       VARIABLEDECLARATION(bl);
-    } else if (SY == Symbol::IDENT) {
+    } else if (symbol == Symbol::IDENT) {
       I = LOC(bl, ID);
       if (I != 0) {
-        if (TAB[I].OBJ == TYPE1) {
+        if (TAB[I].object == OBJECTS::TYPE1) {
           VARIABLEDECLARATION(bl);
         } else {
           su = bl->FSYS;
-          su[symbol::SEMICOLON] = true;
-          su[symbol::RSETBRACK] = true;
+          su.set(static_cast<int>(Symbol::SEMICOLON), true);
+          su.set(static_cast<int>(Symbol::RSETBRACK), true);
           STATEMENT(bl, su);
         }
       } else {
         INSYMBOL();
       }
-    } else if (STATBEGSYS[SY] || ASSIGNBEGSYS[SY]) {
+    } else if (STATBEGSYS.test(static_cast<int>(symbol)) ||
+               ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
       su = bl->FSYS;
-      su[symbol::SEMICOLON] = true;
-      su[symbol::RSETBRACK] = true;
+      su.set(static_cast<int>(Symbol::SEMICOLON), true);
+      su.set(static_cast<int>(Symbol::RSETBRACK), true);
       STATEMENT(bl, su);
     }
     su = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
-    su[symbol::RSETBRACK] = true;
+    su.set(static_cast<int>(Symbol::RSETBRACK), true);
     TEST(su, bl->FSYS, 6);
   }
   BTAB[PRB].VSIZE = bl->DX;
@@ -500,13 +506,13 @@ void BLOCKSTATEMENT(BlockLocal *bl) {
   if (symbol_count == 1) {
     LOCATION[LNUM] = line_count;
   }
-  if (SY == Symbol::RSETBRACK) {
+  if (symbol == Symbol::RSETBRACK) {
     INSYMBOL();
   } else {
     error(7);
   }
   su = bl->FSYS;
-  su[symbol::PERIOD] = true;
+  su.set(static_cast<int>(Symbol::PERIOD), true);
   sv = 0;
   TEST(su, sv, 6);
   EMIT(105);
@@ -525,7 +531,7 @@ void FORALLSTATEMENT(BlockLocal *bl) {
   SymbolSet su;
   bl->FLEVEL = bl->FLEVEL + 1;
   INSYMBOL();
-  if (SY == Symbol::IDENT) {
+  if (symbol == Symbol::IDENT) {
     I = LOC(bl, ID);
     TAB[I].FORLEV = bl->FLEVEL;
     INSYMBOL();
@@ -550,52 +556,52 @@ void FORALLSTATEMENT(BlockLocal *bl) {
     }
   } else {
     su = bl->FSYS;
-    su[symbol::BECOMES] = true;
-    su[symbol::TOSY] = true;
-    su[symbol::DOSY] = true;
-    su[symbol::GROUPINGSY] = true;
+    su.set(static_cast<int>(Symbol::BECOMES), true);
+    su.set(static_cast<int>(Symbol::TOSY), true);
+    su.set(static_cast<int>(Symbol::DOSY), true);
+    su.set(static_cast<int>(Symbol::GROUPINGSY), true);
     SKIP(su, 2);
     CVT = Types::INTS;
   }
-  if (SY == Symbol::BECOMES) {
+  if (symbol == Symbol::BECOMES) {
     INSYMBOL();
     su = bl->FSYS;
-    su[symbol::TOSY] = true;
-    su[symbol::DOSY] = true;
-    su[symbol::GROUPINGSY] = true;
+    su.set(static_cast<int>(Symbol::TOSY), true);
+    su.set(static_cast<int>(Symbol::DOSY), true);
+    su.set(static_cast<int>(Symbol::GROUPINGSY), true);
     EXPRESSION(bl, su, X);
     if (X.types != CVT) {
       error(19);
     }
   } else {
     su = bl->FSYS;
-    su[symbol::TOSY] = true;
-    su[symbol::DOSY] = true;
-    su[symbol::GROUPINGSY] = true;
+    su.set(static_cast<int>(Symbol::TOSY), true);
+    su.set(static_cast<int>(Symbol::DOSY), true);
+    su.set(static_cast<int>(Symbol::GROUPINGSY), true);
     SKIP(su, 51);
   }
-  if (SY == Symbol::TOSY) {
+  if (symbol == Symbol::TOSY) {
     INSYMBOL();
     su = bl->FSYS;
-    su[symbol::ATSY] = true;
-    su[symbol::DOSY] = true;
-    su[symbol::GROUPINGSY] = true;
+    su.set(static_cast<int>(Symbol::ATSY), true);
+    su.set(static_cast<int>(Symbol::DOSY), true);
+    su.set(static_cast<int>(Symbol::GROUPINGSY), true);
     EXPRESSION(bl, su, X);
     if (X.types != CVT) {
       error(19);
     }
   } else {
     su = bl->FSYS;
-    su[symbol::ATSY] = true;
-    su[symbol::DOSY] = true;
-    su[symbol::GROUPINGSY] = true;
+    su.set(static_cast<int>(Symbol::ATSY), true);
+    su.set(static_cast<int>(Symbol::DOSY), true);
+    su.set(static_cast<int>(Symbol::GROUPINGSY), true);
     SKIP(su, 55);
   }
-  if (SY == Symbol::GROUPINGSY) {
+  if (symbol == Symbol::GROUPINGSY) {
     INSYMBOL();
     su = bl->FSYS;
-    su[symbol::ATSY] = true;
-    su[symbol::DOSY] = true;
+    su.set(static_cast<int>(Symbol::ATSY), true);
+    su.set(static_cast<int>(Symbol::DOSY), true);
     EXPRESSION(bl, su, X);
     if (X.types != Types::INTS) {
       error(45);
@@ -608,10 +614,10 @@ void FORALLSTATEMENT(BlockLocal *bl) {
   EMIT(75);
   LC2 = line_count;
   TAB[I].FORLEV = -TAB[I].FORLEV;
-  if (SY == Symbol::ATSY) {
+  if (symbol == Symbol::ATSY) {
     INSYMBOL();
     su = bl->FSYS;
-    su[symbol::DOSY] = true;
+    su.set(static_cast<int>(Symbol::DOSY), true);
     EXPRESSION(bl, su, X);
     if (!(X.types == Types::INTS || X.types == Types::NOTYP)) {
       error(126);
@@ -619,14 +625,14 @@ void FORALLSTATEMENT(BlockLocal *bl) {
   } else {
     EMIT(79);
   }
-  if (SY == Symbol::DOSY) {
+  if (symbol == Symbol::DOSY) {
     INSYMBOL();
   } else {
     error(54);
   }
   TAB[I].FORLEV = -TAB[I].FORLEV;
   bl->CREATEFLAG = false;
-  if (SY == Symbol::IDENT) {
+  if (symbol == Symbol::IDENT) {
     J = LOC(bl, ID);
     if (J != 0) {
       if (TAB[J].object == OBJECTS::PROZEDURE && TAB[J].LEV != 0) {
@@ -642,7 +648,7 @@ void FORALLSTATEMENT(BlockLocal *bl) {
   TCRFLAG = bl->CREATEFLAG;
   LC3 = line_count;
   EMIT1(10, 0);
-  if (SY == Symbol::LSETBRACK) {
+  if (symbol == Symbol::LSETBRACK) {
     BLOCKSTATEMENT(bl);
   } else {
     su = bl->FSYS;
@@ -673,12 +679,12 @@ void FORKSTATEMENT(BlockLocal *bl) {
   bl->CREATEFLAG = false;
   EMIT(106);
   INSYMBOL();
-  if (SY == Symbol::LPARENT) {
+  if (symbol == Symbol::LPARENT) {
     INSYMBOL();
-    if (SY == Symbol::ATSY) {
+    if (symbol == Symbol::ATSY) {
       INSYMBOL();
       su = bl->FSYS;
-      su[symbol::RPARENT] = true;
+      su.set(static_cast<int>(Symbol::RPARENT), true);
       EXPRESSION(bl, su, X);
       if (!(X.types == Types::INTS || X.types == Types::NOTYP)) {
         error(126);
@@ -686,7 +692,7 @@ void FORKSTATEMENT(BlockLocal *bl) {
     } else {
       error(127);
     }
-    if (SY == Symbol::RPARENT) {
+    if (symbol == Symbol::RPARENT) {
       INSYMBOL();
     } else {
       error(4);
@@ -694,7 +700,7 @@ void FORKSTATEMENT(BlockLocal *bl) {
   } else {
     EMIT(79);
   }
-  if (SY == Symbol::IDENT) {
+  if (symbol == Symbol::IDENT) {
     I = LOC(bl, ID);
     if (I != 0) {
       if (TAB[I].object == OBJECTS::PROZEDURE && TAB[I].LEV != 0) {
@@ -725,15 +731,15 @@ void JOINSTATEMENT(BlockLocal *bl) {
 void RETURNSTATEMENT(BlockLocal *bl) {
   Item X;
   INSYMBOL();
-  if (RETURNTYPE.types != Types::VOIDS) {
+  if (return_type.types != Types::VOIDS) {
     EXPRESSION(bl, bl->FSYS, X);
     if (X.types == Types::RECS || X.types == Types::ARRAYS) {
       EMIT1(113, X.size);
     }
-    if (!TYPE_COMPATIBLE(ReturnType, X)) {
+    if (!TYPE_COMPATIBLE(return_type, X)) {
       error(118);
     } else {
-      if (RETURNTYPE.types == Types::REALS && X.types == Types::INTS) {
+      if (return_type.types == Types::REALS && X.types == Types::INTS) {
         EMIT(26);
       }
       EMIT(33);
@@ -760,15 +766,15 @@ void MOVESTATEMENT(BlockLocal *bl) {
   SymbolSet su;
   INSYMBOL();
   su = bl->FSYS;
-  su[symbol::TOSY] = true;
+  su.set(static_cast<int>(Symbol::TOSY), true);
   BASICEXPRESSION(bl, su, X);
-  if (!(X.ISADDR && X.types == Types::CHANS)) {
+  if (!(X.is_address && X.types == Types::CHANS)) {
     error(103);
   }
-  if (SY == Symbol::TOSY) {
+  if (symbol == Symbol::TOSY) {
     INSYMBOL();
     su = bl->FSYS;
-    su[symbol::SEMICOLON] = true;
+    su.set(static_cast<int>(Symbol::SEMICOLON), true);
     EXPRESSION(bl, su, X);
     if (!(X.types == Types::INTS || X.types == Types::NOTYP)) {
       error(126);
@@ -784,16 +790,16 @@ void MOVESTATEMENT(BlockLocal *bl) {
 //        ITEM X;
 //        SYMSET su;
 //        INSYMBOL();
-//        if (SY == INSTR)
+//        if (symbol == INSTR)
 //        {
 //            do
 //            {
 //                INSYMBOL();
-//                if (SY == ENDLSY)
+//                if (symbol == ENDLSY)
 //                {
 //                    EMIT(63);
 //                    INSYMBOL();
-//                } else if (SY == STRNG)
+//                } else if (symbol == STRNG)
 //                {
 //                    EMIT1(24, SLENG);
 //                    EMIT1(28, INUM);
@@ -801,8 +807,8 @@ void MOVESTATEMENT(BlockLocal *bl) {
 //                } else
 //                {
 //                    su = bl->FSYS;
-//                    su[INSTR] = true;
-//                    su[SEMICOLON] = true;
+//                    sv.set(static_cast<int>(INSTR), true);
+//                    sv.set(static_cast<int>(SEMICOLON), true);
 //                    EXPRESSION(bl, su, X);
 //                    if (!X.ISADDR)
 //                    {
@@ -819,7 +825,7 @@ void MOVESTATEMENT(BlockLocal *bl) {
 //                        }
 //                    }
 //                }
-//            } while (SY == INSTR);
+//            } while (symbol == INSTR);
 //        } else
 //        {
 //            error(129);
@@ -829,12 +835,12 @@ void INPUTSTATEMENT(BlockLocal *bl) {
   Item X;
   SymbolSet su;
   INSYMBOL();
-  if (SY == Symbol::INSTR) {
+  if (symbol == Symbol::INSTR) {
     do {
       INSYMBOL();
       su = bl->FSYS;
-      su[symbol::INSTR] = true;
-      su[symbol::SEMICOLON] = true;
+      su.set(static_cast<int>(Symbol::INSTR), true);
+      su.set(static_cast<int>(Symbol::SEMICOLON), true);
       BASICEXPRESSION(bl, su, X);
       if (!X.is_address) {
         error(131);
@@ -846,7 +852,7 @@ void INPUTSTATEMENT(BlockLocal *bl) {
           error(40);
         }
       }
-    } while (SY == Symbol::INSTR);
+    } while (symbol == Symbol::INSTR);
   } else {
     error(129);
   }
@@ -858,23 +864,23 @@ void COUTMETHODS(BlockLocal *bl) {
   SymbolSet su;
   INSYMBOL();
   METHOD = ID;
-  if (SY != Symbol::IDENT || (strcmp(ID.c_str(), "WIDTH         ") != 0 &&
-                              strcmp(ID.c_str(), "PRECISION     ") != 0)) {
+  if (symbol != Symbol::IDENT || (strcmp(ID.c_str(), "WIDTH         ") != 0 &&
+                                  strcmp(ID.c_str(), "PRECISION     ") != 0)) {
     error(133);
   } else {
     INSYMBOL();
-    if (SY == Symbol::LPARENT) {
+    if (symbol == Symbol::LPARENT) {
       INSYMBOL();
     } else {
       error(9);
     }
     su = bl->FSYS;
-    su[symbol::RPARENT] = true;
+    su.set(static_cast<int>(Symbol::RPARENT), true);
     EXPRESSION(bl, su, X);
     if (X.types != Types::INTS) {
       error(134);
     }
-    if (SY != Symbol::RPARENT) {
+    if (symbol != Symbol::RPARENT) {
       error(4);
     }
     if (strcmp(METHOD.c_str(), "WIDTH         ") == 0) {
@@ -890,26 +896,26 @@ void OUTPUTSTATEMENT(BlockLocal *bl) {
   Item X;
   SymbolSet su;
   INSYMBOL();
-  if (SY == Symbol::PERIOD) {
+  if (symbol == Symbol::PERIOD) {
     COUTMETHODS(bl);
   } else {
     EMIT(89);
-    if (SY == Symbol::OUTSTR) {
+    if (symbol == Symbol::OUTSTR) {
       do {
         INSYMBOL();
-        if (SY == Symbol::ENDLSY) {
+        if (symbol == Symbol::ENDLSY) {
           EMIT(63);
           INSYMBOL();
-        } else if (SY == Symbol::STRNG) {
+        } else if (symbol == Symbol::STRNG) {
           EMIT1(24, SLENG);
           EMIT1(28, INUM);
           INSYMBOL();
         } else {
           su = bl->FSYS;
-          su[symbol::OUTSTR] = true;
-          su[symbol::SEMICOLON] = true;
+          su.set(static_cast<int>(Symbol::OUTSTR), true);
+          su.set(static_cast<int>(Symbol::SEMICOLON), true);
           EXPRESSION(bl, su, X);
-          if (!(STANTYPS[X.TYP])) {
+          if (!(STANTYPS.test(static_cast<int>(X.types)))) {
             error(41);
           }
           if (X.types == Types::REALS) {
@@ -918,7 +924,7 @@ void OUTPUTSTATEMENT(BlockLocal *bl) {
             EMIT1(29, static_cast<int>(X.types));
           }
         }
-      } while (SY == Symbol::OUTSTR);
+      } while (symbol == Symbol::OUTSTR);
     } else {
       error(128);
     }
@@ -947,7 +953,7 @@ void CASELABEL(SwitchLocal *switch_local) {
   int64_t K = 0;
   SymbolSet su;
   su = switch_local->bl->FSYS;
-  su[symbol::COLON] = true;
+  su.set(static_cast<int>(Symbol::COLON), true);
   CONSTANT(switch_local->bl, su, LAB);
   if (LAB.TP != switch_local->X.types) {
     error(47);
@@ -969,28 +975,29 @@ void CASELABEL(SwitchLocal *switch_local) {
 
 void ONECASE(SwitchLocal *switch_local) {
   SymbolSet su;
-  if (CONSTBEGSYS[SY]) {
+  if (CONSTBEGSYS.test(static_cast<int>(symbol))) {
     CASELABEL(switch_local);
-    if (SY == Symbol::COLON) {
+    if (symbol == Symbol::COLON) {
       INSYMBOL();
     } else {
       error(5);
     }
 
     su = switch_local->bl->FSYS;
-    su[symbol::CASESY] = true;
-    su[symbol::SEMICOLON] = true;
-    su[symbol::DEFAULTSY] = true;
-    su[symbol::RSETBRACK] = true;
+    su.set(static_cast<int>(Symbol::CASESY), true);
+    su.set(static_cast<int>(Symbol::SEMICOLON), true);
+    su.set(static_cast<int>(Symbol::DEFAULTSY), true);
+    su.set(static_cast<int>(Symbol::RSETBRACK), true);
 
-    while (STATBEGSYS[SY] || ASSIGNBEGSYS[SY]) {
+    while (STATBEGSYS.test(static_cast<int>(symbol)) ||
+           ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
       STATEMENT(switch_local->bl, su);
     }
 
     su = 0;
-    su[symbol::CASESY] = true;
-    su[symbol::DEFAULTSY] = true;
-    su[symbol::RSETBRACK] = true;
+    su.set(static_cast<int>(Symbol::CASESY), true);
+    su.set(static_cast<int>(Symbol::DEFAULTSY), true);
+    su.set(static_cast<int>(Symbol::RSETBRACK), true);
     TEST(su, switch_local->bl->FSYS, 125);
   }
 }
@@ -1007,7 +1014,7 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
   BREAKLOC[BREAKPNT] = 0;
   INSYMBOL();
 
-  if (SY == Symbol::LPARENT) {
+  if (symbol == Symbol::LPARENT) {
     INSYMBOL();
   } else {
     error(9);
@@ -1015,10 +1022,10 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
 
   switch_local.I = 0;
   su = block_local->FSYS;
-  su[symbol::RPARENT] = true;
-  su[symbol::COLON] = true;
-  su[symbol::LSETBRACK] = true;
-  su[symbol::CASESY] = true;
+  su.set(static_cast<int>(Symbol::RPARENT), true);
+  su.set(static_cast<int>(Symbol::COLON), true);
+  su.set(static_cast<int>(Symbol::LSETBRACK), true);
+  su.set(static_cast<int>(Symbol::CASESY), true);
   EXPRESSION(block_local, su, switch_local.X);
 
   if (switch_local.X.types != Types::INTS &&
@@ -1028,7 +1035,7 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
     error(23);
   }
 
-  if (SY == Symbol::RPARENT) {
+  if (symbol == Symbol::RPARENT) {
     INSYMBOL();
   } else {
     error(4);
@@ -1037,12 +1044,12 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
   switch_local.LC1 = line_count;
   EMIT(12);
 
-  if (SY == Symbol::LSETBRACK) {
+  if (symbol == Symbol::LSETBRACK) {
     INSYMBOL();
   } else {
     error(106);
   }
-  if (SY == Symbol::CASESY) {
+  if (symbol == Symbol::CASESY) {
     INSYMBOL();
   } else {
     error(124);
@@ -1050,16 +1057,16 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
 
   ONECASE(&switch_local);
 
-  while (SY == Symbol::CASESY) {
+  while (symbol == Symbol::CASESY) {
     INSYMBOL();
     ONECASE(&switch_local);
   }
 
   switch_local.DEFOUND = false;
-  if (SY == Symbol::DEFAULTSY) {
+  if (symbol == Symbol::DEFAULTSY) {
     INSYMBOL();
 
-    if (SY == Symbol::COLON) {
+    if (symbol == Symbol::COLON) {
       INSYMBOL();
     } else {
       error(5);
@@ -1067,10 +1074,11 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
 
     switch_local.LC3 = line_count;
 
-    while (STATBEGSYS[SY] || ASSIGNBEGSYS[SY]) {
+    while (STATBEGSYS.test(static_cast<int>(symbol)) ||
+           ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
       su = block_local->FSYS;
-      su[symbol::SEMICOLON] = true;
-      su[symbol::RSETBRACK] = true;
+      su.set(static_cast<int>(Symbol::SEMICOLON), true);
+      su.set(static_cast<int>(Symbol::RSETBRACK), true);
       STATEMENT(block_local, su);
     }
     switch_local.DEFOUND = true;
@@ -1096,7 +1104,7 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
     LOCATION[LNUM] = line_count;
   }
 
-  if (SY == Symbol::RSETBRACK) {
+  if (symbol == Symbol::RSETBRACK) {
     INSYMBOL();
   } else {
     error(104);

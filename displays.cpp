@@ -5,7 +5,7 @@
 #include "cs_compile.h"
 #include "cs_global.h"
 #include "cs_interpret.h"
-#include <cstdio>
+
 #include <cstring>
 #include <print>
 #include <string_view>
@@ -282,9 +282,9 @@ void dumpArrays() {
   println(STDOUT, "Indx IxTyp ElTyp ERef Low High ElSz Siz");
   for (int i = 0; i <= atab_index; ++i) {
     println(STDOUT, "{:4} {:>5} {:>5} {:4} {:3} {:4} {:4} {:3}", i,
-            types.at(ATAB[i].INXTYP), types.at(static_cast<int>(ATAB[i].ELTYP)),
-            ATAB[i].ELREF, ATAB[i].LOW, ATAB[i].HIGH, ATAB[i].ELSIZE,
-            ATAB[i].SIZE);
+            types.at(static_cast<int>(ATAB[i].INXTYP)),
+            types.at(static_cast<int>(ATAB[i].ELTYP)), ATAB[i].ELREF,
+            ATAB[i].LOW, ATAB[i].HIGH, ATAB[i].ELSIZE, ATAB[i].SIZE);
   }
 }
 void dumpBlocks() {
@@ -325,7 +325,7 @@ void dumpReals() {
   println(STDOUT, "Indx     RConst  IConval    RConval");
   for (int i = 0; i <= CPNT; ++i) {
     println(STDOUT, "{:4} {:12.6f} {:6} {:12.6f}", i, CONTABLE.at(i),
-            INITABLE[i].input_value, INITABLE[i].return_value);
+            INITABLE[i].IVAL, INITABLE[i].RVAL);
   }
 }
 void dumpPDES(PROCPNT pd) {
@@ -524,10 +524,10 @@ void dumpProctab(InterpLocal *interp_local) {
   //        } PROCTAB[PMAX+1];
   int idx = 0;
   int pid = 0;
-  fprintf(STDOUT, "Processor Table\n");
-  fprintf(
+  std::println(STDOUT, "Processor Table");
+  std::println(
       STDOUT,
-      "Indx Status    Virtime Brktime Protime  Rpid  Num Strtime   Speed\n");
+      "Indx Status    Virtime Brktime Protime  Rpid  Num Strtime   Speed");
   idx = 0;
   while (interp_local->PROCTAB[idx].STATUS !=
          InterpLocal::PROCTAB::STATUS::NEVERUSED) {

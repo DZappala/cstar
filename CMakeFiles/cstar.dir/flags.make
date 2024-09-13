@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/clang++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -isystem /home/dom/projects/pace/parallel/cstar/_deps/ftxui-src/include
+CXX_INCLUDES = 
 
-CXX_FLAGS =  -DMAC -std=c++23 -stdlib=libc++
+CXX_FLAGS =  -stdlib=libc++ -std=gnu++23
 

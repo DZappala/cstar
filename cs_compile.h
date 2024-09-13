@@ -3,6 +3,7 @@
 //
 #include "cs_global.h"
 #include <bitset>
+#include <sstream>
 
 #ifndef CSTAR_CS_COMPILE_H
 #define CSTAR_CS_COMPILE_H
@@ -22,7 +23,7 @@ COMPILE_CS_EXPORT int save_symbol_count, save_execution_count, save_line_count;
 // nb: Message Passing Interface, see https://www.mpi-forum.org
 COMPILE_CS_EXPORT bool mpi_mode; // global ?
 
-COMPILE_CS_EXPORT char line[LLNG + 1], line2[LLNG + 1];
+COMPILE_CS_EXPORT std::stringbuf line, line2;
 COMPILE_CS_EXPORT int SX, CC, C1, C2, CC2;
 COMPILE_CS_EXPORT int line_count;
 COMPILE_CS_EXPORT int LL, LL2;
@@ -176,39 +177,39 @@ struct TABREC {
 struct INITPAIR {
   int IVAL;
   double RVAL;
-};
+} __attribute__((aligned(16)));
 
 struct ATABREC {
   Types INXTYP;
   Types ELTYP;
   int ELREF, LOW, HIGH, ELSIZE, SIZE;
-};
+} __attribute__((aligned(32))) __attribute__((packed));
 
 struct BTABREC {
   int LAST, LASTPAR, PSIZE, VSIZE, PARCNT;
-};
+} __attribute__((aligned(32)));
 
 struct CTABREC {
   Types ELTYP;
   int ELREF, ELSIZE;
-};
+} __attribute__((aligned(16))) __attribute__((packed));
 
 struct Item {
   enum Types types;
   int reference;
   int64_t size;
   bool is_address;
-};
+} __attribute__((aligned(16))) __attribute__((packed));
 
 struct LIBREC {
   ALFA NAME;
   int IDNUM;
-};
+} __attribute__((aligned(32)));
 
 struct CONREC {
   Types TP;
   int64_t I;
-};
+} __attribute__((aligned(16)));
 
 // typedef SYMBOL SYMSET[EMAX];
 //    std::string KEY[] = {
@@ -251,7 +252,7 @@ struct CONREC {
 //    KEY: ARRAY[1..NKW] OF ALFA;
 COMPILE_CS_EXPORT Symbol symbol;
 #ifdef EXPORT_CS_COMPILE
-COMPILE_CS_EXPORT char KEY[][NKW + 1] = {
+COMPILE_CS_EXPORT char key[][NKW + 1] = {
     "              ", "#DEFINE       ", "#INCLUDE      ", "BREAK         ",
     "CASE          ", "CIN           ", "CONST         ", "CONTINUE      ",
     "COUT          ", "DEFAULT       ", "DO            ", "ELSE          ",
