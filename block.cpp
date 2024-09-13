@@ -9,7 +9,7 @@
 #include "cs_interpret.h"
 #include <cstring>
 
-namespace Cstar {
+namespace cs {
 using OptionsLocal = struct {
   Symbol MYSY;
 };
@@ -73,7 +73,7 @@ void TESTSEMICOLON(BlockLocal *block_local) {
       INSYMBOL();
     }
   }
-  su = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
+  su = declaration_set | keyword_set | assigners_set;
   su.set(static_cast<int>(Symbol::INCLUDESY), true);
   TEST(su, block_local->FSYS, 6);
 }
@@ -174,8 +174,8 @@ void CONSTANT(BlockLocal *bl, SymbolSet &FSYS, CONREC &C) {
   SymbolSet su;
   C.TP = Types::NOTYP;
   C.I = 0;
-  TEST(CONSTBEGSYS, FSYS, 50);
-  if (CONSTBEGSYS[static_cast<int>(symbol)]) {
+  TEST(base_set, FSYS, 50);
+  if (base_set[static_cast<int>(symbol)]) {
     if (symbol == Symbol::CHARCON) {
       C.TP = Types::CHARS;
       C.I = INUM;
@@ -335,11 +335,11 @@ void OPTIONS(BlockLocal *bl) {
         INSYMBOL();
         su = 0;
         su.set(static_cast<int>(Symbol::SEMICOLON), true);
-        SKIP(su | DECLBEGSYS, 42);
+        SKIP(su | declaration_set, 42);
       }
       TESTSEMICOLON(bl);
     } else {
-      SKIP(DECLBEGSYS, 42);
+      SKIP(declaration_set, 42);
     }
   }
   switch (topology) {
@@ -374,7 +374,7 @@ void OPTIONS(BlockLocal *bl) {
   }
 }
 void LOADVAL(Item &X) {
-  if (STANTYPS.test(static_cast<int>(X.types)) || X.types == Types::PNTS ||
+  if (standard_set.test(static_cast<int>(X.types)) || X.types == Types::PNTS ||
       X.types == Types::LOCKS) {
     EMIT(34);
   }
@@ -748,10 +748,10 @@ void ASSIGNEXPRESSION(BasicLocal *bx, SymbolSet &FSYS, Item &X) {
   Symbol OP;
   int SF, SZ;
   SymbolSet su, sv;
-  su = FSYS | COMPASGNSYS;
+  su = FSYS | comparators_set;
   su.set(static_cast<int>(Symbol::BECOMES), true);
   OREXPRESSION(bx, su, X);
-  if (COMPASGNSYS.test(static_cast<int>(symbol)))
+  if (comparators_set.test(static_cast<int>(symbol)))
     COMPASSIGNEXP(bx, FSYS, X);
   else if (symbol == Symbol::BECOMES) {
     SF = bx->factor;
@@ -772,7 +772,7 @@ void ASSIGNEXPRESSION(BasicLocal *bx, SymbolSet &FSYS, Item &X) {
     else {
       if (X.types == Types::REALS && Y.types == Types::INTS)
         EMIT1(91, SF);
-      else if (STANTYPS[static_cast<int>(X.types)] || X.types == Types::PNTS ||
+      else if (standard_set[static_cast<int>(X.types)] || X.types == Types::PNTS ||
                X.types == Types::LOCKS)
         EMIT1(38, SF);
       else {
@@ -817,7 +817,7 @@ void STANDPROC(BlockLocal *bl, int N) {
         } else {
           if ((X.types == Types::REALS) && (Y.types == Types::INTS)) {
             EMIT1(92, 1);
-          } else if (STANTYPS[static_cast<int>(X.types)] ||
+          } else if (standard_set[static_cast<int>(X.types)] ||
                      X.types == Types::PNTS) {
             EMIT1(66, 1);
           } else {
@@ -874,7 +874,7 @@ void STANDPROC(BlockLocal *bl, int N) {
           Y = Z;
           if ((X.types == Types::REALS) && (Y.types == Types::INTS)) {
             EMIT1(91, 0);
-          } else if (STANTYPS[static_cast<int>(X.types)] ||
+          } else if (standard_set[static_cast<int>(X.types)] ||
                      X.types == Types::PNTS) {
             EMIT1(38, 0);
             EMIT(111);
@@ -1138,7 +1138,7 @@ void BLOCK(InterpLocal *interp_local, SymbolSet FSYS, bool is_function,
   BTAB[block_local.PRB].PSIZE = block_local.DX;
   BTAB[block_local.PRB].PARCNT = block_local.PCNT;
   if (block_local.LEVEL == 1) {
-    su = DECLBEGSYS;
+    su = declaration_set;
     su.set(static_cast<int>(Symbol::INCLUDESY), true);
     TEST(su, FSYS, 102);
     OPTIONS(&block_local);
@@ -1147,12 +1147,12 @@ void BLOCK(InterpLocal *interp_local, SymbolSet FSYS, bool is_function,
         CONSTANTDECLARATION(&block_local);
       } else if (symbol == Symbol::TYPESY) {
         TYPEDECLARATION(&block_local);
-      } else if (TYPEBEGSYS.test(static_cast<int>(symbol))) {
+      } else if (type_set.test(static_cast<int>(symbol))) {
         VARIABLEDECLARATION(&block_local);
       } else if (symbol == Symbol::INCLUDESY) {
         INCLUDEDIRECTIVE();
       }
-      su = DECLBEGSYS;
+      su = declaration_set;
       su.set(static_cast<int>(Symbol::INCLUDESY), true);
       su.set(static_cast<int>(Symbol::EOFSY), true);
       TEST(su, FSYS, 6);
@@ -1161,14 +1161,14 @@ void BLOCK(InterpLocal *interp_local, SymbolSet FSYS, bool is_function,
   } else {
     if (symbol != Symbol::SEMICOLON) {
       TAB[PRT].address = line_count;
-      su = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
+      su = declaration_set | keyword_set | assigners_set;
       sv = FSYS;
       sv.set(static_cast<int>(Symbol::RSETBRACK), true);
       TEST(su, sv, 101);
       block_local.CREATEFLAG = false;
-      while (DECLBEGSYS.test(static_cast<int>(symbol)) ||
-             STATBEGSYS.test(static_cast<int>(symbol)) ||
-             ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
+      while (declaration_set.test(static_cast<int>(symbol)) ||
+             keyword_set.test(static_cast<int>(symbol)) ||
+             assigners_set.test(static_cast<int>(symbol))) {
         if (symbol == Symbol::DEFINESY)
           CONSTANTDECLARATION(&block_local);
         else if (symbol == Symbol::TYPESY)
@@ -1190,15 +1190,15 @@ void BLOCK(InterpLocal *interp_local, SymbolSet FSYS, bool is_function,
             INSYMBOL();
           }
         } else {
-          if (STATBEGSYS.test(static_cast<int>(symbol)) ||
-              ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
+          if (keyword_set.test(static_cast<int>(symbol)) ||
+              assigners_set.test(static_cast<int>(symbol))) {
             su = FSYS;
             su.set(static_cast<int>(Symbol::SEMICOLON), true);
             su.set(static_cast<int>(Symbol::RSETBRACK), true);
             STATEMENT(&block_local, su);
           }
         }
-        su = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
+        su = declaration_set | keyword_set | assigners_set;
         su.set(static_cast<int>(Symbol::RSETBRACK), true);
         TEST(su, FSYS, 6);
       }

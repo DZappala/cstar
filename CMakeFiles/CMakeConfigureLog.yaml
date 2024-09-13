@@ -267,3 +267,724 @@ events:
         
       exitCode: 0
 ...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake:233 (message)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      The system is: Linux - 6.9.3-76060903-generic - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+      Compiler: /usr/bin/clang++ 
+      Build flags: -stdlib=libc++
+      Id flags:  
+      
+      The output was:
+      1
+      /usr/bin/ld: cannot find -lc++: No such file or directory
+      clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/clang++ 
+      Build flags: -stdlib=libc++
+      Id flags: -c 
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.o"
+      
+      The CXX compiler identification is Clang, found in:
+        /home/dom/projects/pace/parallel/cstar/CMakeFiles/3.28.3/CompilerIdCXX/CMakeCXXCompilerId.o
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-7S5Q9e"
+      binary: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-7S5Q9e"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-18"
+      CMAKE_CXX_FLAGS: " -stdlib=libc++"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-7S5Q9e'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_712a2/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_712a2.dir/build.make CMakeFiles/cmTC_712a2.dir/build
+        gmake[1]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-7S5Q9e'
+        Building CXX object CMakeFiles/cmTC_712a2.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/clang++   -stdlib=libc++  -std=gnu++23   -v -MD -MT CMakeFiles/cmTC_712a2.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_712a2.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_712a2.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp
+        Ubuntu clang version 18.1.3 (1ubuntu1)
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         (in-process)
+         "/usr/lib/llvm-18/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -debugger-tuning=gdb -fdebug-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-7S5Q9e -v -fcoverage-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-7S5Q9e -resource-dir /usr/lib/llvm-18/lib/clang/18 -dependency-file CMakeFiles/cmTC_712a2.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_712a2.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/lib/llvm-18/lib/clang/18/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -std=gnu++23 -fdeprecated-macro -ferror-limit 19 -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_712a2.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp
+        clang -cc1 version 18.1.3 based upon LLVM 18.1.3 default target x86_64-pc-linux-gnu
+        ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include"
+        ignoring nonexistent directory "/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/llvm-18/lib/clang/18/include
+         /usr/local/include
+         /usr/include/x86_64-linux-gnu
+         /usr/include
+        End of search list.
+        Linking CXX executable cmTC_712a2
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_712a2.dir/link.txt --verbose=1
+        /usr/bin/clang++  -stdlib=libc++   -v CMakeFiles/cmTC_712a2.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_712a2 
+        Ubuntu clang version 18.1.3 (1ubuntu1)
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         "/usr/bin/ld" -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -pie -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_712a2 /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/lib -L/usr/lib CMakeFiles/cmTC_712a2.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtendS.o /lib/x86_64-linux-gnu/crtn.o
+        /usr/bin/ld: cannot find -lc++: No such file or directory
+        clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+        gmake[1]: *** [CMakeFiles/cmTC_712a2.dir/build.make:100: cmTC_712a2] Error 1
+        gmake[1]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-7S5Q9e'
+        gmake: *** [Makefile:127: cmTC_712a2/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:49 (try_compile)"
+      - "CMakeLists.txt:22 (project)"
+    checks:
+      - "Check for working CXX compiler: /usr/bin/clang++"
+    directories:
+      source: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-mZgNPF"
+      binary: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-mZgNPF"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-18"
+      CMAKE_CXX_FLAGS: " -stdlib=libc++"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_COMPILER_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-mZgNPF'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_2b18c/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_2b18c.dir/build.make CMakeFiles/cmTC_2b18c.dir/build
+        gmake[1]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-mZgNPF'
+        Building CXX object CMakeFiles/cmTC_2b18c.dir/testCXXCompiler.cxx.o
+        /usr/bin/clang++   -stdlib=libc++  -std=gnu++23 -MD -MT CMakeFiles/cmTC_2b18c.dir/testCXXCompiler.cxx.o -MF CMakeFiles/cmTC_2b18c.dir/testCXXCompiler.cxx.o.d -o CMakeFiles/cmTC_2b18c.dir/testCXXCompiler.cxx.o -c /home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-mZgNPF/testCXXCompiler.cxx
+        Linking CXX executable cmTC_2b18c
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2b18c.dir/link.txt --verbose=1
+        /usr/bin/clang++  -stdlib=libc++  CMakeFiles/cmTC_2b18c.dir/testCXXCompiler.cxx.o -o cmTC_2b18c 
+        /usr/bin/ld: cannot find -lc++: No such file or directory
+        clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+        gmake[1]: *** [CMakeFiles/cmTC_2b18c.dir/build.make:100: cmTC_2b18c] Error 1
+        gmake[1]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-mZgNPF'
+        gmake: *** [Makefile:127: cmTC_2b18c/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+      Compiler: /usr/bin/clang++ 
+      Build flags: -stdlib=libc++
+      Id flags:  
+      
+      The output was:
+      1
+      /usr/bin/ld: cannot find -lc++: No such file or directory
+      clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/clang++ 
+      Build flags: -stdlib=libc++
+      Id flags: -c 
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.o"
+      
+      The CXX compiler identification is Clang, found in:
+        /home/dom/projects/pace/parallel/cstar/CMakeFiles/3.28.3/CompilerIdCXX/CMakeCXXCompilerId.o
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-2GvRZH"
+      binary: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-2GvRZH"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-18"
+      CMAKE_CXX_FLAGS: " -stdlib=libc++"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-2GvRZH'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_a3629/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_a3629.dir/build.make CMakeFiles/cmTC_a3629.dir/build
+        gmake[1]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-2GvRZH'
+        Building CXX object CMakeFiles/cmTC_a3629.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/clang++   -stdlib=libc++  -std=gnu++23   -v -MD -MT CMakeFiles/cmTC_a3629.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_a3629.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_a3629.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp
+        Ubuntu clang version 18.1.3 (1ubuntu1)
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         (in-process)
+         "/usr/lib/llvm-18/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -debugger-tuning=gdb -fdebug-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-2GvRZH -v -fcoverage-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-2GvRZH -resource-dir /usr/lib/llvm-18/lib/clang/18 -dependency-file CMakeFiles/cmTC_a3629.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_a3629.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/lib/llvm-18/lib/clang/18/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -std=gnu++23 -fdeprecated-macro -ferror-limit 19 -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_a3629.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp
+        clang -cc1 version 18.1.3 based upon LLVM 18.1.3 default target x86_64-pc-linux-gnu
+        ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include"
+        ignoring nonexistent directory "/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/llvm-18/lib/clang/18/include
+         /usr/local/include
+         /usr/include/x86_64-linux-gnu
+         /usr/include
+        End of search list.
+        Linking CXX executable cmTC_a3629
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a3629.dir/link.txt --verbose=1
+        /usr/bin/clang++  -stdlib=libc++   -v CMakeFiles/cmTC_a3629.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_a3629 
+        Ubuntu clang version 18.1.3 (1ubuntu1)
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         "/usr/bin/ld" -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -pie -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_a3629 /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/lib -L/usr/lib CMakeFiles/cmTC_a3629.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtendS.o /lib/x86_64-linux-gnu/crtn.o
+        /usr/bin/ld: cannot find -lc++: No such file or directory
+        clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+        gmake[1]: *** [CMakeFiles/cmTC_a3629.dir/build.make:100: cmTC_a3629] Error 1
+        gmake[1]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-2GvRZH'
+        gmake: *** [Makefile:127: cmTC_a3629/fast] Error 2
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:49 (try_compile)"
+      - "CMakeLists.txt:22 (project)"
+    checks:
+      - "Check for working CXX compiler: /usr/bin/clang++"
+    directories:
+      source: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-MQ2Tzk"
+      binary: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-MQ2Tzk"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-18"
+      CMAKE_CXX_FLAGS: " -stdlib=libc++"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_COMPILER_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-MQ2Tzk'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_6d7b4/fast
+        /usr/bin/gmake  -f CMakeFiles/cmTC_6d7b4.dir/build.make CMakeFiles/cmTC_6d7b4.dir/build
+        gmake[1]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-MQ2Tzk'
+        Building CXX object CMakeFiles/cmTC_6d7b4.dir/testCXXCompiler.cxx.o
+        /usr/bin/clang++   -stdlib=libc++  -std=gnu++23 -MD -MT CMakeFiles/cmTC_6d7b4.dir/testCXXCompiler.cxx.o -MF CMakeFiles/cmTC_6d7b4.dir/testCXXCompiler.cxx.o.d -o CMakeFiles/cmTC_6d7b4.dir/testCXXCompiler.cxx.o -c /home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-MQ2Tzk/testCXXCompiler.cxx
+        Linking CXX executable cmTC_6d7b4
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6d7b4.dir/link.txt --verbose=1
+        /usr/bin/clang++  -stdlib=libc++  CMakeFiles/cmTC_6d7b4.dir/testCXXCompiler.cxx.o -o cmTC_6d7b4 
+        /usr/bin/ld: cannot find -lc++: No such file or directory
+        clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+        gmake[1]: *** [CMakeFiles/cmTC_6d7b4.dir/build.make:100: cmTC_6d7b4] Error 1
+        gmake[1]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-MQ2Tzk'
+        gmake: *** [Makefile:127: cmTC_6d7b4/fast] Error 2
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+      Compiler: /usr/bin/clang++ 
+      Build flags: -stdlib=libc++
+      Id flags:  
+      
+      The output was:
+      1
+      /usr/bin/ld: cannot find -lc++: No such file or directory
+      clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/clang++ 
+      Build flags: -stdlib=libc++
+      Id flags: -c 
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.o"
+      
+      The CXX compiler identification is Clang, found in:
+        /home/dom/projects/pace/parallel/cstar/CMakeFiles/3.28.3/CompilerIdCXX/CMakeCXXCompilerId.o
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-SM2leZ"
+      binary: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-SM2leZ"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-18"
+      CMAKE_CXX_FLAGS: " -stdlib=libc++"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-SM2leZ'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_ac94f/fast
+        gmake[1]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-SM2leZ'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_ac94f.dir/build.make CMakeFiles/cmTC_ac94f.dir/build
+        gmake[2]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-SM2leZ'
+        Building CXX object CMakeFiles/cmTC_ac94f.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/clang++   -stdlib=libc++  -std=gnu++23   -v -MD -MT CMakeFiles/cmTC_ac94f.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_ac94f.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_ac94f.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp
+        Ubuntu clang version 18.1.3 (1ubuntu1)
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         (in-process)
+         "/usr/lib/llvm-18/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -debugger-tuning=gdb -fdebug-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-SM2leZ -v -fcoverage-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-SM2leZ -resource-dir /usr/lib/llvm-18/lib/clang/18 -dependency-file CMakeFiles/cmTC_ac94f.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_ac94f.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/lib/llvm-18/lib/clang/18/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -std=gnu++23 -fdeprecated-macro -ferror-limit 19 -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_ac94f.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp
+        clang -cc1 version 18.1.3 based upon LLVM 18.1.3 default target x86_64-pc-linux-gnu
+        ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include"
+        ignoring nonexistent directory "/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/llvm-18/lib/clang/18/include
+         /usr/local/include
+         /usr/include/x86_64-linux-gnu
+         /usr/include
+        End of search list.
+        Linking CXX executable cmTC_ac94f
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ac94f.dir/link.txt --verbose=1
+        /usr/bin/clang++  -stdlib=libc++   -v CMakeFiles/cmTC_ac94f.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_ac94f 
+        Ubuntu clang version 18.1.3 (1ubuntu1)
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         "/usr/bin/ld" -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -pie -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_ac94f /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/lib -L/usr/lib CMakeFiles/cmTC_ac94f.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtendS.o /lib/x86_64-linux-gnu/crtn.o
+        /usr/bin/ld: cannot find -lc++: No such file or directory
+        clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+        gmake[2]: *** [CMakeFiles/cmTC_ac94f.dir/build.make:100: cmTC_ac94f] Error 1
+        gmake[2]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-SM2leZ'
+        gmake[1]: *** [Makefile:127: cmTC_ac94f/fast] Error 2
+        gmake[1]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-SM2leZ'
+        
+      exitCode: 2
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:49 (try_compile)"
+      - "CMakeLists.txt:22 (project)"
+    checks:
+      - "Check for working CXX compiler: /usr/bin/clang++"
+    directories:
+      source: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-RFT9BT"
+      binary: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-RFT9BT"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-18"
+      CMAKE_CXX_FLAGS: " -stdlib=libc++"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_COMPILER_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-RFT9BT'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_e9358/fast
+        gmake[1]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-RFT9BT'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_e9358.dir/build.make CMakeFiles/cmTC_e9358.dir/build
+        gmake[2]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-RFT9BT'
+        Building CXX object CMakeFiles/cmTC_e9358.dir/testCXXCompiler.cxx.o
+        /usr/bin/clang++   -stdlib=libc++  -std=gnu++23 -MD -MT CMakeFiles/cmTC_e9358.dir/testCXXCompiler.cxx.o -MF CMakeFiles/cmTC_e9358.dir/testCXXCompiler.cxx.o.d -o CMakeFiles/cmTC_e9358.dir/testCXXCompiler.cxx.o -c /home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-RFT9BT/testCXXCompiler.cxx
+        Linking CXX executable cmTC_e9358
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e9358.dir/link.txt --verbose=1
+        /usr/bin/clang++  -stdlib=libc++  CMakeFiles/cmTC_e9358.dir/testCXXCompiler.cxx.o -o cmTC_e9358 
+        /usr/bin/ld: cannot find -lc++: No such file or directory
+        clang++: error: linker command failed with exit code 1 (use -v to see invocation)
+        gmake[2]: *** [CMakeFiles/cmTC_e9358.dir/build.make:100: cmTC_e9358] Error 1
+        gmake[2]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-RFT9BT'
+        gmake[1]: *** [Makefile:127: cmTC_e9358/fast] Error 2
+        gmake[1]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-RFT9BT'
+        
+      exitCode: 2
+...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/clang++ 
+      Build flags: -stdlib=libc++
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is Clang, found in:
+        /home/dom/projects/pace/parallel/cstar/CMakeFiles/3.28.3/CompilerIdCXX/a.out
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:57 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ"
+      binary: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-18"
+      CMAKE_CXX_FLAGS: " -stdlib=libc++"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d48ce/fast
+        gmake[1]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_d48ce.dir/build.make CMakeFiles/cmTC_d48ce.dir/build
+        gmake[2]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ'
+        Building CXX object CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/clang++   -stdlib=libc++  -std=gnu++23   -v -MD -MT CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp
+        Ubuntu clang version 18.1.3 (1ubuntu1)
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         (in-process)
+         "/usr/lib/llvm-18/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -debugger-tuning=gdb -fdebug-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ -v -fcoverage-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ -resource-dir /usr/lib/llvm-18/lib/clang/18 -dependency-file CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/lib/llvm-18/bin/../include/c++/v1 -internal-isystem /usr/lib/llvm-18/lib/clang/18/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -std=gnu++23 -fdeprecated-macro -ferror-limit 19 -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp
+        clang -cc1 version 18.1.3 based upon LLVM 18.1.3 default target x86_64-pc-linux-gnu
+        ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include"
+        ignoring nonexistent directory "/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         /usr/lib/llvm-18/bin/../include/c++/v1
+         /usr/lib/llvm-18/lib/clang/18/include
+         /usr/local/include
+         /usr/include/x86_64-linux-gnu
+         /usr/include
+        End of search list.
+        Linking CXX executable cmTC_d48ce
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d48ce.dir/link.txt --verbose=1
+        /usr/bin/clang++  -stdlib=libc++   -v CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_d48ce 
+        Ubuntu clang version 18.1.3 (1ubuntu1)
+        Target: x86_64-pc-linux-gnu
+        Thread model: posix
+        InstalledDir: /usr/bin
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+        Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13
+        Candidate multilib: .;@m64
+        Selected multilib: .;@m64
+         "/usr/bin/ld" -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -pie -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_d48ce /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-18/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtendS.o /lib/x86_64-linux-gnu/crtn.o
+        gmake[2]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ'
+        gmake[1]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ'
+        
+      exitCode: 0
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:127 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Parsed CXX implicit include dir info: rv=done
+        found start of include info
+        found start of implicit include info
+          add: [/usr/lib/llvm-18/bin/../include/c++/v1]
+          add: [/usr/lib/llvm-18/lib/clang/18/include]
+          add: [/usr/local/include]
+          add: [/usr/include/x86_64-linux-gnu]
+          add: [/usr/include]
+        end of search list found
+        collapse include dir [/usr/lib/llvm-18/bin/../include/c++/v1] ==> [/usr/lib/llvm-18/include/c++/v1]
+        collapse include dir [/usr/lib/llvm-18/lib/clang/18/include] ==> [/usr/lib/llvm-18/lib/clang/18/include]
+        collapse include dir [/usr/local/include] ==> [/usr/local/include]
+        collapse include dir [/usr/include/x86_64-linux-gnu] ==> [/usr/include/x86_64-linux-gnu]
+        collapse include dir [/usr/include] ==> [/usr/include]
+        implicit include dirs: [/usr/lib/llvm-18/include/c++/v1;/usr/lib/llvm-18/lib/clang/18/include;/usr/local/include;/usr/include/x86_64-linux-gnu;/usr/include]
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/CMakeDetermineCompilerABI.cmake:159 (message)"
+      - "/usr/share/cmake-3.28/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:22 (project)"
+    message: |
+      Parsed CXX implicit link information:
+        link line regex: [^( *|.*[/\\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
+        ignore line: [Change Dir: '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ']
+        ignore line: []
+        ignore line: [Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_d48ce/fast]
+        ignore line: [gmake[1]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ']
+        ignore line: [/usr/bin/gmake  -f CMakeFiles/cmTC_d48ce.dir/build.make CMakeFiles/cmTC_d48ce.dir/build]
+        ignore line: [gmake[2]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ']
+        ignore line: [Building CXX object CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/usr/bin/clang++   -stdlib=libc++  -std=gnu++23   -v -MD -MT CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Ubuntu clang version 18.1.3 (1ubuntu1)]
+        ignore line: [Target: x86_64-pc-linux-gnu]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /usr/bin]
+        ignore line: [Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12]
+        ignore line: [Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13]
+        ignore line: [Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13]
+        ignore line: [Candidate multilib: .]
+        ignore line: [@m64]
+        ignore line: [Selected multilib: .]
+        ignore line: [@m64]
+        ignore line: [ (in-process)]
+        ignore line: [ "/usr/lib/llvm-18/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -debugger-tuning=gdb -fdebug-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ -v -fcoverage-compilation-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-yGTFRZ -resource-dir /usr/lib/llvm-18/lib/clang/18 -dependency-file CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/lib/llvm-18/bin/../include/c++/v1 -internal-isystem /usr/lib/llvm-18/lib/clang/18/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -std=gnu++23 -fdeprecated-macro -ferror-limit 19 -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.28/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [clang -cc1 version 18.1.3 based upon LLVM 18.1.3 default target x86_64-pc-linux-gnu]
+        ignore line: [ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../x86_64-linux-gnu/include"]
+        ignore line: [ignoring nonexistent directory "/include"]
+        ignore line: [#include "..." search starts here:]
+        ignore line: [#include <...> search starts here:]
+        ignore line: [ /usr/lib/llvm-18/bin/../include/c++/v1]
+        ignore line: [ /usr/lib/llvm-18/lib/clang/18/include]
+        ignore line: [ /usr/local/include]
+        ignore line: [ /usr/include/x86_64-linux-gnu]
+        ignore line: [ /usr/include]
+        ignore line: [End of search list.]
+        ignore line: [Linking CXX executable cmTC_d48ce]
+        ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d48ce.dir/link.txt --verbose=1]
+        ignore line: [/usr/bin/clang++  -stdlib=libc++   -v CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_d48ce ]
+        ignore line: [Ubuntu clang version 18.1.3 (1ubuntu1)]
+        ignore line: [Target: x86_64-pc-linux-gnu]
+        ignore line: [Thread model: posix]
+        ignore line: [InstalledDir: /usr/bin]
+        ignore line: [Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12]
+        ignore line: [Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13]
+        ignore line: [Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/13]
+        ignore line: [Candidate multilib: .]
+        ignore line: [@m64]
+        ignore line: [Selected multilib: .]
+        ignore line: [@m64]
+        link line: [ "/usr/bin/ld" -z relro --hash-style=gnu --build-id --eh-frame-hdr -m elf_x86_64 -pie -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_d48ce /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-18/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtendS.o /lib/x86_64-linux-gnu/crtn.o]
+          arg [/usr/bin/ld] ==> ignore
+          arg [-zrelro] ==> ignore
+          arg [--hash-style=gnu] ==> ignore
+          arg [--build-id] ==> ignore
+          arg [--eh-frame-hdr] ==> ignore
+          arg [-m] ==> ignore
+          arg [elf_x86_64] ==> ignore
+          arg [-pie] ==> ignore
+          arg [-dynamic-linker] ==> ignore
+          arg [/lib64/ld-linux-x86-64.so.2] ==> ignore
+          arg [-o] ==> ignore
+          arg [cmTC_d48ce] ==> ignore
+          arg [/lib/x86_64-linux-gnu/Scrt1.o] ==> obj [/lib/x86_64-linux-gnu/Scrt1.o]
+          arg [/lib/x86_64-linux-gnu/crti.o] ==> obj [/lib/x86_64-linux-gnu/crti.o]
+          arg [/usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtbeginS.o] ==> obj [/usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtbeginS.o]
+          arg [-L/usr/bin/../lib/gcc/x86_64-linux-gnu/13] ==> dir [/usr/bin/../lib/gcc/x86_64-linux-gnu/13]
+          arg [-L/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../lib64] ==> dir [/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../lib64]
+          arg [-L/lib/x86_64-linux-gnu] ==> dir [/lib/x86_64-linux-gnu]
+          arg [-L/lib/../lib64] ==> dir [/lib/../lib64]
+          arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
+          arg [-L/usr/lib/../lib64] ==> dir [/usr/lib/../lib64]
+          arg [-L/usr/lib/llvm-18/bin/../lib] ==> dir [/usr/lib/llvm-18/bin/../lib]
+          arg [-L/lib] ==> dir [/lib]
+          arg [-L/usr/lib] ==> dir [/usr/lib]
+          arg [CMakeFiles/cmTC_d48ce.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [-lc++] ==> lib [c++]
+          arg [-lm] ==> lib [m]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [-lc] ==> lib [c]
+          arg [-lgcc_s] ==> lib [gcc_s]
+          arg [-lgcc] ==> lib [gcc]
+          arg [/usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtendS.o] ==> obj [/usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtendS.o]
+          arg [/lib/x86_64-linux-gnu/crtn.o] ==> obj [/lib/x86_64-linux-gnu/crtn.o]
+        collapse obj [/usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtbeginS.o] ==> [/usr/lib/gcc/x86_64-linux-gnu/13/crtbeginS.o]
+        collapse obj [/usr/bin/../lib/gcc/x86_64-linux-gnu/13/crtendS.o] ==> [/usr/lib/gcc/x86_64-linux-gnu/13/crtendS.o]
+        collapse library dir [/usr/bin/../lib/gcc/x86_64-linux-gnu/13] ==> [/usr/lib/gcc/x86_64-linux-gnu/13]
+        collapse library dir [/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../lib64] ==> [/usr/lib64]
+        collapse library dir [/lib/x86_64-linux-gnu] ==> [/lib/x86_64-linux-gnu]
+        collapse library dir [/lib/../lib64] ==> [/lib64]
+        collapse library dir [/usr/lib/x86_64-linux-gnu] ==> [/usr/lib/x86_64-linux-gnu]
+        collapse library dir [/usr/lib/../lib64] ==> [/usr/lib64]
+        collapse library dir [/usr/lib/llvm-18/bin/../lib] ==> [/usr/lib/llvm-18/lib]
+        collapse library dir [/lib] ==> [/lib]
+        collapse library dir [/usr/lib] ==> [/usr/lib]
+        implicit libs: [c++;m;gcc_s;gcc;c;gcc_s;gcc]
+        implicit objs: [/lib/x86_64-linux-gnu/Scrt1.o;/lib/x86_64-linux-gnu/crti.o;/usr/lib/gcc/x86_64-linux-gnu/13/crtbeginS.o;/usr/lib/gcc/x86_64-linux-gnu/13/crtendS.o;/lib/x86_64-linux-gnu/crtn.o]
+        implicit dirs: [/usr/lib/gcc/x86_64-linux-gnu/13;/usr/lib64;/lib/x86_64-linux-gnu;/lib64;/usr/lib/x86_64-linux-gnu;/usr/lib/llvm-18/lib;/lib;/usr/lib]
+        implicit fwks: []
+      
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/Internal/CheckSourceCompiles.cmake:101 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/CheckCXXSourceCompiles.cmake:52 (cmake_check_source_compiles)"
+      - "/usr/share/cmake-3.28/Modules/FindThreads.cmake:99 (CHECK_CXX_SOURCE_COMPILES)"
+      - "/usr/share/cmake-3.28/Modules/FindThreads.cmake:163 (_threads_check_libc)"
+      - "/usr/share/cmake-3.28/Modules/CMakeFindDependencyMacro.cmake:76 (find_package)"
+      - "/usr/lib/cmake/ftxui/ftxui-config.cmake:28 (find_dependency)"
+      - "CMakeLists.txt:23 (find_package)"
+    checks:
+      - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
+    directories:
+      source: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-PZalI6"
+      binary: "/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-PZalI6"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-18"
+      CMAKE_CXX_FLAGS: " -stdlib=libc++"
+      CMAKE_CXX_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_HAVE_LIBC_PTHREAD"
+      cached: true
+      stdout: |
+        Change Dir: '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-PZalI6'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_f344f/fast
+        gmake[1]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-PZalI6'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_f344f.dir/build.make CMakeFiles/cmTC_f344f.dir/build
+        gmake[2]: Entering directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-PZalI6'
+        Building CXX object CMakeFiles/cmTC_f344f.dir/src.cxx.o
+        /usr/bin/clang++ -DCMAKE_HAVE_LIBC_PTHREAD  -stdlib=libc++  -std=gnu++23 -MD -MT CMakeFiles/cmTC_f344f.dir/src.cxx.o -MF CMakeFiles/cmTC_f344f.dir/src.cxx.o.d -o CMakeFiles/cmTC_f344f.dir/src.cxx.o -c /home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-PZalI6/src.cxx
+        Linking CXX executable cmTC_f344f
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f344f.dir/link.txt --verbose=1
+        /usr/bin/clang++  -stdlib=libc++  CMakeFiles/cmTC_f344f.dir/src.cxx.o -o cmTC_f344f 
+        gmake[2]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-PZalI6'
+        gmake[1]: Leaving directory '/home/dom/projects/pace/parallel/cstar/CMakeFiles/CMakeScratch/TryCompile-PZalI6'
+        
+      exitCode: 0
+...

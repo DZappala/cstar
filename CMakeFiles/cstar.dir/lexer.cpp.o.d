@@ -574,8 +574,6 @@ CMakeFiles/cstar.dir/lexer.cpp.o: \
   /usr/lib/llvm-18/bin/../include/c++/v1/__format/formatter_tuple.h \
   /usr/include/unistd.h \
   /home/dom/projects/pace/parallel/cstar/cs_compile.h \
-  /home/dom/projects/pace/parallel/cstar/cs_global.h \
-  /home/dom/projects/pace/parallel/cstar/cs_defines.h \
   /usr/lib/llvm-18/bin/../include/c++/v1/bitset \
   /usr/lib/llvm-18/bin/../include/c++/v1/__algorithm/count.h \
   /usr/lib/llvm-18/bin/../include/c++/v1/__algorithm/fill.h \
@@ -584,4 +582,6 @@ CMakeFiles/cstar.dir/lexer.cpp.o: \
   /usr/lib/llvm-18/bin/../include/c++/v1/istream \
   /usr/lib/llvm-18/bin/../include/c++/v1/ostream \
   /usr/lib/llvm-18/bin/../include/c++/v1/__exception/operations.h \
+  /home/dom/projects/pace/parallel/cstar/cs_global.h \
+  /home/dom/projects/pace/parallel/cstar/cs_defines.h \
   /home/dom/projects/pace/parallel/cstar/cs_errors.h

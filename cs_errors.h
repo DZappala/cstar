@@ -12,12 +12,12 @@
 #include "cs_global.h"
 #include <bitset>
 
-namespace Cstar {
-void error(int);
-void error_exit();
-void error_message();
-void fatal(int);
-ERRORS_CS_EXPORT std::bitset<ERMAX> errors;
-ERRORS_CS_EXPORT bool fatal_error;
+namespace cs {
+  void error(int);
+  void error_exit();
+  void error_message();
+  void fatal(int);
+  ERRORS_CS_EXPORT std::bitset<ERMAX> errors;
+  ERRORS_CS_EXPORT bool fatal_error;
 } // namespace Cstar
 #endif // CSTAR_CS_ERRORS_H

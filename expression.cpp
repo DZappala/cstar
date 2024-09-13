@@ -6,7 +6,7 @@
 #include "cs_interpret.h"
 #include <cstring>
 
-namespace Cstar {
+namespace cs {
 struct TypLocal {
   SymbolSet FSYS;
   Types TP;
@@ -101,7 +101,7 @@ void SELECTOR(BlockLocal *bl, SymbolSet FSYS, Item &V) {
 
   su.set(static_cast<int>(Symbol::COMMA), true);
   su.set(static_cast<int>(Symbol::RBRACK), true);
-  while (SELECTSYS.test(static_cast<int>(symbol))) {
+  while (selection_set.test(static_cast<int>(symbol))) {
     if (symbol == Symbol::LBRACK) {
       do {
         INSYMBOL();
@@ -211,8 +211,8 @@ auto TYPE_COMPATIBLE(Item X, Item Y) -> bool {
   // ITEM W;
   // if ((inset(X.types, STANTYPS + LOCKS)) && (inset(Y.types, STANTYPS +
   // LOCKS)))
-  if ((STANTYPS.test(static_cast<int>(X.types)) || X.types == Types::LOCKS) &&
-      (STANTYPS.test(static_cast<int>(Y.types)) || Y.types == Types::LOCKS)) {
+  if ((standard_set.test(static_cast<int>(X.types)) || X.types == Types::LOCKS) &&
+      (standard_set.test(static_cast<int>(Y.types)) || Y.types == Types::LOCKS)) {
     return X.types == Y.types ||
            (X.types == Types::REALS && Y.types == Types::INTS) ||
            (X.types == Types::INTS && Y.types == Types::CHARS) ||
@@ -323,7 +323,7 @@ auto FACTOR(BasicLocal *bx, SymbolSet &FSYS, Item &X) -> void {
       X.types = TAB[I].types;
       X.reference = TAB[I].reference;
       X.size = TAB[I].size;
-      if (SELECTSYS.test(static_cast<int>(symbol))) {
+      if (selection_set.test(static_cast<int>(symbol))) {
         bx->factor = (TAB[I].normal) ? 0 : 1;
         EMIT2(bx->factor, TAB[I].LEV, TAB[I].address);
         SELECTOR(bx->block_local, FSYS | su, X);
@@ -488,7 +488,7 @@ auto FACTOR(BasicLocal *bx, SymbolSet &FSYS, Item &X) -> void {
         } else {
           INSYMBOL();
         }
-        if (!STANTYPS.test(static_cast<int>(TYPCAST)) &&
+        if (!standard_set.test(static_cast<int>(TYPCAST)) &&
             TYPCAST != Types::PNTS) {
           error(121);
         }
@@ -619,7 +619,7 @@ auto FACTOR(BasicLocal *bx, SymbolSet &FSYS, Item &X) -> void {
       X.is_address = false;
     }
   }
-  if (SELECTSYS.test(static_cast<int>(symbol)) && X.is_address) {
+  if (selection_set.test(static_cast<int>(symbol)) && X.is_address) {
     su = FSYS;
     su.set(static_cast<int>(Symbol::DBLQUEST), true);
     SELECTOR(bx->block_local, su, X);
@@ -835,9 +835,9 @@ void C_COMPONENTDECLARATION(TypLocal *tl) {
   TSYS.set(static_cast<int>(Symbol::CHANSY), true);
   TSYS.set(static_cast<int>(Symbol::LBRACK), true);
 
-  TEST(TYPEBEGSYS, tl->FSYS, 109);
+  TEST(type_set, tl->FSYS, 109);
 
-  while (TYPEBEGSYS.test(static_cast<int>(symbol))) {
+  while (type_set.test(static_cast<int>(symbol))) {
     TYPF(block_local, TSYS, TP, RF, SZ);
     OTP = TP;
     ORF = RF;
@@ -887,7 +887,7 @@ void C_COMPONENTDECLARATION(TypLocal *tl) {
     } else {
       error(14);
     }
-    su = TYPEBEGSYS;
+    su = type_set;
     su.set(static_cast<int>(Symbol::RSETBRACK), true);
     TEST(su, tl->FSYS, 108);
   }
@@ -938,13 +938,13 @@ void TYPF(BlockLocal *bl, SymbolSet FSYS, Types &types, int64_t &RF,
   tl.TP = Types::NOTYP;
   tl.RF = 0;
   tl.SZ = 0;
-  TEST(TYPEBEGSYS, FSYS, 10);
+  TEST(type_set, FSYS, 10);
 
   if (symbol == Symbol::CONSTSY) {
     INSYMBOL();
   }
 
-  if (TYPEBEGSYS.test(static_cast<int>(symbol))) {
+  if (type_set.test(static_cast<int>(symbol))) {
     if (symbol == Symbol::SHORTSY || symbol == Symbol::LONGSY ||
         symbol == Symbol::UNSIGNEDSY) {
       INSYMBOL();
@@ -952,7 +952,7 @@ void TYPF(BlockLocal *bl, SymbolSet FSYS, Types &types, int64_t &RF,
           symbol == Symbol::UNSIGNEDSY) {
         INSYMBOL();
       }
-      TEST(TYPEBEGSYS, FSYS, 10);
+      TEST(type_set, FSYS, 10);
     }
 
     if (symbol == Symbol::IDENT) {
@@ -1020,7 +1020,7 @@ void TYPF(BlockLocal *bl, SymbolSet FSYS, Types &types, int64_t &RF,
 
 void PARAMETERLIST(BlockLocal *bl) {
   SymbolSet su, sv;
-  su = TYPEBEGSYS;
+  su = type_set;
   su.set(static_cast<int>(Symbol::RPARENT), true);
   su.set(static_cast<int>(Symbol::VALUESY), true);
   INSYMBOL();
@@ -1030,7 +1030,7 @@ void PARAMETERLIST(BlockLocal *bl) {
   // int PCNT;
   bl->PCNT = 0;
 
-  while (TYPEBEGSYS.test(static_cast<int>(symbol)) ||
+  while (type_set.test(static_cast<int>(symbol)) ||
          symbol == Symbol::VALUESY) {
     bool VALUEFOUND;
     if (symbol == Symbol::VALUESY) {
@@ -1207,7 +1207,7 @@ void FUNCDECLARATION(BlockLocal *bl, Types TP, int64_t RF, int64_t SZ) {
     MAINFUNC = T0;
   int LCSAV = line_count;
   EMIT(10);
-  su = bl->FSYS | STATBEGSYS | ASSIGNBEGSYS | DECLBEGSYS;
+  su = bl->FSYS | keyword_set | assigners_set | declaration_set;
   su.set(static_cast<int>(Symbol::LSETBRACK), true);
   BLOCK(bl->blkil, su, ISFUN, bl->LEVEL + 1, T0);
   EMIT(32 + ISFUN);
@@ -1228,7 +1228,7 @@ void FUNCDECLARATION(BlockLocal *bl, Types TP, int64_t RF, int64_t SZ) {
   } else {
     error(104);
   }
-  su = DECLBEGSYS;
+  su = declaration_set;
   su.set(static_cast<int>(Symbol::INCLUDESY), true);
   su.set(static_cast<int>(Symbol::EOFSY), true);
   TEST(su, bl->FSYS, 6);
@@ -1418,7 +1418,7 @@ void PROCDECLARATION(BlockLocal *bl) {
 
   int LCSAV = line_count;
   EMIT(10);
-  su = bl->FSYS | STATBEGSYS | ASSIGNBEGSYS | DECLBEGSYS;
+  su = bl->FSYS | keyword_set | assigners_set | declaration_set;
   su.set(static_cast<int>(Symbol::RSETBRACK), true);
   BLOCK(bl->blkil, su, ISFUN, bl->LEVEL + 1, T0);
   EMIT(32 + ISFUN);
@@ -1440,7 +1440,7 @@ void PROCDECLARATION(BlockLocal *bl) {
   } else {
     error(104);
   }
-  su = DECLBEGSYS;
+  su = declaration_set;
   su.set(static_cast<int>(Symbol::INCLUDESY), true);
   su.set(static_cast<int>(Symbol::EOFSY), true);
   TEST(su, bl->FSYS, 6);
@@ -1554,7 +1554,7 @@ void VARIABLEDECLARATION(BlockLocal *bl) {
               TP = ATAB[RF].ELTYP;
               RF = ATAB[RF].ELREF;
             }
-            if (!STANTYPS.test(static_cast<int>(TP))) {
+            if (!standard_set.test(static_cast<int>(TP))) {
               error(137);
             }
             INSYMBOL();

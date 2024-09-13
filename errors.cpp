@@ -12,7 +12,7 @@
 
 #define EXPORT_CS_ERRORS
 #include "cs_errors.h"
-namespace Cstar {
+namespace cs {
 using std::cin;
 using std::cout;
 using std::exit;

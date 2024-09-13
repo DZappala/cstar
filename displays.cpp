@@ -9,7 +9,7 @@
 #include <cstring>
 #include <print>
 #include <string_view>
-namespace Cstar {
+namespace cs {
 using std::array;
 using std::print;
 using std::println;

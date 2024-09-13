@@ -13,7 +13,7 @@
 #include <iostream>
 #include <numbers>
 #include <print>
-namespace Cstar {
+namespace cs {
 using std::cout;
 using std::println;
 using std::numbers::ln10;

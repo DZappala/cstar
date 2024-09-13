@@ -9,7 +9,7 @@
 #include "cs_errors.h"
 #include "cs_global.h"
 
-namespace Cstar {
+namespace cs {
 using std::isdigit;
 using std::print;
 using std::println;
@@ -486,10 +486,10 @@ label1:
     symbol_local.J = NKW;
     do {
       symbol_local.K = (symbol_local.I + symbol_local.J) / 2;
-      if (strcmp(ID.data(), Cstar::key[symbol_local.K]) <= 0) {
+      if (strcmp(ID.data(), cs::key[symbol_local.K]) <= 0) {
         symbol_local.J = symbol_local.K - 1;
       }
-      if (strcmp(ID.data(), Cstar::key[symbol_local.K]) >= 0) {
+      if (strcmp(ID.data(), cs::key[symbol_local.K]) >= 0) {
         symbol_local.I = symbol_local.K + 1;
       }
     } while (symbol_local.I <= symbol_local.J);
@@ -498,7 +498,7 @@ label1:
     } else {
       symbol = Symbol::IDENT;
     }
-    if (mpi_mode && (NONMPISYS.test(static_cast<int>(symbol)))) {
+    if (mpi_mode && (non_mpi_set.test(static_cast<int>(symbol)))) {
       error(145);
     }
   } else if (isdigit(CH) != 0) {
@@ -806,7 +806,7 @@ label1:
     goto label1;
   }
   symbol_count++;
-  if (EXECSYS.test(static_cast<int>(symbol))) {
+  if (execution_set.test(static_cast<int>(symbol))) {
     execution_count++;
   }
   if (symbol == Symbol::UNIONSY) {

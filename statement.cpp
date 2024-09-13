@@ -6,7 +6,7 @@
 #include "cs_global.h"
 #include "cs_interpret.h"
 
-namespace Cstar {
+namespace cs {
 extern void NEXTCH();
 extern void VARIABLEDECLARATION(BlockLocal *);
 extern void CONSTANTDECLARATION(BlockLocal *);
@@ -56,8 +56,8 @@ void STATEMENT(BlockLocal *block_local, SymbolSet &FSYS) {
   SymbolSet sv;
   SYMSAV = symbol;
   // INSYMBOL();
-  if (STATBEGSYS.test(static_cast<int>(symbol)) ||
-      ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
+  if (keyword_set.test(static_cast<int>(symbol)) ||
+      assigners_set.test(static_cast<int>(symbol))) {
     if (symbol == Symbol::LSETBRACK) // BEGINSY ??
     {
       COMPOUNDSTATEMENT(block_local);
@@ -113,7 +113,7 @@ void STATEMENT(BlockLocal *block_local, SymbolSet &FSYS) {
       EMIT(111);
     }
   }
-  if (ASSIGNBEGSYS.test(static_cast<int>(SYMSAV)) ||
+  if (assigners_set.test(static_cast<int>(SYMSAV)) ||
       (SYMSAV == Symbol::DOSY || SYMSAV == Symbol::JOINSY ||
        SYMSAV == Symbol::RETURNSY || SYMSAV == Symbol::BREAKSY ||
        SYMSAV == Symbol::CONTSY || SYMSAV == Symbol::SEMICOLON ||
@@ -138,14 +138,14 @@ void COMPOUNDSTATEMENT(BlockLocal *bl) {
   int64_t X;
   SymbolSet su, sv;
   INSYMBOL();
-  su = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
+  su = declaration_set | keyword_set | assigners_set;
   // su.set(static_cast<int>(RSETBRACK), true);  ??
   sv = bl->FSYS;
   sv.set(static_cast<int>(Symbol::RSETBRACK), true);
   TEST(su, sv, 123);
-  while (DECLBEGSYS.test(static_cast<int>(symbol)) ||
-         STATBEGSYS.test(static_cast<int>(symbol)) ||
-         ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
+  while (declaration_set.test(static_cast<int>(symbol)) ||
+         keyword_set.test(static_cast<int>(symbol)) ||
+         assigners_set.test(static_cast<int>(symbol))) {
     if (symbol == Symbol::DEFINESY) {
       CONSTANTDECLARATION(bl);
     }
@@ -169,14 +169,14 @@ void COMPOUNDSTATEMENT(BlockLocal *bl) {
       } else {
         INSYMBOL();
       }
-    } else if (STATBEGSYS.test(static_cast<int>(symbol)) ||
-               ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
+    } else if (keyword_set.test(static_cast<int>(symbol)) ||
+               assigners_set.test(static_cast<int>(symbol))) {
       su = bl->FSYS;
       su.set(static_cast<int>(Symbol::RSETBRACK), true);
       su.set(static_cast<int>(Symbol::SEMICOLON), true);
       STATEMENT(bl, su);
     }
-    su = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
+    su = declaration_set | keyword_set | assigners_set;
     su.set(static_cast<int>(Symbol::RSETBRACK), true);
     TEST(su, bl->FSYS, 6);
   }
@@ -458,7 +458,7 @@ void BLOCKSTATEMENT(BlockLocal *bl) {
   BTAB[PRB].PSIZE = bl->DX;
   su = 0;
   su.set(static_cast<int>(Symbol::LSETBRACK), true);
-  sv = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
+  sv = declaration_set | keyword_set | assigners_set;
   TEST(su, sv, 3);
   INSYMBOL();
   EMIT1(18, PRT);
@@ -490,14 +490,14 @@ void BLOCKSTATEMENT(BlockLocal *bl) {
       } else {
         INSYMBOL();
       }
-    } else if (STATBEGSYS.test(static_cast<int>(symbol)) ||
-               ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
+    } else if (keyword_set.test(static_cast<int>(symbol)) ||
+               assigners_set.test(static_cast<int>(symbol))) {
       su = bl->FSYS;
       su.set(static_cast<int>(Symbol::SEMICOLON), true);
       su.set(static_cast<int>(Symbol::RSETBRACK), true);
       STATEMENT(bl, su);
     }
-    su = DECLBEGSYS | STATBEGSYS | ASSIGNBEGSYS;
+    su = declaration_set | keyword_set | assigners_set;
     su.set(static_cast<int>(Symbol::RSETBRACK), true);
     TEST(su, bl->FSYS, 6);
   }
@@ -915,7 +915,7 @@ void OUTPUTSTATEMENT(BlockLocal *bl) {
           su.set(static_cast<int>(Symbol::OUTSTR), true);
           su.set(static_cast<int>(Symbol::SEMICOLON), true);
           EXPRESSION(bl, su, X);
-          if (!(STANTYPS.test(static_cast<int>(X.types)))) {
+          if (!(standard_set.test(static_cast<int>(X.types)))) {
             error(41);
           }
           if (X.types == Types::REALS) {
@@ -975,7 +975,7 @@ void CASELABEL(SwitchLocal *switch_local) {
 
 void ONECASE(SwitchLocal *switch_local) {
   SymbolSet su;
-  if (CONSTBEGSYS.test(static_cast<int>(symbol))) {
+  if (base_set.test(static_cast<int>(symbol))) {
     CASELABEL(switch_local);
     if (symbol == Symbol::COLON) {
       INSYMBOL();
@@ -989,8 +989,8 @@ void ONECASE(SwitchLocal *switch_local) {
     su.set(static_cast<int>(Symbol::DEFAULTSY), true);
     su.set(static_cast<int>(Symbol::RSETBRACK), true);
 
-    while (STATBEGSYS.test(static_cast<int>(symbol)) ||
-           ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
+    while (keyword_set.test(static_cast<int>(symbol)) ||
+           assigners_set.test(static_cast<int>(symbol))) {
       STATEMENT(switch_local->bl, su);
     }
 
@@ -1074,8 +1074,8 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
 
     switch_local.LC3 = line_count;
 
-    while (STATBEGSYS.test(static_cast<int>(symbol)) ||
-           ASSIGNBEGSYS.test(static_cast<int>(symbol))) {
+    while (keyword_set.test(static_cast<int>(symbol)) ||
+           assigners_set.test(static_cast<int>(symbol))) {
       su = block_local->FSYS;
       su.set(static_cast<int>(Symbol::SEMICOLON), true);
       su.set(static_cast<int>(Symbol::RSETBRACK), true);

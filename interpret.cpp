@@ -17,7 +17,7 @@
 #define FALS 0
 #define COMMAX 30
 
-namespace Cstar {
+namespace cs {
 using std::cout;
 using std::getc;
 using std::print;
@@ -2492,7 +2492,7 @@ void INTERPRET() {
       initialize_compiler();
       strcpy(PROGNAME.data(), "PROGRAM       ");
       MAINFUNC = -1;
-      BLOCK(il, DECLBEGSYS, false, 1, tab_index);
+      BLOCK(il, declaration_set, false, 1, tab_index);
       if (symbol != Symbol::EOFSY)
         error(22);
       if (BTAB[2].VSIZE + WORKSIZE > STMAX)

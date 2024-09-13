@@ -64,29 +64,87 @@ CMAKE_BINARY_DIR = /home/dom/projects/pace/parallel/cstar
 
 # The main recursive "all" target.
 all: CMakeFiles/cstar.dir/all
+all: FTXUI/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
-preinstall:
+preinstall: FTXUI/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
 clean: CMakeFiles/cstar.dir/clean
+clean: FTXUI/clean
 .PHONY : clean
+
+#=============================================================================
+# Directory level rules for directory FTXUI
+
+# Recursive "all" directory target.
+FTXUI/all: FTXUI/CMakeFiles/screen.dir/all
+FTXUI/all: FTXUI/CMakeFiles/dom.dir/all
+FTXUI/all: FTXUI/CMakeFiles/component.dir/all
+FTXUI/all: FTXUI/examples/all
+FTXUI/all: FTXUI/doc/all
+.PHONY : FTXUI/all
+
+# Recursive "preinstall" directory target.
+FTXUI/preinstall: FTXUI/examples/preinstall
+FTXUI/preinstall: FTXUI/doc/preinstall
+.PHONY : FTXUI/preinstall
+
+# Recursive "clean" directory target.
+FTXUI/clean: FTXUI/CMakeFiles/screen.dir/clean
+FTXUI/clean: FTXUI/CMakeFiles/dom.dir/clean
+FTXUI/clean: FTXUI/CMakeFiles/component.dir/clean
+FTXUI/clean: FTXUI/examples/clean
+FTXUI/clean: FTXUI/doc/clean
+.PHONY : FTXUI/clean
+
+#=============================================================================
+# Directory level rules for directory FTXUI/doc
+
+# Recursive "all" directory target.
+FTXUI/doc/all:
+.PHONY : FTXUI/doc/all
+
+# Recursive "preinstall" directory target.
+FTXUI/doc/preinstall:
+.PHONY : FTXUI/doc/preinstall
+
+# Recursive "clean" directory target.
+FTXUI/doc/clean:
+.PHONY : FTXUI/doc/clean
+
+#=============================================================================
+# Directory level rules for directory FTXUI/examples
+
+# Recursive "all" directory target.
+FTXUI/examples/all:
+.PHONY : FTXUI/examples/all
+
+# Recursive "preinstall" directory target.
+FTXUI/examples/preinstall:
+.PHONY : FTXUI/examples/preinstall
+
+# Recursive "clean" directory target.
+FTXUI/examples/clean:
+.PHONY : FTXUI/examples/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/cstar.dir
 
 # All Build rule for target.
-CMakeFiles/cstar.dir/all:
+CMakeFiles/cstar.dir/all: FTXUI/CMakeFiles/screen.dir/all
+CMakeFiles/cstar.dir/all: FTXUI/CMakeFiles/dom.dir/all
+CMakeFiles/cstar.dir/all: FTXUI/CMakeFiles/component.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cstar.dir/build.make CMakeFiles/cstar.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cstar.dir/build.make CMakeFiles/cstar.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11 "Built target cstar"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=26,27,28,29,30,31,32,33,34,35,36 "Built target cstar"
 .PHONY : CMakeFiles/cstar.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/cstar.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 11
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 84
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/cstar.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 0
 .PHONY : CMakeFiles/cstar.dir/rule
@@ -99,6 +157,85 @@ cstar: CMakeFiles/cstar.dir/rule
 CMakeFiles/cstar.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/cstar.dir/build.make CMakeFiles/cstar.dir/clean
 .PHONY : CMakeFiles/cstar.dir/clean
+
+#=============================================================================
+# Target rules for target FTXUI/CMakeFiles/screen.dir
+
+# All Build rule for target.
+FTXUI/CMakeFiles/screen.dir/all:
+	$(MAKE) $(MAKESILENT) -f FTXUI/CMakeFiles/screen.dir/build.make FTXUI/CMakeFiles/screen.dir/depend
+	$(MAKE) $(MAKESILENT) -f FTXUI/CMakeFiles/screen.dir/build.make FTXUI/CMakeFiles/screen.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=77,78,79,80,81,82,83,84 "Built target screen"
+.PHONY : FTXUI/CMakeFiles/screen.dir/all
+
+# Build rule for subdir invocation for target.
+FTXUI/CMakeFiles/screen.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 8
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 FTXUI/CMakeFiles/screen.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 0
+.PHONY : FTXUI/CMakeFiles/screen.dir/rule
+
+# Convenience name for target.
+screen: FTXUI/CMakeFiles/screen.dir/rule
+.PHONY : screen
+
+# clean rule for target.
+FTXUI/CMakeFiles/screen.dir/clean:
+	$(MAKE) $(MAKESILENT) -f FTXUI/CMakeFiles/screen.dir/build.make FTXUI/CMakeFiles/screen.dir/clean
+.PHONY : FTXUI/CMakeFiles/screen.dir/clean
+
+#=============================================================================
+# Target rules for target FTXUI/CMakeFiles/dom.dir
+
+# All Build rule for target.
+FTXUI/CMakeFiles/dom.dir/all: FTXUI/CMakeFiles/screen.dir/all
+	$(MAKE) $(MAKESILENT) -f FTXUI/CMakeFiles/dom.dir/build.make FTXUI/CMakeFiles/dom.dir/depend
+	$(MAKE) $(MAKESILENT) -f FTXUI/CMakeFiles/dom.dir/build.make FTXUI/CMakeFiles/dom.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76 "Built target dom"
+.PHONY : FTXUI/CMakeFiles/dom.dir/all
+
+# Build rule for subdir invocation for target.
+FTXUI/CMakeFiles/dom.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 48
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 FTXUI/CMakeFiles/dom.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 0
+.PHONY : FTXUI/CMakeFiles/dom.dir/rule
+
+# Convenience name for target.
+dom: FTXUI/CMakeFiles/dom.dir/rule
+.PHONY : dom
+
+# clean rule for target.
+FTXUI/CMakeFiles/dom.dir/clean:
+	$(MAKE) $(MAKESILENT) -f FTXUI/CMakeFiles/dom.dir/build.make FTXUI/CMakeFiles/dom.dir/clean
+.PHONY : FTXUI/CMakeFiles/dom.dir/clean
+
+#=============================================================================
+# Target rules for target FTXUI/CMakeFiles/component.dir
+
+# All Build rule for target.
+FTXUI/CMakeFiles/component.dir/all: FTXUI/CMakeFiles/screen.dir/all
+FTXUI/CMakeFiles/component.dir/all: FTXUI/CMakeFiles/dom.dir/all
+	$(MAKE) $(MAKESILENT) -f FTXUI/CMakeFiles/component.dir/build.make FTXUI/CMakeFiles/component.dir/depend
+	$(MAKE) $(MAKESILENT) -f FTXUI/CMakeFiles/component.dir/build.make FTXUI/CMakeFiles/component.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/dom/projects/pace/parallel/cstar/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25 "Built target component"
+.PHONY : FTXUI/CMakeFiles/component.dir/all
+
+# Build rule for subdir invocation for target.
+FTXUI/CMakeFiles/component.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 73
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 FTXUI/CMakeFiles/component.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar/CMakeFiles 0
+.PHONY : FTXUI/CMakeFiles/component.dir/rule
+
+# Convenience name for target.
+component: FTXUI/CMakeFiles/component.dir/rule
+.PHONY : component
+
+# clean rule for target.
+FTXUI/CMakeFiles/component.dir/clean:
+	$(MAKE) $(MAKESILENT) -f FTXUI/CMakeFiles/component.dir/build.make FTXUI/CMakeFiles/component.dir/clean
+.PHONY : FTXUI/CMakeFiles/component.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

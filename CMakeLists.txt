@@ -20,7 +20,8 @@ set(SOURCE_FILES lexer.cpp
         displays.cpp)
 
 project(cstar LANGUAGES CXX VERSION 1.0.0)
-find_package(ftxui 5 REQUIRED)
+#find_package(ftxui 5 REQUIRED)
+add_subdirectory(FTXUI)
 add_executable(cstar ${SOURCE_FILES} ${HEADERS})
 
 #add_executable(cstar main.cpp)

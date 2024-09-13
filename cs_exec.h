@@ -4,9 +4,10 @@
 
 #ifndef CSTAR_CS_EXEC_H
 #define CSTAR_CS_EXEC_H
+#include <sstream>
+
 #include "cs_global.h"
 #include "cs_interpret.h"
-#include <sstream>
 
 struct ExLocal {
   ExLocal() = default;
@@ -20,9 +21,9 @@ struct ExLocal {
   int TGAP = 0;
   double RH1 = 0;
 
-  Cstar::ORDER IR{};
+  cs::ORDER IR{};
   bool B1 = false;
-  Cstar::PROCPNT NEWPROC = nullptr;
+  cs::PROCPNT NEWPROC = nullptr;
   // InterpLocal *il;
   double log10 = 0.0;
   std::stringbuf buf;

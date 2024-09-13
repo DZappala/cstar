@@ -8,7 +8,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <numbers>
-namespace Cstar {
+namespace cs {
 using std::numbers::ln2;
 
 #define OPCHMAX 30000 /*MAXIMUM NUMBER OF OPEN CHANNELS*/
