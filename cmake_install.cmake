@@ -1,4 +1,4 @@
-# Install script for directory: /home/dom/projects/pace/parallel/cstar
+# Install script for directory: /home/dom/projects/pace/parallel/cstar_dev
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -44,7 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/dom/projects/pace/parallel/cstar/FTXUI/cmake_install.cmake")
+  include("/home/dom/projects/pace/parallel/cstar_dev/FTXUI/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -55,5 +55,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/dom/projects/pace/parallel/cstar/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/dom/projects/pace/parallel/cstar_dev/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

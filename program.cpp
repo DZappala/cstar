@@ -9,8 +9,8 @@
 #include <string>
 #include <unistd.h>
 
-#include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/component/component.hpp>
+#include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
 
 #define EXPORT_CS_GLOBAL
@@ -352,31 +352,24 @@ namespace cs {
     // auto program() -> void {
     if (interactive) {
       using namespace ftxui;
-      using ftxui::FlexboxConfig...;
+      using ftxui::FlexboxConfig;
       using ftxui::ScreenInteractive, ftxui::Renderer, ftxui::Button,
         ftxui::text, ftxui::hcenter, ftxui::vbox, ftxui::bold, ftxui::dim,
-        ftxui::Event..., Container::Horizontal, Container::Vertical,
-        Container::Stacked, ftxui::Element..., ftxui::Component...,
-        ftxui::ComponentBase..., ftxui::flexbox, ftxui::FlexboxConfig...;
-
-      using FlexboxConfig::AlignContent..., FlexboxConfig::AlignItems...,
-        FlexboxConfig::Direction..., FlexboxConfig::JustifyContent...,
-        FlexboxConfig::Wrap...;
-
-      using AlignContent::Center, AlignItems::Center, Direction::Column,
-        JustifyContent::Center, Wrap::NoWrap;
+        ftxui::Event, Container::Horizontal, Container::Vertical,
+        Container::Stacked, ftxui::Element, ftxui::Component,
+        ftxui::ComponentBase, ftxui::flexbox, ftxui::FlexboxConfig;
 
       auto screen = ScreenInteractive::Fullscreen();
       int shift = 0;
       constexpr FlexboxConfig main_vertical_flexbox_config{
-        .direction = Column,
-        .wrap = NoWrap,
-        .justify_content = JustifyContent::Center,
-        .align_items = AlignItems::Center,
+        .direction = FlexboxConfig::Direction::Column,
+        .wrap = FlexboxConfig::Wrap::NoWrap,
+        .justify_content = FlexboxConfig::JustifyContent::Center,
+        .align_items = FlexboxConfig::AlignItems::Center,
         .gap_x = 10,
       };
 
-      const auto head_paragraph_flexbox = flexbox(
+      const Element head_paragraph_flexbox = flexbox(
         [&] {
           const string heading =
             "C* Compiler \nand parallel computer simulation system";
@@ -389,32 +382,16 @@ namespace cs {
             text(copyright) | hcenter | dim
           };
         }(),
-        main_vertical_flexbox_config
+        {
+          .direction = FlexboxConfig::Direction::Column,
+          .wrap = FlexboxConfig::Wrap::NoWrap,
+          .justify_content = FlexboxConfig::JustifyContent::Center,
+          .align_items = FlexboxConfig::AlignItems::Center,
+          .gap_x = 10,
+        }
       );
 
-      // auto usage_paragraph_rendeerer = ftxui::Renderer(
-      //   [&] {
-      //     string usage = "Usage: cstar [-i] [-h] [-l] [-m] [-Xabcrst] [file]";
-      //     string no_operands = "no operands implies -i";
-      //     string i =
-      //       "i  interactive - if file is specified, it will be OPEN'ed";
-      //     string h = "h  display this help and exit";
-      //     string l = "l  display listing on the console";
-      //     string m = "m  set MPI ON";
-      //     string file = "file  compile and execute a C* file (no -i switch)";
-      //     string X =
-      //       "X  execution options, combined in any order after X (no spaces)";
-      //     string a = "a  display the array table";
-      //     string b = "b  display the block table";
-      //     string c = "c  display the generated interpreter code";
-      //     string r = "r  display the real constant table";
-      //     string s = "s  display the symbol table";
-      //     string t = "t  trace interpreter instruction execution";
-      //     return ftxui::vbox({});
-      //   }
-      // );
-
-      const auto basic_usage_flexbox = flexbox(
+      const Element basic_usage_flexbox = flexbox(
         [&] {
           const string basic_usage = "Basic Commands:";
           const string open =
@@ -434,35 +411,44 @@ namespace cs {
             text(help)
           };
         }(),
-        main_vertical_flexbox_config
+        {
+          .direction = FlexboxConfig::Direction::Column,
+          .wrap = FlexboxConfig::Wrap::NoWrap,
+          .justify_content = FlexboxConfig::JustifyContent::Center,
+          .align_items = FlexboxConfig::AlignItems::FlexStart,
+          .gap_x = 10,
+        }
       );
 
-      const auto exit_button = Button(
+      const Component exit_button = Button(
         "Exit",
         [&] { screen.Exit(); },
         ButtonOption::Animated()
       );
 
-      Element main_flex = flexbox(
-        [&] {
-          return Elements{
-            head_paragraph_flexbox,
-            basic_usage_flexbox,
-            exit_button->Render() | hcenter,
-          };
-        }(),
-        main_vertical_flexbox_config
-      );
+      const auto main_flex = [&] {
+        return flexbox(
+          [&] {
+            return Elements{
+              head_paragraph_flexbox,
+              basic_usage_flexbox,
+            };
+          }(),
+          {
+            .direction = FlexboxConfig::Direction::Column,
+            .wrap = FlexboxConfig::Wrap::NoWrap,
+            .justify_content = FlexboxConfig::JustifyContent::Center,
+            .align_items = FlexboxConfig::AlignItems::Center,
+            .gap_x = 10,
+          }
+        );
+      };
 
-      auto main_renderer = Renderer(
-        Vertical(main_content),
-        [&] {
-          return vbox(
-            {
-              exit_button->Render() | hcenter,
-            }
-          );
-        }
+      const auto main_container = Vertical({{exit_button},});
+
+      const Component main_renderer = Renderer(
+        main_container,
+        [&] { return vbox({main_flex(),}); }
       );
 
       std::atomic refresh_ui_continue = true;
@@ -536,6 +522,28 @@ namespace cs {
     if (SRCOPEN)
       fclose(SRC);
     return {};
+
+    // auto usage_paragraph_rendeerer = ftxui::Renderer(
+    //   [&] {
+    //     string usage = "Usage: cstar [-i] [-h] [-l] [-m] [-Xabcrst] [file]";
+    //     string no_operands = "no operands implies -i";
+    //     string i =
+    //       "i  interactive - if file is specified, it will be OPEN'ed";
+    //     string h = "h  display this help and exit";
+    //     string l = "l  display listing on the console";
+    //     string m = "m  set MPI ON";
+    //     string file = "file  compile and execute a C* file (no -i switch)";
+    //     string X =
+    //       "X  execution options, combined in any order after X (no spaces)";
+    //     string a = "a  display the array table";
+    //     string b = "b  display the block table";
+    //     string c = "c  display the generated interpreter code";
+    //     string r = "r  display the real constant table";
+    //     string s = "s  display the symbol table";
+    //     string t = "t  trace interpreter instruction execution";
+    //     return ftxui::vbox({});
+    //   }
+    // );
   }
 } // namespace Cstar
 
