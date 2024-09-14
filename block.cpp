@@ -13,7 +13,7 @@ namespace cs {
 using OptionsLocal = struct {
   Symbol MYSY;
 };
-extern auto inCLUDEFLAG() -> bool;
+extern auto
 extern auto RESULTTYPE(Types A, Types B) -> Types;
 extern auto SUMRESULTTYPE(Types A, Types B) -> Types;
 extern auto COMPATIBLE(Item X, Item Y) -> bool;
@@ -128,7 +128,7 @@ auto LOC(BlockLocal *bl, const ALFA &ID) -> int64_t {
   I = bl->NUMWITH;
   FOUND = false;
   while (I > 0 && !FOUND) {
-    J = WITHTAB[I];
+    J = WITH_TAB[I];
     while (strcmp(TAB[J].name.c_str(), ID.c_str()) != 0) {
       J = TAB[J].link;
     }
@@ -150,9 +150,9 @@ auto LOC(BlockLocal *bl, const ALFA &ID) -> int64_t {
       I = I - 1;
     } while (I >= 0 && J == 0);
   }
-  //        fprintf(STDOUT, "lookup %s\n", ID);
+  //        fprintf(STANDARD_OUTPUT, "lookup %s\n", ID);
   //        if (J != 0 && strcmp(ID, "SIZEOF        ") == 0)
-  //            fprintf(STDOUT, "sizeof %d\n", J);
+  //            fprintf(STANDARD_OUTPUT, "sizeof %d\n", J);
   if (J == 0 && bl->UNDEFMSGFLAG) {
     error(0);
   }
@@ -1208,8 +1208,8 @@ void BLOCK(InterpLocal *interp_local, SymbolSet FSYS, bool is_function,
   BTAB[block_local.PRB].VSIZE = block_local.DX;
   BTAB[block_local.PRB].VSIZE =
       BTAB[block_local.PRB].VSIZE + block_local.MAXNUMWITH;
-  if ((symbol_count == 1) && (!inCLUDEFLAG()))
-    LOCATION[LNUM] = line_count;
+  if ((symbol_count == 1) && (!INCLUDE_FLAG()))
+    LOCATION[LINE_NUMBER] = line_count;
 }
 
 } // namespace Cstar

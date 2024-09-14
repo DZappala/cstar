@@ -5,9 +5,12 @@
 #include "cs_exec.h"
 #include "cs_global.h"
 #include "cs_interpret.h"
+
 #include <cmath>
 #include <cstdlib>
 #include <numbers>
+#include <print>
+
 namespace cs {
 using std::numbers::ln2;
 
@@ -101,11 +104,11 @@ int HOPS(int SOURCE, int DEST) {
   return DIST;
 }
 
-int GRPDELAY(InterpLocal *il, int lSRC, int DEST, int LEN) {
+int GRPDELAY(InterpLocal *il, int lSOURCE, int DEST, int LEN) {
   int NUMPACK, NUMHOP, TD, T1, T2;
   int AVEFAN = 0, MAXFAN = 0;
   NUMPACK = LEN / 3;
-  NUMHOP = HOPS(lSRC, DEST);
+  NUMHOP = HOPS(lSOURCE, DEST);
   switch (topology) {
   case Symbol::HYPERCUBESY:
     AVEFAN = TOPDIM;
@@ -143,7 +146,7 @@ int GRPDELAY(InterpLocal *il, int lSRC, int DEST, int LEN) {
       TD += (NUMPACK - 1) * T2;
     }
   }
-  if (lSRC == DEST) {
+  if (lSOURCE == DEST) {
     TD = NUMPACK * MPINODETIME * MAXFAN;
   }
   return TD;
@@ -243,7 +246,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
   PROCPNT proc;
   // memset(&xl, 0, sizeof(xl));
   xl.il = il;
-  // fprintf(STDOUT, "execlib call (%d)\n", ID);
+  // fprintf(STANDARD_OUTPUT, "execlib call (%d)\n", ID);
   // WITH CURPR
   switch (lID) {
   case 1: // integer abs
@@ -324,7 +327,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         il->S[CURPR->T] = 0;
       }
     }
-    // fprintf(STDOUT, "calloc len=%d at=%d\n", xl.H1, xl.H2);
+    // fprintf(STANDARD_OUTPUT, "calloc len=%d at=%d\n", xl.H1, xl.H2);
     break;
   case 19: // realloc
     xl.H1 = il->S[CURPR->T - 1];
@@ -408,7 +411,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     while (il->STARTMEM[xl.H1 + xl.H2] == xl.H1) {
       xl.H2 = xl.H2 + 1;
     }
-    // fprintf(STDOUT, "free len=%d at=%d\n", xl.H2, xl.H1);
+    // fprintf(STANDARD_OUTPUT, "free len=%d at=%d\n", xl.H2, xl.H1);
     RELEASE(il, xl.H1, xl.H2);
     break;
   case 21:
@@ -2070,7 +2073,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     break;
   }
   default:
-    fprintf(STDOUT, "execlib (%d) currently unimplemented\n", lID);
+    print("execlib (%d) currently unimplemented\n", lID);
     break;
   }
 }

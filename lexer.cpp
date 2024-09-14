@@ -14,6 +14,8 @@ using std::isdigit;
 using std::print;
 using std::println;
 using std::string;
+using std::cout;
+using std::cin;
 
 //    void fatal(int);
 //    void error(int);
@@ -26,11 +28,11 @@ extern void dumpInst(int);
 
 // extern bool eoln(FILE *);
 //  double RNUM; // source local ?
-//  int SLENG;  // source local ?
+//  int STRING_LENGTH;  // source local ?
 //  int eof_count = 0;  // source local ?
 
 void NEXTCH();
-string FILENAME;
+fs::path file_name;
 
 struct IncludeStack {
   FILE *inc{};
@@ -46,7 +48,7 @@ static const int maxiStack = 10;
 static struct std::array<IncludeStack, maxiStack> iStack;
 static int i_stack_index = -1;
 
-auto inCLUDEFLAG() -> bool { return i_stack_index >= 0; }
+auto HasIncludeFlag() -> bool { return i_stack_index >= 0; }
 
 static int look_ahead = -2;
 static bool console_list = false;
@@ -84,18 +86,18 @@ static auto readc(FILE *inf) -> char {
 static auto eoln(FILE *inf) -> bool {
   int ltr = 0;
   bool eln = false;
-  // //        if ((*SRC).eof())
+  // //        if ((*SOURCE).eof())
   // //            return true;
-  //        ch = (*SRC).peek();
+  //        ch = (*SOURCE).peek();
   ltr = fgetc(inf);
   if (ltr >= 0) {
     if (ltr == '\r') {
-      // (*SRC).ignore();
+      // (*SOURCE).ignore();
       ltr = fgetc(inf);
       eln = true;
     }
     if (ltr == '\n') {
-      // (*SRC).ignore(2);
+      // (*SOURCE).ignore(2);
       ltr = fgetc(inf);
       eln = true;
     }
@@ -168,7 +170,7 @@ void INCLUDEDIRECTIVE() {
   int len = 0;
   INSYMBOL();
   if (symbol == Symbol::LSS) {
-    FILENAME = "";
+    file_name = "";
     len = 0;
     // while (((CH >= 'a' && CH <= 'z') || (CH >= 'A' && CH <= 'Z') || (CH >=
     // '0' && CH <= '9') ||
@@ -178,7 +180,7 @@ void INCLUDEDIRECTIVE() {
             CH == '_' || CH == ':') &&
            (len <= FILMAX)) {
       // if (CH >= 'a' && CH <= 'z') CH = CH - 32;  // DE
-      FILENAME += CH;
+      file_name += CH;
       len++;
       NEXTCH();
     }
@@ -186,22 +188,22 @@ void INCLUDEDIRECTIVE() {
     if (symbol == Symbol::GTR || symbol == Symbol::GRSEMI) {
       // #I-
       // needs fixup
-      // ASSIGN(INSRC, FILENAME.c_str());
-      // RESET(INSRC);
+      // ASSIGN(INPUT_SOURCE, file_name.c_str());
+      // RESET(INPUT_SOURCE);
       // #I-
       if (++i_stack_index == maxiStack) {
         error(149);
       }
-      //                if (INSRC != nullptr) // || IOResult() != 0)
+      //                if (INPUT_SOURCE != nullptr) // || IOResult() != 0)
       //                    error(149);
       else {
-        INSRC = fopen(FILENAME.c_str(), "re");
-        if (INSRC == nullptr) {
+        INPUT_SOURCE = std::ifstream(file_name.c_str());
+        if (!INPUT_SOURCE) {
           error(150);
         } else {
-          iStack.at(i_stack_index).fname = FILENAME;
-          iStack.at(i_stack_index).inc = INSRC;
-          INCLUDEFLAG = true;
+          iStack.at(i_stack_index).fname = file_name;
+          iStack.at(i_stack_index).inc = INPUT_SOURCE;
+          INCLUDE_FLAG = true;
           if (i_stack_index == 0) {
             save_symbol_count = symbol_count;
             save_execution_count = execution_count;
@@ -221,57 +223,51 @@ void MAINNEXTCH() {
   if (CC == LL) {
     // end of the buffered line
     // read and buffer another line
-    // if ((*SRC).eof())
-    if (feof(SRC) != 0) {
+    // if ((*SOURCE).eof())
+    if (SOURCE.eof()) {
       CH = static_cast<char>(28);
       goto label37;
     }
     if (error_position != 0) {
-      // std::cout << std::endl;
-      if (console_list)
-        fputc('\n', STDOUT);
-      // (*LIS) << std::endl;
-      fputc('\n', LIS);
+      if (console_list) std::cout << '\n';
+      LISTFILE.put('\n');
       error_position = 0;
     }
-    if (LNUM > 0) {
-      if (LOCATION[LNUM] == line_count && execution_count > 0) {
+    if (LINE_NUMBER > 0) {
+      if (LOCATION[LINE_NUMBER] == line_count && execution_count > 0) {
         EMIT(6);
       }
     }
-    LNUM++;
+    LINE_NUMBER++;
     symbol_count = 0;
     execution_count = 0;
-    // std::cout << LNUM << "     ";
+    // std::cout << LINE_NUMBER << "     ";
     if (console_list) {
-      print(STDOUT, "{:5} ", LNUM);
+      print("{:5} ", LINE_NUMBER);
     }
-    print(LIS, "{:5} ", LNUM);
-    LOCATION[LNUM] = line_count;
-    BREAKALLOW[LNUM] = OKBREAK;
+    print(LISTFILE, "{:5} ", LINE_NUMBER);
+    LOCATION[LINE_NUMBER] = line_count;
+    BREAK_ALLOW[LINE_NUMBER] = OK_BREAK;
     LL = 0;
     CC = 0;
-    while (!eoln(SRC)) {
+    while (SOURCE.peek() != '\n' && !SOURCE.eof()) {
       LL++;
-      // CH = (*SRC).get();
-      CH = static_cast<char>(fgetc(SRC));
+      // CH = (*SOURCE).get();
+      CH = static_cast<char>(SOURCE.get());
       // std::cout << CH;
       if (console_list) {
-        fputc(CH, STDOUT);
+        cout << CH
       }
-      fputc(CH, LIS);
+      LISTFILE.put(CH);
       if (CH == 9) {
         CH = ' ';
       }
       line.str().at(LL) = CH;
     }
-    if (console_list) {
-      fputc('\n', STDOUT);
-    }
-    // std::cout << std::endl;
-    fputc('\n', LIS);
+    if (console_list) { cout << '\n'; }
+    LISTFILE.put('\n');
     LL++;
-    // do_eoln(SRC);
+    // do_eoln(SOURCE);
     line.str().at(LL) = ' ';
   }
   CC++;
@@ -281,35 +277,32 @@ label37:;
 
 void ALTNEXTCH() {
   if (CC2 == LL2) {
-    // if ((*INSRC).eof())
-    if (feof(INSRC) != 0) {
-      //(*INSRC).close();
-      fclose(INSRC);
+    if (INPUT_SOURCE.eof()) {
+      INPUT_SOURCE.close();
       if (--i_stack_index < 0) {
-        INCLUDEFLAG = false;
-        INSRC = nullptr;
+        INCLUDE_FLAG = false;
+        INPUT_SOURCE.close();
         execution_count = save_execution_count;
         symbol_count = save_symbol_count;
         // line_count = SAVELC;  // DE
         MAINNEXTCH();
         return;
       }
-      INSRC = iStack[i_stack_index].inc;
-      FILENAME = iStack[i_stack_index].fname;
+      INPUT_SOURCE = iStack[i_stack_index].inc;
+      file_name = iStack[i_stack_index].fname;
     }
     LL2 = 0;
     CC2 = 0;
-    while (!eoln(INSRC)) {
+    while (INPUT_SOURCE.peek() != '\n' && !INPUT_SOURCE.eof()) {
       LL2++;
-      // CH = (*INSRC).get();
-      CH = fgetc(INSRC);
+      CH = INPUT_SOURCE.get();
       if (CH == '\x09') {
         CH = ' ';
       }
       line2.str().at(LL2) = CH;
     }
     LL2++;
-    //(*INSRC).ignore();
+    //(*INPUT_SOURCE).ignore();
     line2.str().at(LL2) = ' ';
   }
   CC2++;
@@ -317,7 +310,7 @@ void ALTNEXTCH() {
 }
 
 void NEXTCH() {
-  if (inCLUDEFLAG()) {
+  if (HasIncludeFlag()) {
     ALTNEXTCH();
   } else {
     MAINNEXTCH();
@@ -478,7 +471,7 @@ label1:
         }
         ID[symbol_local.K] = CH;
       } else {
-        // fprintf(STDOUT, "long symbol %s\n", ID);
+        // fprintf(STANDARD_OUTPUT, "long symbol %s\n", ID);
       }
       NEXTCH();
     } while (isalnum(CH) || CH == '_');
@@ -722,7 +715,7 @@ label1:
     } else {
       symbol = Symbol::STRNG;
       INUM = SX;
-      SLENG = symbol_local.K;
+      STRING_LENGTH = symbol_local.K;
       SX += symbol_local.K;
     }
   } else if (CH == '/') {
@@ -741,9 +734,9 @@ label1:
         //                    std::cout << " FAILURE TO END A COMMENT" <<
         //                    std::endl;
         if (console_list) {
-          println(STDOUT, "\n\n FAILURE TO END A COMMENT");
+          println("\n\n FAILURE TO END A COMMENT");
         }
-        println(LIS, "\n\n FAILURE TO END A COMMENT");
+        println(LISTFILE, "\n\n FAILURE TO END A COMMENT");
         error_message();
         fatal_error = true;
         error_exit();
@@ -793,9 +786,9 @@ label1:
       //                std::cout << std::endl;
       //                std::cout << " PROGRAM INCOMPLETE" << std::endl;
       if (console_list) {
-        println(STDOUT, "\n\n PROGRAM INCOMPLETE");
+        println("\n\n PROGRAM INCOMPLETE");
       }
-      println(LIS, "\n\n PROGRAM INCOMPLETE");
+      println(LISTFILE, "\n\n PROGRAM INCOMPLETE");
       error_message();
       fatal_error = true;
       error_exit();

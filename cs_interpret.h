@@ -244,7 +244,7 @@ namespace cs {
     std::array<int, BRKMAX + 1> BRKLINE;
     int REF, ADR;
     Types TYP;
-    OBJECTS OBJ;
+    Objects OBJ;
     int NUMBRK; // range 0..BRKMAX
     bool RESTART;
     bool INITFLAG;

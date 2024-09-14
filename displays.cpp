@@ -242,11 +242,11 @@ void dumpInst(int i) {
     print(string_view{}, "%4d: %3d %d,%d %s\n", i, F, X, Y, op);
     break;
   }
-  print(STDOUT, "{}", string_view{});
+  print(STANDARD_OUTPUT, "{}", string_view{});
 }
 void dumpLInst(int idx, int *line) {
   while (LOCATION[*line] <= idx) {
-    println(STDOUT, "Line {:4}", *line);
+    println(STANDARD_OUTPUT, "Line {:4}", *line);
     ++*line;
   }
   dumpInst(idx);
@@ -262,12 +262,12 @@ void dumpSymbols() {
   //        const char *np;
   //
   //        ALFA name;
-  println(STDOUT, "Symbol Table");
-  println(STDOUT, "Indx Name           Link     Object  Type Ref Nm Lev   Addr "
+  println(STANDARD_OUTPUT, "Symbol Table");
+  println(STANDARD_OUTPUT, "Indx Name           Link     Object  Type Ref Nm Lev   Addr "
                   "  Size Fref FLev PP");
   for (int i = 0; i <= tab_index; ++i) {
     // strcpy(name, TAB[ix].NAME);
-    print(STDOUT,
+    print(STANDARD_OUTPUT,
           "{{:4}} {{:.14}} {{:4}} {{:>10}} {{:>5}} {{:3}} {{:2d}} {{:3}} "
           "{{:6}} {{:6}} {{:4}} {{:4}} {{:2d}}",
           i, TAB[i].name, TAB[i].link,
@@ -278,10 +278,10 @@ void dumpSymbols() {
   }
 }
 void dumpArrays() {
-  println(STDOUT, "Array Table");
-  println(STDOUT, "Indx IxTyp ElTyp ERef Low High ElSz Siz");
+  println(STANDARD_OUTPUT, "Array Table");
+  println(STANDARD_OUTPUT, "Indx IxTyp ElTyp ERef Low High ElSz Siz");
   for (int i = 0; i <= atab_index; ++i) {
-    println(STDOUT, "{:4} {:>5} {:>5} {:4} {:3} {:4} {:4} {:3}", i,
+    println(STANDARD_OUTPUT, "{:4} {:>5} {:>5} {:4} {:3} {:4} {:4} {:3}", i,
             types.at(static_cast<int>(ATAB[i].INXTYP)),
             types.at(static_cast<int>(ATAB[i].ELTYP)), ATAB[i].ELREF,
             ATAB[i].LOW, ATAB[i].HIGH, ATAB[i].ELSIZE, ATAB[i].SIZE);
@@ -291,40 +291,40 @@ void dumpBlocks() {
   int idx = 0;
   int lst = 0;
   int cnt = 0;
-  println(STDOUT, "Block Table");
-  println(STDOUT, "  Display");
+  println(STANDARD_OUTPUT, "Block Table");
+  println(STANDARD_OUTPUT, "  Display");
   idx = 1;
   while (idx <= LMAX && DISPLAY.at(idx) > 0) {
-    std::println(STDOUT, "  D{} {}", idx, DISPLAY[idx]);
+    std::println(STANDARD_OUTPUT, "  D{} {}", idx, DISPLAY[idx]);
     idx += 1;
   }
-  std::println(STDOUT, "Indx  Last LstPr PSize VSize PrCnt");
+  std::println(STANDARD_OUTPUT, "Indx  Last LstPr PSize VSize PrCnt");
   for (idx = 0; idx <= btab_index; ++idx) {
-    std::println(STDOUT, "{:4} {:5} {:5} {:5} {:5} {:5}", idx, BTAB[idx].LAST,
+    std::println(STANDARD_OUTPUT, "{:4} {:5} {:5} {:5} {:5} {:5}", idx, BTAB[idx].LAST,
                  BTAB[idx].LASTPAR, BTAB[idx].PSIZE, BTAB[idx].VSIZE,
                  BTAB[idx].PARCNT);
   }
   for (idx = btab_index; idx >= 1; --idx) {
     lst = BTAB[idx].LAST;
-    std::println(STDOUT, "block {} declares", idx);
+    std::println(STANDARD_OUTPUT, "block {} declares", idx);
     cnt = 0;
     while (lst != 0) {
-      std::print(STDOUT, " {}", TAB[lst].name);
+      std::print(STANDARD_OUTPUT, " {}", TAB[lst].name);
       if (++cnt % 8 == 0) {
-        std::println(STDOUT, "");
+        std::println(STANDARD_OUTPUT, "");
       }
       lst = TAB[lst].link;
     }
     if (cnt % 8 != 0) {
-      println(STDOUT, "");
+      println(STANDARD_OUTPUT, "");
     }
   }
 }
 void dumpReals() {
-  println(STDOUT, "Real Constants");
-  println(STDOUT, "Indx     RConst  IConval    RConval");
+  println(STANDARD_OUTPUT, "Real Constants");
+  println(STANDARD_OUTPUT, "Indx     RConst  IConval    RConval");
   for (int i = 0; i <= CPNT; ++i) {
-    println(STDOUT, "{:4} {:12.6f} {:6} {:12.6f}", i, CONTABLE.at(i),
+    println(STANDARD_OUTPUT, "{:4} {:12.6f} {:6} {:12.6f}", i, CONTABLE.at(i),
             INITABLE[i].IVAL, INITABLE[i].RVAL);
   }
 }
@@ -361,29 +361,29 @@ void dumpPDES(PROCPNT pd) {
   //        } PRIORITY;
   //        bool SEQON;
   //        bool GROUPREP;
-  println(STDOUT, "**current stack top: {}", pd->T);
-  println(STDOUT, "  block table index: {}", pd->B);
-  println(STDOUT, "         current PC: {}", pd->PC);
-  println(STDOUT, "          stacksize: {}", pd->STACKSIZE);
-  print(STDOUT, "            display: {}", pd->DISPLAY[0]);
+  println(STANDARD_OUTPUT, "**current stack top: {}", pd->T);
+  println(STANDARD_OUTPUT, "  block table index: {}", pd->B);
+  println(STANDARD_OUTPUT, "         current PC: {}", pd->PC);
+  println(STANDARD_OUTPUT, "          stacksize: {}", pd->STACKSIZE);
+  print(STANDARD_OUTPUT, "            display: {}", pd->DISPLAY[0]);
   for (idx = 1; idx <= LMAX; ++idx) {
-    print(STDOUT, ", {}", pd->DISPLAY[idx]);
+    print(STANDARD_OUTPUT, ", {}", pd->DISPLAY[idx]);
   }
-  println(STDOUT, "");
+  println(STANDARD_OUTPUT, "");
   ppid = (pd->PARENT == nullptr) ? -1 : pd->PARENT->PID;
-  println(STDOUT, "             parent: {}", ppid);
-  println(STDOUT, " number of children: {}", pd->NUMCHILDREN);
-  println(STDOUT, "         stack base: {}", pd->BASE);
-  println(STDOUT, "     max child time: {:f}", pd->MAXCHILDTIME);
-  println(STDOUT, "               time: {:f}", pd->TIME);
-  println(STDOUT, "          for level: {}", pd->FORLEVEL);
-  println(STDOUT, "          for index: {}", pd->FORINDEX);
-  println(STDOUT, "          processor: {}", pd->PROCESSOR);
-  println(STDOUT, "      alt processor: {}", pd->ALTPROC);
-  println(STDOUT, "          wake time: {:f}", pd->WAKETIME);
-  println(STDOUT, "              state: {}",
+  println(STANDARD_OUTPUT, "             parent: {}", ppid);
+  println(STANDARD_OUTPUT, " number of children: {}", pd->NUMCHILDREN);
+  println(STANDARD_OUTPUT, "         stack base: {}", pd->BASE);
+  println(STANDARD_OUTPUT, "     max child time: {:f}", pd->MAXCHILDTIME);
+  println(STANDARD_OUTPUT, "               time: {:f}", pd->TIME);
+  println(STANDARD_OUTPUT, "          for level: {}", pd->FORLEVEL);
+  println(STANDARD_OUTPUT, "          for index: {}", pd->FORINDEX);
+  println(STANDARD_OUTPUT, "          processor: {}", pd->PROCESSOR);
+  println(STANDARD_OUTPUT, "      alt processor: {}", pd->ALTPROC);
+  println(STANDARD_OUTPUT, "          wake time: {:f}", pd->WAKETIME);
+  println(STANDARD_OUTPUT, "              state: {}",
           states.at(static_cast<int>(pd->STATE)));
-  println(STDOUT, "         process ID: {}", pd->PID);
+  println(STANDARD_OUTPUT, "         process ID: {}", pd->PID);
   println(STDOUT, "       virtual time: {:f}", pd->VIRTUALTIME);
   println(STDOUT, "         read staus: {}",
           readstatus.at(static_cast<int>(pd->READSTATUS)));

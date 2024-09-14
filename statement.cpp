@@ -17,7 +17,7 @@ extern void TEST(SymbolSet &, SymbolSet &, int N);
 extern void CALL(BlockLocal *, SymbolSet &, int);
 extern void STANDPROC(BlockLocal *, int);
 extern void ENTER(BlockLocal *block_local, const ALFA &identifier,
-                  OBJECTS objects);
+                  Objects objects);
 extern void ENTERBLOCK();
 extern auto TYPE_COMPATIBLE(Item X, Item Y) -> bool;
 extern void BASICEXPRESSION(BlockLocal *, SymbolSet, Item &);
@@ -92,7 +92,7 @@ void STATEMENT(BlockLocal *block_local, SymbolSet &FSYS) {
     } else if (symbol == Symbol::IDENT) {
       I = LOC(block_local, ID);
       if (I != 0) {
-        if (TAB[I].object == OBJECTS::PROZEDURE) {
+        if (TAB[I].object == Objects::Procedure) {
           INSYMBOL();
           if (TAB[I].LEV != 0) {
             CALL(block_local, FSYS, I);
@@ -181,7 +181,7 @@ void COMPOUNDSTATEMENT(BlockLocal *bl) {
     TEST(su, bl->FSYS, 6);
   }
   if (symbol_count == 1) {
-    LOCATION[LNUM] = line_count;
+    LOCATION[LINE_NUMBER] = line_count;
   }
   if (symbol == Symbol::RSETBRACK) {
     INSYMBOL();
@@ -192,12 +192,12 @@ void COMPOUNDSTATEMENT(BlockLocal *bl) {
 
 void FIXBREAKS(int64_t LC1) {
   int64_t LC2;
-  while (BREAKLOC[BREAKPNT] > 0) {
-    LC2 = code[BREAKLOC[BREAKPNT]].Y;
-    code[BREAKLOC[BREAKPNT]].Y = LC1;
-    BREAKLOC[BREAKPNT] = LC2;
+  while (BREAK_LOCATION[BREAK_POINT] > 0) {
+    LC2 = code[BREAK_LOCATION[BREAK_POINT]].Y;
+    code[BREAK_LOCATION[BREAK_POINT]].Y = LC1;
+    BREAK_LOCATION[BREAK_POINT] = LC2;
   }
-  BREAKPNT = BREAKPNT - 1;
+  BREAK_POINT = BREAK_POINT - 1;
 }
 
 void FIXCONTS(int64_t LC1) {
@@ -226,8 +226,8 @@ void IFSTATEMENT(BlockLocal *bl) {
     }
     LC1 = line_count;
     EMIT(11);
-    if (LOCATION[LNUM] == line_count - 1) {
-      LOCATION[LNUM] = line_count;
+    if (LOCATION[LINE_NUMBER] == line_count - 1) {
+      LOCATION[LINE_NUMBER] = line_count;
     }
     if (symbol == Symbol::RPARENT) {
       INSYMBOL();
@@ -241,7 +241,7 @@ void IFSTATEMENT(BlockLocal *bl) {
       LC2 = line_count;
       EMIT(10);
       if (symbol_count == 1) {
-        LOCATION[LNUM] = line_count;
+        LOCATION[LINE_NUMBER] = line_count;
       }
       code[LC1].Y = line_count;
       INSYMBOL();
@@ -261,8 +261,8 @@ void DOSTATEMENT(BlockLocal *bl) {
   LC1 = line_count;
   SymbolSet su;
   INSYMBOL();
-  BREAKPNT = BREAKPNT + 1;
-  BREAKLOC[BREAKPNT] = 0;
+  BREAK_POINT = BREAK_POINT + 1;
+  BREAK_LOCATION[BREAK_POINT] = 0;
   CONTPNT = CONTPNT + 1;
   CONTLOC[CONTPNT] = 0;
   su = bl->FSYS;
@@ -272,7 +272,7 @@ void DOSTATEMENT(BlockLocal *bl) {
   LC2 = line_count;
   if (symbol == Symbol::WHILESY) {
     if (symbol_count == 1) {
-      LOCATION[LNUM] = line_count;
+      LOCATION[LINE_NUMBER] = line_count;
     }
     INSYMBOL();
     if (symbol == Symbol::LPARENT) {
@@ -312,8 +312,8 @@ void WHILESTATEMENT(BlockLocal *bl) {
     error(9);
   }
   LC1 = line_count;
-  BREAKPNT = BREAKPNT + 1;
-  BREAKLOC[BREAKPNT] = 0;
+  BREAK_POINT = BREAK_POINT + 1;
+  BREAK_LOCATION[BREAK_POINT] = 0;
   CONTPNT = CONTPNT + 1;
   CONTLOC[CONTPNT] = 0;
   su = bl->FSYS;
@@ -334,7 +334,7 @@ void WHILESTATEMENT(BlockLocal *bl) {
   EMIT1(10, LC1);
   code[LC2].Y = line_count;
   if (symbol_count == 1) {
-    LOCATION[LNUM] = line_count;
+    LOCATION[LINE_NUMBER] = line_count;
   }
   FIXBREAKS(line_count);
   FIXCONTS(line_count - 1);
@@ -371,8 +371,8 @@ void FORSTATEMENT(BlockLocal *bl) {
   } else {
     error(9);
   }
-  BREAKPNT = BREAKPNT + 1;
-  BREAKLOC[BREAKPNT] = 0;
+  BREAK_POINT = BREAK_POINT + 1;
+  BREAK_LOCATION[BREAK_POINT] = 0;
   CONTPNT = CONTPNT + 1;
   CONTLOC[CONTPNT] = 0;
   if (symbol != Symbol::SEMICOLON) {
@@ -418,7 +418,7 @@ void FORSTATEMENT(BlockLocal *bl) {
   EMIT1(10, LC3);
   code[LC2].Y = line_count;
   if (symbol_count == 1) {
-    LOCATION[LNUM] = line_count;
+    LOCATION[LINE_NUMBER] = line_count;
   }
   FIXBREAKS(line_count);
   FIXCONTS(line_count - 1);
@@ -504,7 +504,7 @@ void BLOCKSTATEMENT(BlockLocal *bl) {
   BTAB[PRB].VSIZE = bl->DX;
   BTAB[PRB].VSIZE = BTAB[PRB].VSIZE + bl->MAXNUMWITH;
   if (symbol_count == 1) {
-    LOCATION[LNUM] = line_count;
+    LOCATION[LINE_NUMBER] = line_count;
   }
   if (symbol == Symbol::RSETBRACK) {
     INSYMBOL();
@@ -667,7 +667,7 @@ void FORALLSTATEMENT(BlockLocal *bl) {
   EMIT(5);
   bl->FLEVEL = bl->FLEVEL - 1;
   if (symbol_count == 1) {
-    LOCATION[LNUM] = line_count;
+    LOCATION[LINE_NUMBER] = line_count;
   }
 }
 
@@ -703,7 +703,7 @@ void FORKSTATEMENT(BlockLocal *bl) {
   if (symbol == Symbol::IDENT) {
     I = LOC(bl, ID);
     if (I != 0) {
-      if (TAB[I].object == OBJECTS::PROZEDURE && TAB[I].LEV != 0) {
+      if (TAB[I].object == Objects::Procedure && TAB[I].LEV != 0) {
         bl->CREATEFLAG = true;
       }
     }
@@ -719,7 +719,7 @@ void FORKSTATEMENT(BlockLocal *bl) {
   EMIT(69);
   code.at(JUMPLC).Y = line_count;
   if (symbol_count == 1) {
-    LOCATION[LNUM] = line_count;
+    LOCATION[LINE_NUMBER] = line_count;
   }
 }
 
@@ -750,8 +750,8 @@ void RETURNSTATEMENT(BlockLocal *bl) {
 }
 
 void BREAKSTATEMENT(BlockLocal *bl) {
-  EMIT1(10, BREAKLOC[BREAKPNT]);
-  BREAKLOC[BREAKPNT] = line_count - 1;
+  EMIT1(10, BREAK_LOCATION[BREAK_POINT]);
+  BREAK_LOCATION[BREAK_POINT] = line_count - 1;
   INSYMBOL();
 }
 
@@ -801,7 +801,7 @@ void MOVESTATEMENT(BlockLocal *bl) {
 //                    INSYMBOL();
 //                } else if (symbol == STRNG)
 //                {
-//                    EMIT1(24, SLENG);
+//                    EMIT1(24, STRING_LENGTH);
 //                    EMIT1(28, INUM);
 //                    INSYMBOL();
 //                } else
@@ -907,7 +907,7 @@ void OUTPUTSTATEMENT(BlockLocal *bl) {
           EMIT(63);
           INSYMBOL();
         } else if (symbol == Symbol::STRNG) {
-          EMIT1(24, SLENG);
+          EMIT1(24, STRING_LENGTH);
           EMIT1(28, INUM);
           INSYMBOL();
         } else {
@@ -1010,8 +1010,8 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
   switch_local.bl = block_local;
   SymbolSet su;
 
-  BREAKPNT = BREAKPNT + 1;
-  BREAKLOC[BREAKPNT] = 0;
+  BREAK_POINT = BREAK_POINT + 1;
+  BREAK_LOCATION[BREAK_POINT] = 0;
   INSYMBOL();
 
   if (symbol == Symbol::LPARENT) {
@@ -1101,7 +1101,7 @@ void SWITCHSTATEMENT(BlockLocal *block_local) {
   EMIT1(10, 0);
   code.at(switch_local.LC2).Y = line_count;
   if (symbol_count == 1) {
-    LOCATION[LNUM] = line_count;
+    LOCATION[LINE_COUNT] = line_count;
   }
 
   if (symbol == Symbol::RSETBRACK) {

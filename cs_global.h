@@ -9,45 +9,49 @@
 #else
 #define GLOBAL_CS_EXPORT extern
 #endif
-#include "cs_defines.h"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <vector>
+
+#include "cs_defines.h"
+
+namespace fs = std::filesystem;
 
 namespace cs {
 #define ArraySize(A) ((sizeof(A)) / (sizeof(A)[0]))
+  inline std::ifstream SOURCE;
+  inline std::ofstream LISTFILE;
+  inline std::ifstream INPUT;
+  inline std::ofstream OUTPUT;
+  inline std::ifstream INPUT_SOURCE;
 
-  //    GLOBAL_CS_EXPORT std::istream *SRC;
-  //    GLOBAL_CS_EXPORT std::ofstream *LIS;
-  //    GLOBAL_CS_EXPORT std::ifstream *INP;
-  //    GLOBAL_CS_EXPORT std::ofstream *OUTP;
-  //    GLOBAL_CS_EXPORT std::ifstream *INSRC;
+  inline bool LISTFILE_FLAG;
+  inline bool INPUTFILE_FLAG;
+  inline bool OUTPUTFILE_FLAG;
+  inline bool INPUTOPEN_FLAG;
+  inline bool OUTPUTOPEN_FLAG;
+  inline bool MUST_RUN_FLAG;
+  inline bool SOURCEOPEN_FLAG;
+  inline bool LISTDEF_FLAG;
+  inline bool END_FLAG;
+  inline int LINE_NUMBER;
 
-  GLOBAL_CS_EXPORT FILE* SRC;
-  GLOBAL_CS_EXPORT FILE* LIS;
-  GLOBAL_CS_EXPORT FILE* INP;
-  GLOBAL_CS_EXPORT FILE* OUTP;
-  GLOBAL_CS_EXPORT FILE* INSRC;
-  GLOBAL_CS_EXPORT FILE* STDIN;
-  GLOBAL_CS_EXPORT FILE* STDOUT;
-
-  GLOBAL_CS_EXPORT bool LISTFILE, INPUTFILE, OUTPUTFILE, INPUTOPEN, OUTPUTOPEN,
-    MUSTRUN, SRCOPEN, LISTDEF;
-  GLOBAL_CS_EXPORT bool ENDFLAG;
-  GLOBAL_CS_EXPORT int LNUM;
-
-  struct ORDER {
+  struct Order {
     int F = 0;
     int X = 0;
     int Y = 0;
   } __attribute__((aligned(16)));
 
-  enum class OBJECTS : std::uint8_t {
-    KONSTANT,
-    VARIABLE,
-    TYPE1,
-    PROZEDURE,
-    FUNKTION,
-    COMPONENT,
-    STRUCTAG
+  enum class Objects : std::uint8_t {
+    Constant,
+    Variable,
+    Type1,
+    Procedure,
+    Function,
+    Component,
+    StructTag
   };
 
   //    enum TYPES
@@ -56,7 +60,7 @@ namespace cs {
   //        LOCKS, VOIDS
   //    };
 
-  GLOBAL_CS_EXPORT std::array<int, LMAX + 1> DISPLAY;
+  GLOBAL_CS_EXPORT inline std::array<int, LMAX + 1> DISPLAY;
 
   using ALFA = std::string;
   using OLDALFA = std::string;
@@ -64,46 +68,45 @@ namespace cs {
   using Index = int;
 
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT std::vector<int> LOCATION;
+  GLOBAL_CS_EXPORT inline std::vector<int> LOCATION;
 #else
   GLOBAL_CS_EXPORT std::vector<int> LOCATION;
 #endif
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT std::vector<bool> BREAKALLOW;
+  GLOBAL_CS_EXPORT inline std::vector<bool> BREAK_ALLOW;
 #else
-  GLOBAL_CS_EXPORT std::vector<bool> BREAKALLOW;
+  GLOBAL_CS_EXPORT std::vector<bool> BREAK_ALLOW;
 #endif
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT std::vector<int> BREAKLOC;
+  GLOBAL_CS_EXPORT inline std::vector<int> BREAK_LOCATION;
 #else
-  GLOBAL_CS_EXPORT std::vector<int> BREAKLOC;
+  GLOBAL_CS_EXPORT std::vector<int> BREAK_LOCATION;
 #endif
-  GLOBAL_CS_EXPORT int BREAKPNT;
+  GLOBAL_CS_EXPORT inline int BREAK_POINT;
 
   // char *KEY[NKW];
 
   // std::vector<char> STAB(SMAX + 1);
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT std::array<ORDER, CMAX + 1> code;
+  GLOBAL_CS_EXPORT inline std::array<Order, CMAX + 1> code;
 #else
-  GLOBAL_CS_EXPORT std::array<ORDER, CMAX + 1> code;
+  GLOBAL_CS_EXPORT std::array<Order, CMAX + 1> code;
 #endif
 #ifdef EXPORT_CS_GLOBAL
-GLOBAL_CS_EXPORT std::vector<Index> WITHTAB;
+  GLOBAL_CS_EXPORT inline std::vector<Index> WITH_TAB;
 #else
-  GLOBAL_CS_EXPORT std::vector<Index> WITHTAB;
+  GLOBAL_CS_EXPORT std::vector<Index> WITH_TAB;
 #endif
-  GLOBAL_CS_EXPORT bool INCLUDEFLAG;
-  GLOBAL_CS_EXPORT bool OKBREAK;
-  GLOBAL_CS_EXPORT ALFA ID;
-  GLOBAL_CS_EXPORT int INUM;
-  GLOBAL_CS_EXPORT double RNUM;
-  GLOBAL_CS_EXPORT int SLENG;
-  GLOBAL_CS_EXPORT char CH;
-  GLOBAL_CS_EXPORT std::array<double, RCMAX + 1> CONTABLE;
+  GLOBAL_CS_EXPORT inline bool INCLUDE_FLAG;
+  GLOBAL_CS_EXPORT inline bool OK_BREAK;
+  GLOBAL_CS_EXPORT inline ALFA ID;
+  GLOBAL_CS_EXPORT inline int INUM;
+  GLOBAL_CS_EXPORT inline double RNUM;
+  GLOBAL_CS_EXPORT inline int STRING_LENGTH;
+  GLOBAL_CS_EXPORT inline char CH;
+  GLOBAL_CS_EXPORT inline std::array<double, RCMAX + 1> CONTABLE;
   void EMIT(int FCT);
   void EMIT1(int FCT, int B);
   void EMIT2(int FCT, int A, int B);
 } // namespace Cstar
-
 #endif // CSTAR_CS_GLOBAL_H

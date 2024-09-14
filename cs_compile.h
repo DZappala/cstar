@@ -163,7 +163,7 @@ namespace cs {
   struct TABREC {
     ALFA name;
     Index link;
-    OBJECTS object;
+    Objects object;
     Types types;
     Index reference;
     bool normal;

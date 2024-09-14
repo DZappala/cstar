@@ -21,8 +21,8 @@ using std::print;
 using std::println;
 using std::string;
 
-extern auto inCLUDEFLAG() -> bool;
-extern FILE *LIS;
+extern auto HasIncludeFlag() -> bool;
+extern std::ofstream LISTFILE;
 
 string MSG[] = {"Undefined Identifier     ",
                 "Multiple Definitions     ",
@@ -299,10 +299,10 @@ void error_message() {
   //        MSG[156] = "No Bitwise Ops Allowed   ";
   //        MSG[157] = "No Cond Expressions      ";
 
-  // WRITELN(LIS); WRITELN(LIS, ' COMPILATION ERRORS');
-  println(LIS, "\n COMPILATION ERRORS");
-  // WRITELN(LIS); WRITELN(LIS, ' ERROR CODES');
-  println(LIS, "\n ERROR CODES");
+  // WRITELN(LISTFILE); WRITELN(LISTFILE, ' COMPILATION ERRORS');
+  println(LISTFILE, "\n COMPILATION ERRORS");
+  // WRITELN(LISTFILE); WRITELN(LISTFILE, ' ERROR CODES');
+  println(LISTFILE, "\n ERROR CODES");
   // WRITELN; WRITELN(' COMPILATION ERRORS');
   // WRITELN; WRITELN(' ERROR CODES');
   println(stdout, "\n COMPILATION ERRORS");
@@ -311,14 +311,14 @@ void error_message() {
     if (!errors[K]) {
       continue;
     }
-    // WRITE(LIS, K);
-    print(LIS, "{}", K);
+    // WRITE(LISTFILE, K);
+    print(LISTFILE, "{}", K);
     if (K < 10) {
-      fputc(' ', LIS);
+      fputc(' ', LISTFILE);
     }
     if (K < 100)
-      fputc(' ', LIS);
-    print(LIS, "  {}", MSG[K]);
+      fputc(' ', LISTFILE);
+    print(LISTFILE, "  {}", MSG[K]);
     print(stdout, "{}", K);
     if (K < 10) {
       fputc(' ', stdout);
@@ -345,22 +345,22 @@ void error_exit() {
 
 void error(int N) {
   int I;
-  if (inCLUDEFLAG()) {
+  if (INCLUDE_FLAG()) {
     if (error_count == 0) {
       println(stdout, "");
-      print(stdout, "{:5} ", LNUM);
+      print(stdout, "{:5} ", LINE_NUMBER);
       for (I = 1; I <= LL; ++I) {
         fputc(line.str().at(I), stdout);
       }
       println(stdout, "");
       println(stdout, " ****                   ^150");
-      println(LIS, " ****                   ^150");
+      println(LISTFILE, " ****                   ^150");
       errors[150] = true;
     }
   } else {
     if (error_position == 0) {
       println(stdout, "");
-      print(stdout, "{:5} ", LNUM);
+      print(stdout, "{:5} ", LINE_NUMBER);
       for (I = 1; I <= LL; ++I) {
         fputc(line.str().at(I), stdout);
       }
@@ -368,15 +368,15 @@ void error(int N) {
     }
     if (error_position == 0) {
       print(stdout, " ****");
-      print(LIS, " ****");
+      print(LISTFILE, " ****");
     }
     if (CC > error_position && error_position == 0) {
       for (I = 0; I < CC - error_position; ++I) {
         fputc(' ', stdout);
-        fputc(' ', LIS);
+        fputc(' ', LISTFILE);
       }
       println(stdout, "^{:2}", N);
-      println(LIS, "^{:2}", N);
+      println(LISTFILE, "^{:2}", N);
       error_position = CC + 3;
       errors[N] = true;
     }

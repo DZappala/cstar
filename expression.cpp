@@ -24,11 +24,11 @@ struct TypLocal {
 } __attribute__((aligned(128))) __attribute__((packed));
 
 void TEST(SymbolSet &, SymbolSet &, int);
-extern auto inCLUDEFLAG() -> bool;
+extern auto HasIncludeFlag() -> bool;
 extern void C_PNTCHANTYP(BlockLocal *bl, Types &TP, int64_t &RF, int64_t &SZ);
 extern void BASICEXPRESSION(BlockLocal *, SymbolSet, Item &);
 void ENTERCHANNEL();
-void ENTERVARIABLE(BlockLocal *, OBJECTS);
+void ENTERVARIABLE(BlockLocal *, Objects);
 void EXPRESSION(BlockLocal *block_local, SymbolSet FSYS, Item &X);
 void LOADVAL(Item &);
 void TYPF(BlockLocal *block_local, SymbolSet FSYS, Types &types, int64_t &RF,
@@ -36,7 +36,7 @@ void TYPF(BlockLocal *block_local, SymbolSet FSYS, Types &types, int64_t &RF,
 void CONSTANT(BlockLocal *, SymbolSet &, CONREC &);
 void ENTERARRAY(Types TP, int L, int H);
 extern void ENTER(BlockLocal *block_local, const ALFA &identifier,
-                  OBJECTS objects);
+                  Objects objects);
 auto LOC(BlockLocal *bl, const ALFA &ID) -> int64_t;
 auto TYPE_COMPATIBLE(Item /*X*/, Item /*Y*/) -> bool;
 extern void BLOCK(InterpLocal *il, SymbolSet fsys, bool ISFUN, int LEVEL,
@@ -457,7 +457,7 @@ auto FACTOR(BasicLocal *bx, SymbolSet &FSYS, Item &X) -> void {
     CTAB[ctab_index].ELSIZE = 1;
     X.reference = ctab_index;
     X.is_address = false;
-    EMIT2(13, INUM, SLENG);
+    EMIT2(13, INUM, STRING_LENGTH);
     INSYMBOL();
   } else if (symbol == Symbol::REALCON) {
     X.types = Types::REALS;
@@ -1138,7 +1138,7 @@ L56:
 
   if (symbol != Symbol::SEMICOLON) {
     if (symbol == Symbol::LSETBRACK) {
-      OKBREAK = true;
+      OK_BREAK = true;
       INSYMBOL();
       if (proto_index >= 0) {
         if ((bl->PCNT != BTAB[proto_ref].PARCNT) ||
@@ -1151,7 +1151,7 @@ L56:
       su.set(static_cast<int>(Symbol::LSETBRACK), true);
       TEST(sv, bl->FSYS, 106);
     }
-    OKBREAK = true;
+    OK_BREAK = true;
   } else if (proto_index >= 0) {
     error(153);
   }
@@ -1217,9 +1217,9 @@ void FUNCDECLARATION(BlockLocal *bl, Types TP, int64_t RF, int64_t SZ) {
     execution_count = 0; // no executable content , avoids 6 (noop) for breaks
   } else
     code[LCSAV].Y = line_count;
-  OKBREAK = false;
+  OK_BREAK = false;
 
-  if (inCLUDEFLAG() && (TAB[T0].address == 0)) {
+  if (HasIncludeFlag() && (TAB[T0].address == 0)) {
     TAB[T0].address = -GETFUNCID(TAB[T0].name);
   }
 
@@ -1376,7 +1376,7 @@ void GETLIST(BlockLocal *bl, Types TP) {
     if (TP != Types::CHARS) {
       error(138);
     } else {
-      for (int CI = 1; CI <= SLENG; CI++) {
+      for (int CI = 1; CI <= STRING_LENGTH; CI++) {
         INITABLE[ITPNT].IVAL = STAB[INUM + CI - 1];
         ITPNT = ITPNT + 1;
       }
@@ -1429,9 +1429,9 @@ void PROCDECLARATION(BlockLocal *bl) {
   } else {
     code.at(LCSAV).Y = line_count;
   }
-  OKBREAK = false;
+  OK_BREAK = false;
 
-  if (inCLUDEFLAG() && (TAB[T0].address == 0)) {
+  if (HasIncludeFlag() && (TAB[T0].address == 0)) {
     TAB[T0].address = -GETFUNCID(TAB[T0].name);
   }
 

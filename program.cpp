@@ -17,14 +17,31 @@
 #include "cs_errors.h"
 #include "cs_global.h"
 #define EXPORT_CS_COMPILE
+
 #include "cs_compile.h"
 #include "cs_PreBuffer.h"
 
-using cs::PreBuffer, cs::STDIN;
+using cs::PreBuffer, cs::STANDARD_INPUT;
 using std::exit;
 using std::make_unique, std::snprintf, std::string, std::cout, std::expected,
   std::unexpected;
 using std::println;
+
+auto cstar_button(
+  const char* label,
+  const std::function<void()> &callback
+) -> ftxui::Component {
+  return Button(
+    label,
+    callback,
+    ftxui::ButtonOption::Animated(
+      ftxui::Color::GrayDark,
+      ftxui::Color::White,
+      ftxui::Color::White,
+      ftxui::Color::GrayDark
+    )
+  );
+}
 
 namespace cs {
   extern void INTERPRET();
@@ -35,11 +52,15 @@ namespace cs {
   extern void showArrayList(bool);
   extern void showRealList(bool);
   extern void showInstTrace(bool);
-  extern std::unique_ptr<PreBuffer> pre_buf;
+
+  namespace {
+    auto PRE_BUF = std::make_unique<
+      std::streambuf>(std::streambuf<char>());
+  } // buffers
 
   bool interactive = false;
 
-  static void enter(const char* X0, OBJECTS X1, Types X2, int X3) {
+  static void enter(const char* X0, Objects X1, Types X2, int X3) {
     tab_index++;
     if (tab_index == TMAX)
       fatal(1);
@@ -227,7 +248,7 @@ namespace cs {
     CC2 = 0;
     CH = ' ';
     CPNT = 1;
-    LNUM = 0;
+    LINE_NUMBER = 0;
     error_position = 0;
     errors = 0;
     INSYMBOL();
@@ -240,40 +261,40 @@ namespace cs {
     C2 = 0;
     ctab_index = 0;
     error_count = 0;
-    OKBREAK = false;
-    BREAKPNT = 0;
+    OK_BREAK = false;
+    BREAK_POINT = 0;
     ITPNT = 1;
     DISPLAY[0] = 1;
     strcpy(dummy_name.data(), "************00");
-    INCLUDEFLAG = false;
+    INCLUDE_FLAG = false;
     fatal_error = false;
     proto_index = -1;
-    enter("              ", OBJECTS::VARIABLE, Types::NOTYP, 0);
-    enter("FALSE         ", OBJECTS::KONSTANT, Types::BOOLS, 0);
-    enter("TRUE          ", OBJECTS::KONSTANT, Types::BOOLS, 1);
-    enter("NULL          ", OBJECTS::KONSTANT, Types::PNTS, 0);
-    enter("CHAR          ", OBJECTS::TYPE1, Types::CHARS, 1);
-    enter("BOOLEAN       ", OBJECTS::TYPE1, Types::BOOLS, 1);
-    enter("INT           ", OBJECTS::TYPE1, Types::INTS, 1);
-    enter("FLOAT         ", OBJECTS::TYPE1, Types::REALS, 1);
-    enter("DOUBLE        ", OBJECTS::TYPE1, Types::REALS, 1);
-    enter("VOID          ", OBJECTS::TYPE1, Types::VOIDS, 1);
-    enter("SPINLOCK      ", OBJECTS::TYPE1, Types::LOCKS, 1);
-    enter("SELF          ", OBJECTS::FUNKTION, Types::INTS, 19);
-    enter("CLOCK         ", OBJECTS::FUNKTION, Types::REALS, 20);
-    enter("SEQTIME       ", OBJECTS::FUNKTION, Types::REALS, 21);
-    enter("MYID          ", OBJECTS::FUNKTION, Types::INTS, 22);
-    enter("SIZEOF        ", OBJECTS::FUNKTION, Types::INTS, 24);
-    enter("SEND          ", OBJECTS::PROZEDURE, Types::NOTYP, 3);
-    enter("RECV          ", OBJECTS::PROZEDURE, Types::NOTYP, 4);
-    enter("NEW           ", OBJECTS::PROZEDURE, Types::NOTYP, 5);
-    enter("DELETE        ", OBJECTS::PROZEDURE, Types::NOTYP, 6);
-    enter("LOCK          ", OBJECTS::PROZEDURE, Types::NOTYP, 7);
-    enter("UNLOCK        ", OBJECTS::PROZEDURE, Types::NOTYP, 8);
-    enter("DURATION      ", OBJECTS::PROZEDURE, Types::NOTYP, 9);
-    enter("SEQOFF        ", OBJECTS::PROZEDURE, Types::NOTYP, 10);
-    enter("SEQON         ", OBJECTS::PROZEDURE, Types::NOTYP, 11);
-    enter("              ", OBJECTS::PROZEDURE, Types::NOTYP, 0);
+    enter("              ", Objects::Variable, Types::NOTYP, 0);
+    enter("FALSE         ", Objects::Constant, Types::BOOLS, 0);
+    enter("TRUE          ", Objects::Constant, Types::BOOLS, 1);
+    enter("NULL          ", Objects::Constant, Types::PNTS, 0);
+    enter("CHAR          ", Objects::Type1, Types::CHARS, 1);
+    enter("BOOLEAN       ", Objects::Type1, Types::BOOLS, 1);
+    enter("INT           ", Objects::Type1, Types::INTS, 1);
+    enter("FLOAT         ", Objects::Type1, Types::REALS, 1);
+    enter("DOUBLE        ", Objects::Type1, Types::REALS, 1);
+    enter("VOID          ", Objects::Type1, Types::VOIDS, 1);
+    enter("SPINLOCK      ", Objects::Type1, Types::LOCKS, 1);
+    enter("SELF          ", Objects::Function, Types::INTS, 19);
+    enter("CLOCK         ", Objects::Function, Types::REALS, 20);
+    enter("SEQTIME       ", Objects::Function, Types::REALS, 21);
+    enter("MYID          ", Objects::Function, Types::INTS, 22);
+    enter("SIZEOF        ", Objects::Function, Types::INTS, 24);
+    enter("SEND          ", Objects::Procedure, Types::NOTYP, 3);
+    enter("RECV          ", Objects::Procedure, Types::NOTYP, 4);
+    enter("NEW           ", Objects::Procedure, Types::NOTYP, 5);
+    enter("DELETE        ", Objects::Procedure, Types::NOTYP, 6);
+    enter("LOCK          ", Objects::Procedure, Types::NOTYP, 7);
+    enter("UNLOCK        ", Objects::Procedure, Types::NOTYP, 8);
+    enter("DURATION      ", Objects::Procedure, Types::NOTYP, 9);
+    enter("SEQOFF        ", Objects::Procedure, Types::NOTYP, 10);
+    enter("SEQON         ", Objects::Procedure, Types::NOTYP, 11);
+    enter("              ", Objects::Procedure, Types::NOTYP, 0);
     BTAB[1].LAST = tab_index;
     BTAB[1].LASTPAR = 1;
     BTAB[1].PSIZE = 0;
@@ -339,7 +360,9 @@ namespace cs {
     LIBFINIT(59, "RAND          ", 43);
   }
 
-  enum class ProgramError { GeneralError };
+  using ErrorBase = uint8_t;
+
+  enum class ProgramError : ErrorBase { GeneralError };
 
   auto to_string(const ProgramError err) -> const char* {
     switch (err) {
@@ -348,76 +371,100 @@ namespace cs {
     }
   }
 
-  auto program() -> std::expected<void, ProgramError> {
-    // auto program() -> void {
-    if (interactive) {
-      using namespace ftxui;
-      using ftxui::FlexboxConfig;
-      using ftxui::ScreenInteractive, ftxui::Renderer, ftxui::Button,
-        ftxui::text, ftxui::hcenter, ftxui::vbox, ftxui::bold, ftxui::dim,
-        ftxui::Event, Container::Horizontal, Container::Vertical,
-        Container::Stacked, ftxui::Element, ftxui::Component,
-        ftxui::ComponentBase, ftxui::flexbox, ftxui::FlexboxConfig;
+  enum class IOError : ErrorBase {
+    FileOpen,
+    FileRead,
+    FileWrite,
+    FileClose,
+    InvalidPath,
+    EmptyPath,
+    BufferOverflow,
+    BufferUnderflow
+  };
 
-      auto screen = ScreenInteractive::Fullscreen();
+  auto to_string(const IOError err) -> const char* {
+    switch (err) {
+      case IOError::FileOpen: return "There was an error opening the file";
+      case IOError::FileRead: return "There was an error reading the file";
+      case IOError::FileWrite: return "There was an error writing the file";
+      case IOError::FileClose: return "There was an error closing the file";
+      case IOError::InvalidPath: return "The path provided is invalid";
+      case IOError::EmptyPath: return "No File path was provided";
+      case IOError::BufferOverflow: return
+          "command buffer could not fit OPEN command.\n
+          "The `prebuffer_overhead` variable in the cstar source code
+          "to increase the buffer size";
+      case IOError::BufferUnderflow: return "BufferUnderflow";
+      default: return "unknown";
+    }
+  }
+
+  auto program() -> std::expected<void, ProgramError> {
+    if (interactive) {
+      auto screen = ftxui::ScreenInteractive::Fullscreen();
       int shift = 0;
 
-      const Element header_paragraph =
-        text("C* Compiler \nand parallel computer simulation system")
-        | hcenter | bold;
-      const Element subheading = text("(Ver. 3.0c++)") | hcenter | dim;
-      const Element copyright =
-        text("(C) Copyright 2007 by Bruce P. Lester, All Rights Reserved")
-        | hcenter | dim;
+      const ftxui::Element header_paragraph =
+        ftxui::text("C* Compiler \nand parallel computer simulation system")
+        | ftxui::hcenter | ftxui::bold;
+      const ftxui::Element subheading =
+        ftxui::text("(Ver. 3.0c++)") | ftxui::hcenter | ftxui::dim;
+      const ftxui::Element copyright =
+        ftxui::text(
+          "(C) Copyright 2007 by Bruce P. Lester, All Rights Reserved"
+        )
+        | ftxui::hcenter | ftxui::dim;
 
-      const Elements header_content = {header_paragraph, subheading, copyright};
-      const Component header_renderer = Renderer(
+      const ftxui::Elements header_content = {
+        header_paragraph,
+        subheading,
+        copyright
+      };
+
+      const ftxui::Component header_renderer = ftxui::Renderer(
         [&] {
-          return vbox({vbox(header_content) | flex | center});
+          return ftxui::vbox(
+            {vbox(header_content) | ftxui::flex | ftxui::center}
+          );
         }
       );
 
-      const Element open = text(
+      const ftxui::Element open = ftxui::text(
         "*(O)PEN filename - Open and Compile your program source file"
       );
-      const Element run = text(
+      const ftxui::Element run = ftxui::text(
         "*(R)UN - Initialize and run your program from the beginning"
       );
-      const Element close = text(
+      const ftxui::Element close = ftxui::text(
         "*(C)LOSE - Close your program source file to allow editing"
       );
-      const Element exit = text("*(E)XIT - Terminate this C* System");
-      const Element help = text("*(H)ELP - Show a complete list of commands");
+      const ftxui::Element exit = ftxui::text(
+        "*(E)XIT - Terminate this C* System"
+      );
+      const ftxui::Element help = ftxui::text(
+        "*(H)ELP - Show a complete list of commands"
+      );
 
-      const Elements tutorial_content = {open, run, close, exit, help,};
-      const Component tutorial_renderer = Renderer(
+      const ftxui::Elements tutorial_content = {open, run, close, exit, help,};
+      const ftxui::Component tutorial_renderer = ftxui::Renderer(
         [&] {
-          return vbox(
+          return ftxui::vbox(
             {
               window(
-                text("Basic Commands"),
-                vbox(tutorial_content) | flex
+                ftxui::text("Basic Commands"),
+                vbox(tutorial_content) | ftxui::flex
               )
             }
           );
         }
       );
 
-      const Component exit_button =
-        Button(
-          "Exit",
-          [&] { screen.Exit(); },
-          ButtonOption::Animated(
-            Color::RGB(18, 18, 18),
-            Color::RGB(0xf1, 0xf1, 0xf1),
-            Color::RGB(0xf1, 0xf1, 0xf1),
-            Color::RGB(18, 18, 18)
-          )
-        )
-        | hcenter;
-      const Component main_container = Vertical(
+      const ftxui::Component exit_button =
+        cstar_button("Exit", [&] { screen.Exit(); }) | ftxui::hcenter;
+
+      const ftxui::Component main_container = ftxui::Container::Vertical(
         {
-          Horizontal(
+          ftxui::Container::Horizontal(
             {
               /* button greup */
               exit_button
@@ -428,20 +475,24 @@ namespace cs {
         }
       );
 
-      Component main_renderer = Renderer(
+      ftxui::Component main_renderer = Renderer(
         main_container,
         [&] {
-          return vbox(
+          return ftxui::vbox(
             {
-              header_renderer->Render() | flex,
-              tutorial_renderer->Render() | flex,
-              exit_button->Render() | size(WIDTH, EQUAL, 10) | hcenter
+              header_renderer->Render() | ftxui::flex,
+              tutorial_renderer->Render() | ftxui::flex,
+              exit_button->Render() | size(
+                ftxui::WIDTH,
+                ftxui::EQUAL,
+                10
+              ) | ftxui::hcenter
             }
           );
         }
       );
 
-      main_renderer = main_renderer | borderEmpty;
+      main_renderer = main_renderer | ftxui::borderEmpty;
 
       std::atomic refresh_ui_continue = true;
       std::thread refresh_ui(
@@ -450,7 +501,7 @@ namespace cs {
             using namespace std::chrono_literals;
             std::this_thread::sleep_for(.05s);
             screen.Post([&] { shift++; });
-            screen.Post(Event::Custom);
+            screen.Post(ftxui::Event::Custom);
           }
         }
       );
@@ -458,61 +509,30 @@ namespace cs {
       screen.Loop(main_renderer);
       refresh_ui_continue = false;
       refresh_ui.join();
-      return {};
-
-      string welcome{};
-
-      std::cout << '\n';
-      std::cout << "                          C* COMPILER AND" << std::endl;
-      std::cout << "                 PARALLEL COMPUTER SIMULATION SYSTEM "
-        << std::endl;
-      std::cout << "                             (VER. 2.2c++)" << std::endl;
-      //            std::cout << "                             (VER. 2.1)" <<
-      //            std::endl;
-      std::cout << std::endl;
-      std::cout
-        << "     (C) Copyright 2007 by Bruce P. Lester, All Rights Reserved"
-        << std::endl;
-      //            std::cout << "     (C) Copyright 2006 by Bruce P. Lester, All
-      //            Rights Reserved" << std::endl;
-      std::cout << std::endl;
-      std::cout << std::endl;
-      std::cout << "  Basic Commands:" << std::endl;
-      std::cout
-        << "    *OPEN filename - Open and Compile your program source file"
-        << std::endl;
-      std::cout <<
-        "    *RUN - Initialize and run your program from the beginning"
-        << std::endl;
-      std::cout <<
-        "    *CLOSE - Close your program source file to allow editing"
-        << std::endl;
-      std::cout << "    *EXIT - Terminate this C* System" << std::endl;
-      std::cout << "    *HELP - Show a complete list of commands" << std::endl;
-      std::cout << std::endl;
     }
 
     INTERPRET();
     std::cout << '\n';
     if (fatal_error && interactive) {
-      fclose(SRC);
+      fclose(SOURCE);
+
       // std::cout << "PROGRAM SOURCE FILE IS NOW CLOSED TO ALLOW EDITING" <<
       // std::endl;
-      fclose(LIS);
+      fclose(LISTFILE);
       std::cout << '\n';
       std::cout
         << "To continue, press ENTER key, then Restart the C* Software System"
-        << std::endl;
+        << '\n';
       fgetc(stdin);
       std::exit(1);
     }
 
-    if (OUTPUTFILE)
-      fclose(OUTP);
-    if (INPUTFILE)
-      fclose(INP);
-    if (SRCOPEN)
-      fclose(SRC);
+    if (OUTPUTFILE_FLAG)
+      fclose(OUTPUT);
+    if (INPUTFILE_FLAG)
+      fclose(INPUT);
+    if (SOURCEOPEN_FLAG)
+      fclose(SOURCE);
     return {};
 
     // auto usage_paragraph_rendeerer = ftxui::Renderer(
@@ -609,123 +629,96 @@ static void doOption(const char* opt, const char* pgm) {
   }
 }
 
-static void cs_error(const char* p, int ern = 0, const char* p2 = "") {
-  // std::cerr << p << " " << p2 << "\n";
-  println(stderr, "cs{:03} {} {}", ern, p, p2);
-  exit(1);
-}
+namespace {
+  template<typename T> requires std::is_same_v<T, std::string> ||
+                                std::is_same_v<T, const char*>
+  void cs_error(T err_msg, int err_num = 0, T context = "") {
+    println("cs{:03} {} {}", err_num, err_msg, context);
+    exit(1);
+  }
+
+  template<typename T> requires
+    std::is_same_v<std::underlying_type_t<T>, cs::ErrorBase>
+  void cs_error(T err, int err_num = 0, T context = "") {
+    println("cs{:03} {} {}", err_num, to_string(err), context);
+    exit(1);
+  }
+} // namespace
+
+namespace {
+  auto make_prebuf(
+    const fs::path &from_file,
+    string &temp_buf,
+    const int prebuffer_overhead
+  ) -> std::expected<void, cs::IOError> {
+    temp_buf =
+      string(mpi ? "MPI ON\n" : "")
+      + (cs::interactive
+           ? std::format("OPEN {}\n", from_file.string())
+           : std::format("OPEN {}\n", from_file.string()) + "RUN\nEXIT\n");
+
+    if (temp_buf.length() > prebuffer_overhead)
+      return std::unexpected(cs::IOError::BufferOverflow);
+
+    cs::PRE_BUF->pubsetbuf(temp_buf.data(), temp_buf.size());
+    return {};
+  }
+
+  auto check_file(
+    const fs::path &from_file_path,
+    std::ifstream &from_file
+  ) -> std::expected<bool, cs::IOError> {
+    if (from_file_path.empty()) return std::unexpected(cs::IOError::EmptyPath);
+    from_file = std::ifstream(from_file_path);
+    if (!from_file) return std::unexpected(cs::IOError::FileOpen);
+    return true;
+  }
+} // namespace
 
 auto main(int argc, const char* argv[]) -> int {
   using cs::ProgramError;
 
-  const char* from_file = nullptr;
-  FILE* from = nullptr;
-  FILE* to = nullptr;
-  FILE* commands = nullptr;
-  char* tbuf = nullptr;
+  fs::path from_file_path;
+  auto to_file = std::ofstream();
+  auto commands = std::fstream();
+  auto from_file = std::ifstream();
+  string temp_buf;
   int ix = 0;
-  int jx = 0;
 
   // overhead for longest prebuf command sequences
-  constexpr int prebuffer_overhead = 25;
-  constexpr int return_code = 0;
-
-#if defined(__APPLE__)
-  __sFILE *stdin_save = nullptr;
-  cs::STDOUT = __stdoutp;
-#elif defined(__linux__) || defined(_WIN32)
-  FILE* stdin_save = nullptr;
-  cs::STDOUT = stdout;
-#endif
-
-  if (argc == 1) cs::interactive = true;
+  int prebuffer_overhead = 25;
+  int return_code = 0;
+  cs::interactive = argc == 1;
 
   for (ix = 1; ix < argc; ++ix) {
     if (argv[ix][0] == '-') doOption(&argv[ix][1], argv[0]);
-    else if (from_file == nullptr) from_file = argv[ix];
+    else if (from_file_path.empty()) from_file_path = argv[ix];
     else usage(argv[0]);
   }
 
-#if defined(__APPLE__)
-  cs::STDIN = __stdinp;
-#elif defined(__linux__) || defined(_WIN32)
-  STDIN = stdin;
-#endif
-
-  cs::pre_buf = make_unique<PreBuffer>(PreBuffer(STDIN));
-  if (from_file != nullptr) {
-    // if file present, open it to see if it exists, error out otherwise
-    // close it because the interpreter will open it again
-    from = fopen(from_file, "re");
-    if (from == nullptr) cs_error("cannot open input file", 1, from_file);
-    fclose(from);
-  }
-  if (cs::interactive) {
-    // interactive - enter an OPEN command if a file is present
-    if (from_file != nullptr) {
-      // fprintf(Cstar::STDIN, "OPEN %s\n", from_file);
-      ix = static_cast<int>(strlen(from_file)) + prebuffer_overhead;
-      tbuf = static_cast<char*>(malloc(ix));
-      jx = snprintf(
-        tbuf,
-        ix,
-        "%sOPEN %s\n",
-        (mpi) ? "MPI ON\n" : "",
-        from_file
-      );
-      if (jx > ix) cs_error("command buffer length issue");
-      cs::pre_buf->setBuffer(tbuf, jx);
-      free(tbuf);
-    }
-  } else {
-    // compile and execute
-    //        cmds = fopen(cfile, "w");
-    //        if (!cmds)
-    //            error("cannot open command file", cfile);
-    ix = static_cast<int>(std::strlen(from_file)) + prebuffer_overhead;
-    tbuf = static_cast<char*>(malloc(ix));
-    // fprintf(cmds, "OPEN %s\nRUN\nEXIT\n", from_file);
-    jx = snprintf(
-      tbuf,
-      ix,
-      "%sOPEN %s\nRUN\nEXIT\n",
-      (mpi) ? "MPI ON\n" : "",
-      from_file
-    );
-    if (jx > ix) cs_error("command buffer length issue");
-    cs::pre_buf->setBuffer(tbuf, jx);
-    free(tbuf);
-    //        fclose(cmds);
-    //        cmds = fopen(cfile, "r");
-    //        if (!cmds)
-    //            error("cannot reopen command file", cfile);
-    //        stdin_save = __stdinp;
-    //        Cstar::STDIN = cmds;
-  }
-  program().or_else(
-    [](const ProgramError &err)-> std::expected<void, ProgramError> {
-      cs_error(to_string(err));
+  check_file(from_file_path, from_file).and_then(
+    make_prebuf(from_file_path, temp_buf, prebuffer_overhead)
+  ).or_else(
+    [](const cs::IOError &err)-> std::expected<void, cs::IOError> {
+      cs_error<cs::IOError>(err);
       return {};
     }
   );
 
-  // catch
-  // exception &exc {
-  //   cs_error(exc.what());
-  //   return_code = 2;
-  // }
+  program().or_else(
+    [](const ProgramError &err)-> std::expected<void, ProgramError> {
+      cs_error<ProgramError>(err);
+      return {};
+    }
+  );
 
-  if (to != nullptr) fclose(to);
-  if (commands != nullptr) {
-    fclose(commands);
+  if (to_file.is_open()) to_file.close();
+  if (commands.is_open()) {
+    commands.close();
     unlink(cfile);
   }
 
-  if (stdin_save != nullptr)
-#if defined(__APPLE__)
-    __stdinp = stdin_save;
-#elif defined(__linux__) || defined(_WIN32)
-    // stdin = stdin_save;
-#endif
-    return return_code;
+  return return_code;
 }
+
+

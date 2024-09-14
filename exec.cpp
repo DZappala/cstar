@@ -13,6 +13,7 @@
 #include <iostream>
 #include <numbers>
 #include <print>
+
 namespace cs {
 using std::cout;
 using std::println;
@@ -84,7 +85,7 @@ void CHKVAR(InterpLocal *interp_local, int STKLOC) {
                 << (interp_local->TRCTAB[i].NAME) << '\n';
       // CURPR* curpr = new CURPR;
       interp_local->BLINE = GETLNUM(interp_local->CURPR->PC - 1);
-      std::print(STDOUT, "Line Number{:5}  In Function ", interp_local->BLINE);
+      std::print("Line Number{:5}  In Function ", interp_local->BLINE);
       j = interp_local->CURPR->B;
       interp_local->INX = interp_local->S[interp_local->CURPR->B + 4];
       while (TAB[interp_local->INX].name[0] == '*') {
@@ -98,32 +99,32 @@ void CHKVAR(InterpLocal *interp_local, int STKLOC) {
       }
       //                std::cout << "Process Number" << il->CURPR->PID <<
       //                std::endl; std::cout << std::endl;
-      std::println(STDOUT, "Process Number{:4}\n", interp_local->CURPR->PID);
+      std::println("Process Number{:4}\n", interp_local->CURPR->PID);
       interp_local->STEPROC = interp_local->CURPR;
       interp_local->PS = InterpLocal::PS::BREAK;
     }
   }
 }
 
-void MOVE(CommdelayLocal *commdelay_local, int lSRC, int DES, int STEP) {
+void MOVE(CommdelayLocal *commdelay_local, int lSOURCE, int DES, int STEP) {
   int DIREC = 0;
   int I = 0;
-  if (lSRC < DES) {
+  if (lSOURCE < DES) {
     DIREC = 1;
   } else {
     DIREC = -1;
   }
-  for (I = 1; I <= abs(lSRC - DES); I++) {
+  for (I = 1; I <= abs(lSOURCE - DES); I++) {
     commdelay_local->PATHLEN = commdelay_local->PATHLEN + 1;
     commdelay_local->PATH[commdelay_local->PATHLEN] =
         commdelay_local->PATH[commdelay_local->PATHLEN - 1] + DIREC * STEP;
   }
 }
 
-void RMOVE(CommdelayLocal *cl, int lSRC, int DES, int STEP) {
+void RMOVE(CommdelayLocal *cl, int lSOURCE, int DES, int STEP) {
   int DIREC, I, DIST;
-  DIST = abs(lSRC - DES);
-  if (lSRC < DES) {
+  DIST = abs(lSOURCE - DES);
+  if (lSOURCE < DES) {
     DIREC = 1;
   } else {
     DIREC = -1;
@@ -134,12 +135,12 @@ void RMOVE(CommdelayLocal *cl, int lSRC, int DES, int STEP) {
   }
   for (I = 1; I <= DIST; I++) {
     cl->PATHLEN = cl->PATHLEN + 1;
-    lSRC = lSRC + DIREC;
-    if (lSRC == TOPDIM) {
-      lSRC = 0;
+    lSOURCE = lSOURCE + DIREC;
+    if (lSOURCE == TOPDIM) {
+      lSOURCE = 0;
       cl->PATH[cl->PATHLEN] = cl->PATH[cl->PATHLEN - 1] - STEP * (TOPDIM - 1);
-    } else if (lSRC == -1) {
-      lSRC = TOPDIM - 1;
+    } else if (lSOURCE == -1) {
+      lSOURCE = TOPDIM - 1;
       cl->PATH[cl->PATHLEN] = cl->PATH[cl->PATHLEN - 1] + STEP * (TOPDIM - 1);
     } else {
       cl->PATH[cl->PATHLEN] = cl->PATH[cl->PATHLEN - 1] + DIREC * STEP;
@@ -198,7 +199,7 @@ void SCHEDULE(CommdelayLocal *cl, double &ARRIVAL) {
             if (CURPNT->FIRST == ARRIVAL + 1) {
               PREV->LAST = CURPNT->LAST;
               PREV->NEXT = CURPNT->NEXT;
-              // fprintf(STDOUT, "free commdelay1\n");
+              // fprintf(STANDARD_OUTPUT, "free commdelay1\n");
               std::free(CURPNT);
             }
           }
@@ -207,7 +208,7 @@ void SCHEDULE(CommdelayLocal *cl, double &ARRIVAL) {
           PREV = CURPNT;
           CURPNT = CURPNT->NEXT;
           if (PREV->LAST < cl->PASTINTERVAL) {
-            // fprintf(STDOUT, "free commdelay2\n");
+            // fprintf(STANDARD_OUTPUT, "free commdelay2\n");
             std::free(PREV);
             cl->il->PROCTAB[PROCNUM].BUSYLIST = CURPNT;
             PREV = nullptr;
@@ -362,7 +363,7 @@ int COMMDELAY(InterpLocal *il, int SOURCE, int DEST, int LEN) {
     il->PS = InterpLocal::PS::CPUCHK;
   }
   //        if (rtn != 0)
-  //            fprintf(STDOUT, "COMMDELAY source %d dest %d len %d returns
+  //            fprintf(STANDARD_OUTPUT, "COMMDELAY source %d dest %d len %d returns
   //            %d\n", SOURCE, DEST, LEN, rtn);
   return rtn;
 }
@@ -400,7 +401,7 @@ bool ISREAL(InterpLocal *il) {
 }
 void procTime(PROCPNT prc, float incr, const char *id) {
   if (prc->PID == 0) {
-    fprintf(STDOUT, "%.1f = %.1f + %.1f %s\n", prc->TIME + incr, prc->TIME,
+    fprintf(STANDARD_OUTPUT, "%.1f = %.1f + %.1f %s\n", prc->TIME + incr, prc->TIME,
             incr, id);
   }
 }
@@ -420,7 +421,7 @@ void TIMEINC(InterpLocal *il, int UNITS, const char *trc) {
   proc->VIRTUALTIME += STEP;
   if (proc->SEQON) {
     if (debug & DBGSQTME)
-      fprintf(STDOUT, "%.1f = %.1f + %.1f SEQ\n", il->SEQTIME + STEP,
+      fprintf(STANDARD_OUTPUT, "%.1f = %.1f + %.1f SEQ\n", il->SEQTIME + STEP,
               il->SEQTIME, STEP);
     il->SEQTIME += STEP;
   }
@@ -468,7 +469,7 @@ void SLICE(InterpLocal *il) {
       DEADLOCK = false; // maybe bug, maybe C++ problem yet to be corrected
       ptab = &il->PROCTAB[proc->PROCESSOR];
       //                if (ptab->RUNPROC != nullptr && ptab->RUNPROC != proc)
-      //                    fprintf(STDOUT, "ptab(%d) != proc(%d) virtime %.1f
+      //                    fprintf(STANDARD_OUTPUT, "ptab(%d) != proc(%d) virtime %.1f
       //                    starttime %.1f\n",
       //                            ptab->RUNPROC->PID, proc->PID,
       //                            ptab->VIRTIME, ptab->STARTTIME);
@@ -487,10 +488,10 @@ void SLICE(InterpLocal *il) {
         TIMEINC(il, SWITCHTIME, "slc1");
         proc->STATE = PRD::STATE::RUNNING;
         ptab->RUNPROC = il->CURPR;
-        //                    fprintf(STDOUT, "switch ptab runproc\n");
+        //                    fprintf(STANDARD_OUTPUT, "switch ptab runproc\n");
       } else {
         if (COUNT > PMAX && !DEADLOCK) {
-          fprintf(STDOUT, "loop in SLICE\n");
+          fprintf(STANDARD_OUTPUT, "loop in SLICE\n");
           DEADLOCK = true;
         }
         proc->TIME = il->CLOCK;
@@ -525,7 +526,7 @@ void SLICE(InterpLocal *il) {
         il->ACPTAIL = PREV;
       }
       if (debug & DBGPROC) {
-        fprintf(STDOUT, "slice terminated/freed process %d\n", proc->PID);
+        fprintf(STANDARD_OUTPUT, "slice terminated/freed process %d\n", proc->PID);
         snapPDES(il, proc);
       }
       std::free(proc);
@@ -537,12 +538,12 @@ void SLICE(InterpLocal *il) {
     }
   } while (!DONE && !((COUNT > PMAX) && DEADLOCK));
   // if (il->CURPR->PID == 0)
-  //     fprintf(STDOUT, "dispatch %d time %.1f seqtime %.1f\n", il->CURPR->PID,
+  //     fprintf(STANDARD_OUTPUT, "dispatch %d time %.1f seqtime %.1f\n", il->CURPR->PID,
   //     il->CURPR->TIME, il->SEQTIME);
   if (DEADLOCK) {
     cout << "    DEADLOCK:  All Processes are Blocked" << '\n';
     cout << "For Further Information Type STATUS Command" << '\n';
-    println(STDOUT, "CLOCK {:.1f} PS {}, DONE {:d}, COUNT {}, DEADLOCK {:d}",
+    println(STANDARD_OUTPUT, "CLOCK {:.1f} PS {}, DONE {:d}, COUNT {}, DEADLOCK {:d}",
             il->CLOCK, static_cast<std::int8_t>(il->PS), DONE, COUNT, DEADLOCK);
     il->PS = InterpLocal::PS::DEAD;
     dumpDeadlock(il);
@@ -579,13 +580,13 @@ void EXECUTE(InterpLocal *interp_local) {
       if ((!interp_local->NOSWITCH &&
            current_process->TIME >= interp_local->CLOCK) ||
           current_process->STATE != PRD::STATE::RUNNING) {
-        //                    fprintf(STDOUT, "state %s noswitch %d time %.1f
+        //                    fprintf(STANDARD_OUTPUT, "state %s noswitch %d time %.1f
         //                    clock %.1f",
         //                            nameState(CURPR->STATE), il->NOSWITCH,
         //                            CURPR->TIME, il->CLOCK);
         SLICE(interp_local);
         current_process = interp_local->CURPR;
-        //                    fprintf(STDOUT, " new process %d processor %d\n",
+        //                    fprintf(STANDARD_OUTPUT, " new process %d processor %d\n",
         //                    CURPR->PID, CURPR->PROCESSOR);
       }
     }
@@ -701,7 +702,7 @@ void EXECUTE(InterpLocal *interp_local) {
       interp_local->BLINE = GETLNUM(current_process->PC);
       //                std::cout << std::endl;
       //                std::cout << "Break At " << il->BLINE << std::endl;
-      fprintf(STDOUT, "\nBreak At %d", interp_local->BLINE);
+      fprintf(STANDARD_OUTPUT, "\nBreak At %d", interp_local->BLINE);
       executor.H1 = current_process->B;
       interp_local->INX = interp_local->S[current_process->B + 4];
       while (TAB[interp_local->INX].name[0] == '*') {
@@ -737,7 +738,7 @@ void EXECUTE(InterpLocal *interp_local) {
       //                {
       //                    if (il->S[mon] != val)
       //                    {
-      //                        fprintf(STDOUT, "----------modified %d at
+      //                        fprintf(STANDARD_OUTPUT, "----------modified %d at
       //                        %d----------\n", il->S[mon], CURPR->PC); watch =
       //                        false;
       //                    }
@@ -746,7 +747,7 @@ void EXECUTE(InterpLocal *interp_local) {
       //                {
       //                    if (mon >= 0 && il->S[mon] == val)
       //                    {
-      //                        fprintf(STDOUT, "----------monitor set at
+      //                        fprintf(STANDARD_OUTPUT, "----------monitor set at
       //                        %d----------\n", CURPR->PC); watch = true;
       //                    }
       //                }
@@ -754,7 +755,7 @@ void EXECUTE(InterpLocal *interp_local) {
       //                {
       //                    if (CURPR->PC == braddr)
       //                    {
-      //                        fprintf(STDOUT, "----------break at at
+      //                        fprintf(STANDARD_OUTPUT, "----------break at at
       //                        %d----------\n", CURPR->PC);
       //                    }
       //                }
@@ -762,7 +763,7 @@ void EXECUTE(InterpLocal *interp_local) {
         //                    if (CURPR->PROCESSOR == 0 && CURPR->PC < 81 &&
         //                    CURPR->PC > 18)
         //                    {
-        fprintf(STDOUT, "proc %3d stk %5d [%5d] ", current_process->PROCESSOR,
+        fprintf(STANDARD_OUTPUT, "proc %3d stk %5d [%5d] ", current_process->PROCESSOR,
                 current_process->T, interp_local->S[current_process->T]);
         dumpInst(current_process->PC - 1);
         //                    }
@@ -779,7 +780,7 @@ void EXECUTE(InterpLocal *interp_local) {
         } else {
           interp_local->S[current_process->T] =
               current_process->DISPLAY[executor.IR.X] + executor.IR.Y;
-          //                            fprintf(STDOUT, "%3d: %d %d,%d %s %s\n",
+          //                            fprintf(STANDARD_OUTPUT, "%3d: %d %d,%d %s %s\n",
           //                            CURPR->PC - 1,
           //                                el.IR.F, el.IR.X, el.IR.Y,
           //                                opcodes[el.IR.F], lookupSym(el.IR.X,
@@ -803,7 +804,7 @@ void EXECUTE(InterpLocal *interp_local) {
             interp_local->RS[current_process->T] =
                 interp_local->RS[executor.H1];
           }
-          //                            fprintf(STDOUT, "%3d: %d %d,%d %s %s\n",
+          //                            fprintf(STANDARD_OUTPUT, "%3d: %d %d,%d %s %s\n",
           //                            CURPR->PC - 1,
           //                                    el.IR.F, el.IR.X, el.IR.Y,
           //                                    opcodes[el.IR.F],
@@ -950,7 +951,7 @@ void EXECUTE(InterpLocal *interp_local) {
             interp_local->ACPTAIL = interp_local->PTEMP;
             executor.H1 = FINDFRAME(interp_local, interp_local->STKMAIN);
             if ((debug & DBGPROC) != 0) {
-              println(STDOUT, "opc {} findframe {} length {}, response {}",
+              println(STANDARD_OUTPUT, "opc {} findframe {} length {}, response {}",
                       executor.IR.F, current_process->PID,
                       interp_local->STKMAIN, executor.H1);
             }
@@ -1003,14 +1004,14 @@ void EXECUTE(InterpLocal *interp_local) {
             while (process->DISPLAY[executor.J] != -1) {
               interp_local->S[process->DISPLAY[executor.J] + 5]++;
               if (debug & DBGRELEASE) {
-                println(STDOUT, "{} ref ct {} ct={}", executor.IR.F,
+                println(STANDARD_OUTPUT, "{} ref ct {} ct={}", executor.IR.F,
                         current_process->PID,
                         interp_local->S[process->DISPLAY[executor.J] + 5]);
               }
               executor.J++;
             }
             if (debug & DBGPROC) {
-              println(STDOUT, "opc {} newproc pid {}", executor.IR.F,
+              println(STANDARD_OUTPUT, "opc {} newproc pid {}", executor.IR.F,
                       process->PID);
             }
             current_process->FORKCOUNT += 1;
@@ -1053,10 +1054,7 @@ void EXECUTE(InterpLocal *interp_local) {
         executor.H2 = executor.IR.Y;
         executor.H3 = FINDFRAME(interp_local, executor.H2 + 1);
         if (debug & DBGPROC) {
-          fprintf(STDOUT, "opc %d findframe %d length %d, response %d\n",
-                  executor.IR.F, current_process->PID, executor.H2 + 1,
-                  executor.H3);
-        }
+          println("opc {} findframe {} length {}, response {}", executor.IR.F, current_process->PID, executor.H2 + 1, executor.H3); }
         if (executor.H3 < 0) {
           interp_local->PS = InterpLocal::PS::STKCHK;
         } else {
@@ -1077,7 +1075,7 @@ void EXECUTE(InterpLocal *interp_local) {
       case 14: { // push from stack top stack frame loc
         executor.H1 = interp_local->S[current_process->T];
         //                        if (CURPR->PROCESSOR == 0)
-        //                            fprintf(STDOUT, "14: proc %d pc %d stack
+        //                            fprintf(STANDARD_OUTPUT, "14: proc %d pc %d stack
         //                            %d\n", CURPR->PROCESSOR, CURPR->PC,
         //                            CURPR->T);
         current_process->T++;
@@ -1107,7 +1105,7 @@ void EXECUTE(InterpLocal *interp_local) {
           executor.H1 = BTAB[TAB[executor.IR.Y].reference].VSIZE + WORKSIZE;
           executor.H2 = FINDFRAME(interp_local, executor.H1);
           if (debug & DBGPROC) {
-            fprintf(STDOUT, "opc %d findframe %d length %d, response %d\n",
+            fprintf(STANDARD_OUTPUT, "opc %d findframe %d length %d, response %d\n",
                     executor.IR.F, current_process->PID, executor.H1,
                     executor.H2);
           }
@@ -1198,7 +1196,7 @@ void EXECUTE(InterpLocal *interp_local) {
           interp_local->S[current_process->T] =
               interp_local->S[current_process->T] +
               (executor.H3 - executor.H2) * ATAB[executor.H1].ELSIZE;
-          // fprintf(STDOUT, "\nindex %d array stack base %d stack loc %d\n",
+          // fprintf(STANDARD_OUTPUT, "\nindex %d array stack base %d stack loc %d\n",
           // el.H3, el.H4, il->S[CURPR->T]);
         }
         break;
@@ -1301,21 +1299,21 @@ void EXECUTE(InterpLocal *interp_local) {
         if (interp_local->NUMTRACE > 0) {
           CHKVAR(interp_local, executor.H1);
         }
-        if (INPUTFILE) {
-          if (feof(INP)) {
+        if (INPUTFILE_FLAG) {
+          if (feof(INPUT)) {
             interp_local->PS = InterpLocal::PS::REDCHK;
           }
-        } else if (feof(STDIN)) {
+        } else if (feof(STANDARD_INPUT)) {
           interp_local->PS = InterpLocal::PS::REDCHK;
         }
         if (interp_local->PS != InterpLocal::PS::REDCHK) {
-          if (!INPUTFILE) {
+          if (!INPUTFILE_FLAG) {
             switch (executor.IR.Y) {
             case 1: {
               interp_local->S[executor.H1] = RTAG;
               // INPUT >> il->RS[el.H1];
-              // fscanf(STDIN, "%lf", &il->RS[el.H1]);
-              fscanf(STDIN, "%s", executor.buf.str().data());
+              // fscanf(STANDARD_INPUT, "%lf", &il->RS[el.H1]);
+              fscanf(STANDARD_INPUT, "%s", executor.buf.str().data());
               interp_local->RS[executor.H1] =
                   strtod(executor.buf.str().data(), nullptr);
 #if defined(__APPLE__)
@@ -1328,8 +1326,8 @@ void EXECUTE(InterpLocal *interp_local) {
             }
             case 2: {
               // INPUT >> il->S[el.H1];
-              // fscanf(STDIN, "%d", &il->S[el.H1]);
-              fscanf(STDIN, "%s", executor.buf.str().data());
+              // fscanf(STANDARD_INPUT, "%d", &il->S[el.H1]);
+              fscanf(STANDARD_INPUT, "%s", executor.buf.str().data());
               interp_local->S[executor.H1] = static_cast<int>(
                   strtol(executor.buf.str().data(), nullptr, 10));
 #if defined(__APPLE__)
@@ -1345,7 +1343,7 @@ void EXECUTE(InterpLocal *interp_local) {
               // char CH;
               //  INPUT >> CH;
               // il->S[el.H1] = int(CH);
-              interp_local->S[executor.H1] = fgetc(STDIN);
+              interp_local->S[executor.H1] = fgetc(STANDARD_INPUT);
               if (0 > interp_local->S[executor.H1])
                 IORESULT = -1;
               break;
@@ -1355,9 +1353,9 @@ void EXECUTE(InterpLocal *interp_local) {
             switch (executor.IR.Y) {
             case 1: {
               interp_local->S[executor.H1] = RTAG;
-              // INP >> il->RS[el.H1];
-              // fscanf(INP, "%lf", &il->RS[el.H1]);
-              fscanf(INP, "%s", executor.buf.str().data());
+              // INPUT >> il->RS[el.H1];
+              // fscanf(INPUT, "%lf", &il->RS[el.H1]);
+              fscanf(INPUT, "%s", executor.buf.str().data());
               interp_local->RS[executor.H1] =
                   strtod(executor.buf.str().data(), nullptr);
 #if defined(__APPLE__)
@@ -1369,9 +1367,9 @@ void EXECUTE(InterpLocal *interp_local) {
               break;
             }
             case 2: {
-              // INP >> il->S[el.H1];
-              // fscanf(STDIN, "%d", &il->S[el.H1]);
-              fscanf(INP, "%s", executor.buf.str().data());
+              // INPUT >> il->S[el.H1];
+              // fscanf(STANDARD_INPUT, "%d", &il->S[el.H1]);
+              fscanf(INPUT, "%s", executor.buf.str().data());
               interp_local->S[executor.H1] = static_cast<int>(
                   strtol(executor.buf.str().data(), nullptr, 10));
 #if defined(__APPLE__)
@@ -1384,10 +1382,10 @@ void EXECUTE(InterpLocal *interp_local) {
             }
             case 4: {
               // char CH;
-              // INP >> CH;
+              // INPUT >> CH;
               // il->S[el.H1] = int(CH);
-              // il->S[el.H1] = fgetc(STDIN);
-              interp_local->S[executor.H1] = fgetc(INP);
+              // il->S[el.H1] = fgetc(STANDARD_INPUT);
+              interp_local->S[executor.H1] = fgetc(INPUT);
               if (0 > interp_local->S[executor.H1]) {
                 IORESULT = -1;
               }
@@ -1411,10 +1409,10 @@ void EXECUTE(InterpLocal *interp_local) {
           interp_local->PS = InterpLocal::PS::LNGCHK;
         }
         do {
-          if (!OUTPUTFILE) {
-            std::fputc(STAB[executor.H2], STDOUT);
+          if (!OUTPUTFILE_FLAG) {
+            std::fputc(STAB[executor.H2], STANDARD_OUTPUT);
           } else {
-            std::fputc(STAB[executor.H2], OUTP);
+            std::fputc(STAB[executor.H2], OUTPUT);
           }
           executor.H1--;
           executor.H2++;
@@ -1431,10 +1429,10 @@ void EXECUTE(InterpLocal *interp_local) {
           if (interp_local->CHRCNT > LINELENG) {
             interp_local->PS = InterpLocal::PS::LNGCHK;
           } else {
-            if (!OUTPUTFILE) {
+            if (!OUTPUTFILE_FLAG) {
               switch (executor.IR.Y) {
               case 2: {
-                fprintf(STDOUT, "%*d", interp_local->FLD[2],
+                fprintf(STANDARD_OUTPUT, "%*d", interp_local->FLD[2],
                         interp_local->S[current_process->T]);
                 break;
               }
@@ -1462,12 +1460,12 @@ void EXECUTE(InterpLocal *interp_local) {
             } else {
               switch (executor.IR.Y) {
               case 2: {
-                fprintf(OUTP, "%*d", interp_local->FLD[2],
+                fprintf(OUTPUT, "%*d", interp_local->FLD[2],
                         interp_local->S[current_process->T]);
                 break;
               }
               case 3: {
-                fprintf(OUTP, "%*s", interp_local->FLD[3],
+                fprintf(OUTPUT, "%*s", interp_local->FLD[3],
                         (ITOB(interp_local->S[current_process->T])) ? "true"
                                                                     : "false");
                 break;
@@ -1477,7 +1475,7 @@ void EXECUTE(InterpLocal *interp_local) {
                     (interp_local->S[current_process->T] > CHARH)) {
                   interp_local->PS = InterpLocal::PS::CHRCHK;
                 } else {
-                  fprintf(OUTP, "%*c", interp_local->FLD[4],
+                  fprintf(OUTPUT, "%*c", interp_local->FLD[4],
                           char(interp_local->S[current_process->T]));
                   if ((interp_local->S[current_process->T] == 10) ||
                       (interp_local->S[current_process->T] == 13)) {
@@ -1495,7 +1493,7 @@ void EXECUTE(InterpLocal *interp_local) {
           if (interp_local->CHRCNT > LINELENG) {
             interp_local->PS = InterpLocal::PS::LNGCHK;
           } else {
-            if (!OUTPUTFILE) {
+            if (!OUTPUTFILE_FLAG) {
               switch (executor.IR.Y) {
               case 2: {
                 // std::cout << el.H1;
@@ -1525,11 +1523,11 @@ void EXECUTE(InterpLocal *interp_local) {
             } else {
               switch (executor.IR.Y) {
               case 2: {
-                fprintf(OUTP, "%*d", interp_local->COUTWIDTH, executor.H1);
+                fprintf(OUTPUT, "%*d", interp_local->COUTWIDTH, executor.H1);
                 break;
               }
               case 3: {
-                fprintf(OUTP, "%*s", interp_local->COUTWIDTH,
+                fprintf(OUTPUT, "%*s", interp_local->COUTWIDTH,
                         (ITOB(executor.H1)) ? "true" : "false");
                 break;
               }
@@ -1537,7 +1535,7 @@ void EXECUTE(InterpLocal *interp_local) {
                 if ((executor.H1 < CHARL) || (executor.H1 > CHARH)) {
                   interp_local->PS = InterpLocal::PS::CHRCHK;
                 } else {
-                  fprintf(OUTP, "%*c", interp_local->COUTWIDTH,
+                  fprintf(OUTPUT, "%*c", interp_local->COUTWIDTH,
                           (char)executor.H1);
                   if ((executor.H1 == 10) || (executor.H1 == 13)) {
                     interp_local->CHRCNT = 0;
@@ -1708,7 +1706,7 @@ void EXECUTE(InterpLocal *interp_local) {
         if (interp_local->CHRCNT > LINELENG) {
           interp_local->PS = InterpLocal::PS::LNGCHK;
         } else {
-          if (!OUTPUTFILE) {
+          if (!OUTPUTFILE_FLAG) {
             if (interp_local->COUTPREC <= 0) {
               // cout << el.RH1;
               fprintf(STDOUT, "%*f", executor.H1, executor.RH1);
@@ -1726,14 +1724,14 @@ void EXECUTE(InterpLocal *interp_local) {
             }
           } else {
             if (interp_local->COUTPREC <= 0) {
-              // OUTP << el.RH1;
-              fprintf(OUTP, "%*f", executor.H1, executor.RH1);
+              // OUTPUT << el.RH1;
+              fprintf(OUTPUT, "%*f", executor.H1, executor.RH1);
             } else {
               if (interp_local->COUTWIDTH <= 0) {
-                fprintf(OUTP, "%*.*f", interp_local->COUTPREC + 3,
+                fprintf(OUTPUT, "%*.*f", interp_local->COUTPREC + 3,
                         interp_local->COUTPREC - executor.H2, executor.RH1);
               } else {
-                fprintf(OUTP, "%*.*f", interp_local->COUTWIDTH,
+                fprintf(OUTPUT, "%*.*f", interp_local->COUTWIDTH,
                         interp_local->COUTPREC - executor.H2, executor.RH1);
               }
             }
@@ -1968,26 +1966,26 @@ void EXECUTE(InterpLocal *interp_local) {
         break;
       }
       case 62: {
-        if (!INPUTFILE) {
-          if (feof(STDIN)) {
+        if (!INPUTFILE_FLAG) {
+          if (feof(STANDARD_INPUT)) {
             interp_local->PS = InterpLocal::PS::REDCHK;
           } else {
-            fgetc(STDIN);
+            fgetc(STANDARD_INPUT);
           }
         } else {
-          if (feof(INP)) {
+          if (feof(INPUT)) {
             interp_local->PS = InterpLocal::PS::REDCHK;
           } else {
-            fgetc(INP);
+            fgetc(INPUT);
           }
         }
         break;
       }
       case 63: { // write endl
-        if (!OUTPUTFILE) {
+        if (!OUTPUTFILE_FLAG) {
           fputc('\n', STDOUT);
         } else {
-          fputc('\n', OUTP);
+          fputc('\n', OUTPUT);
         }
         interp_local->LNCNT = interp_local->LNCNT + 1;
         interp_local->CHRCNT = 0;
@@ -2937,7 +2935,7 @@ void EXECUTE(InterpLocal *interp_local) {
       case 105: {
         if (interp_local->S[current_process->B + 5] == 1) {
           if (debug & DBGRELEASE) {
-            fprintf(STDOUT, "%d release %d fm=%d ln=%d\n", executor.IR.F,
+            println("{} release {} fm={} ln={}", executor.IR.F,
                     current_process->PID, current_process->B,
                     interp_local->S[current_process->B + 6]);
           }
@@ -3131,12 +3129,12 @@ void EXECUTE(InterpLocal *interp_local) {
 
         /* instruction cases go here */
       default:
-        fprintf(STDOUT, "Missing Code %d\n", executor.IR.F);
+         println("Missing Code {}", executor.IR.F);
         break;
       }
     }
   } while (interp_local->PS == InterpLocal::PS::RUN);
   // label_999:
-  fprintf(STDOUT, "\n");
+  print('\n');
 } // EXECUTE
 } // namespace Cstar

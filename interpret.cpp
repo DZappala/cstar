@@ -8,6 +8,9 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <string>
+#include <print>
+
 #define EXPORT_CS_INTERPRET
 #include "cs_PreBuffer.h"
 #include "cs_interpret.h"
@@ -411,7 +414,7 @@ void PARTWRITE(InterpLocal *il, int START, Types PTYP, Index PREF, int PADR,
   pl.DONE = DONE;
   if (!DONE) {
     if (START > 70) {
-      print(STDOUT, "\nData Has Too Many Levels of Structure\n");
+      print("\nData Has Too Many Levels of Structure\n");
       return;
     }
     switch (PTYP) {
@@ -620,7 +623,7 @@ void INITCOMMANDS() {
 //    bool eoln(std::ifstream *inp)
 //    {
 //        int ch;
-////        if ((*SRC).eof())
+////        if ((*SOURCE).eof())
 ////            return true;
 //        ch = (*inp).peek();
 //        if (ch < 0)
@@ -675,16 +678,16 @@ void INITINTERP(InterpLocal *il) {
     il->TRCTAB[I].MEMLOC = -1;
   }
   strcpy(il->LISTDEFNAME.data(), "LISTFILE.TXT");
-  // LIS = fopen(LISTDEFNAME, "w");   Pascal ASSIGN
+  // LISTFILE = fopen(LISTDEFNAME, "w");   Pascal ASSIGN
   strcpy(il->LISTFNAME.data(), il->LISTDEFNAME.data());
   LISTDEF = true;
-  INPUTFILE = false;
-  OUTPUTFILE = false;
+  INPUTFILE_FLAG = false;
+  OUTPUTFILE_FLAG = false;
   il->INPUTFNAME[0] = '\0';
   il->OUTPUTFNAME[0] = '\0';
-  INPUTOPEN = false;
-  OUTPUTOPEN = false;
-  MUSTRUN = false;
+  INPUTOPEN_FLAG = false;
+  OUTPUTOPEN_FLAG = false;
+  MUST_RUN_FLAG = false;
 }
 void GETVAR(InterpLocal *il) {
   PROCPNT KDES;
@@ -837,9 +840,9 @@ void CONVERT() {
 
 static void READLINE() {
   LL = 0;
-  while (!eoln(STDIN) && (LL <= LLNG)) {
-    // CH = (*INP).get();
-    CH = (char)fgetc(STDIN);
+  while (!eoln(STANDARD_INPUT) && (LL <= LLNG)) {
+    // CH = (*INPUT).get();
+    CH = (char)fgetc(STANDARD_INPUT);
     if (CH == '\x08') {
       if (LL > 0) {
         LL = LL - 1;
@@ -850,7 +853,7 @@ static void READLINE() {
       line.str().at(LL) = CH;
     }
   }
-  // READLN(STDIN);
+  // READLN(STANDARD_INPUT);
   if (LL > 0) {
     ENDFLAG = false;
     CC = 1;
@@ -864,9 +867,9 @@ static void READLINE() {
 
 static void FREADLINE() {
   LL = 0;
-  while (!eoln(STDIN) && (LL <= LLNG)) {
-    // CH = (*INP).get();
-    CH = (char)fgetc(STDIN);
+  while (!eoln(STANDARD_INPUT) && (LL <= LLNG)) {
+    // CH = (*INPUT).get();
+    CH = (char)fgetc(STANDARD_INPUT);
     if (CH == '\x08') {
       if (LL > 0) {
         LL = LL - 1;
@@ -876,7 +879,7 @@ static void FREADLINE() {
       line.str().at(LL) = CH;
     }
   }
-  // READLN(STDIN);
+  // READLN(STANDARD_INPUT);
   if (LL > 0) {
     ENDFLAG = false;
     CC = 1;
@@ -1053,7 +1056,7 @@ void GETRANGE(int &FIRST, int &LAST, bool &ERR) {
 
 int GETLNUM(int PC) {
   int I = 1;
-  while (LOCATION[I] <= PC && I <= LNUM) {
+  while (LOCATION[I] <= PC && I <= LINE_NUMBER) {
     I++;
   }
   return I - 1;
@@ -1160,31 +1163,31 @@ void PRINTSTATS(InterpLocal *il) {
     default:
       break;
     }
-    print(STDOUT, "\n");
+    print(STANDARD_OUTPUT, "\n");
   }
-  if (!OUTPUTFILE) {
-    print(STDOUT, "SEQUENTIAL EXECUTION TIME: %d\n", (int)il->SEQTIME);
-    print(STDOUT, "PARALLEL EXECUTION TIME: %d\n", (int)il->MAINPROC->TIME);
+  if (!OUTPUTFILE_FLAG) {
+    print(STANDARD_OUTPUT, "SEQUENTIAL EXECUTION TIME: %d\n", (int)il->SEQTIME);
+    print(STANDARD_OUTPUT, "PARALLEL EXECUTION TIME: %d\n", (int)il->MAINPROC->TIME);
     if (il->MAINPROC->TIME != 0) {
       il->SPEED = il->SEQTIME / il->MAINPROC->TIME;
-      print(STDOUT, "SPEEDUP:  %6.2f\n", il->SPEED);
+      print(STANDARD_OUTPUT, "SPEEDUP:  %6.2f\n", il->SPEED);
     }
-    print(STDOUT, "NUMBER OF PROCESSORS USED: %d\n", il->USEDPROCS);
+    print(STANDARD_OUTPUT, "NUMBER OF PROCESSORS USED: %d\n", il->USEDPROCS);
   } else {
-    // print(STDOUT, OUTP);
-    print(OUTP, "SEQUENTIAL EXECUTION TIME: %d\n", (int)il->SEQTIME);
-    print(OUTP, "PARALLEL EXECUTION TIME: %d\n", (int)il->MAINPROC->TIME);
+    // print(STANDARD_OUTPUT, OUTPUT);
+    print(OUTPUT, "SEQUENTIAL EXECUTION TIME: %d\n", (int)il->SEQTIME);
+    print(OUTPUT, "PARALLEL EXECUTION TIME: %d\n", (int)il->MAINPROC->TIME);
     if (il->MAINPROC->TIME != 0) {
       il->SPEED = il->SEQTIME / il->MAINPROC->TIME;
-      print(OUTP, "SPEEDUP:  %6.2f\n", il->SPEED);
+      print(OUTPUT, "SPEEDUP:  %6.2f\n", il->SPEED);
     }
-    print(OUTP, "NUMBER OF PROCESSORS USED: %d\n", il->USEDPROCS);
-    // (*OUTP).close();
-    fclose(OUTP);
+    print(OUTPUT, "NUMBER OF PROCESSORS USED: %d\n", il->USEDPROCS);
+    // (*OUTPUT).close();
+    fclose(OUTPUT);
     OUTPUTOPEN = false;
     if (INPUTOPEN) {
-      // (*INP).close();
-      fclose(INP);
+      // (*INPUT).close();
+      fclose(INPUT);
       INPUTOPEN = false;
     }
   }
@@ -1296,11 +1299,11 @@ void RELEASE(InterpLocal *il, int BASE, int LENGTH) {
 }
 void unreleased(InterpLocal *il) {
   BLKPNT seq;
-  print(STDOUT, "rel_fail %d, rel_alloc %d, rel_free %d\n", rel_fail, rel_alloc,
+  print(STANDARD_OUTPUT, "rel_fail %d, rel_alloc %d, rel_free %d\n", rel_fail, rel_alloc,
         rel_free);
   seq = il->STHEAD;
   while (seq != nullptr) {
-    print(STDOUT, "unreleased %d len %d\n", seq->START, seq->SIZE);
+    print(STANDARD_OUTPUT, "unreleased %d len %d\n", seq->START, seq->SIZE);
     seq = seq->NEXT;
   }
 }
@@ -1551,13 +1554,13 @@ void INTERPRET() {
     do {
       // print(stdout, "\n");
       // std::cout << std::endl;
-      fputc('\n', STDOUT);
+      fputc('\n', STANDARD_OUTPUT);
       // print(stdout, '*');
       // std::cout << "*";
-      fputc('*', STDOUT);
+      fputc('*', STANDARD_OUTPUT);
       //                FREADLINE();
       Freadline(pre_buf);
-      //                print(STDOUT, "%s\n", &LINE[1]);
+      //                print(STANDARD_OUTPUT, "%s\n", &LINE[1]);
       if (++cct > 3) {
         printf("prompt loop may be infinite\n");
         exit(1);
@@ -1574,40 +1577,40 @@ void INTERPRET() {
     }
     switch (il->COMMLABEL) {
     case COMTYP::RUNP:
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         print(stdout, "Must Open a Program Source File First\n");
         break;
       }
       if (TESTEND()) {
-        if (INPUTFILE) {
+        if (INPUTFILE_FLAG) {
           if (!INPUTOPEN) {
             size_t ll = il->INPUTFNAME.length() - 1;
             while (ll > 0 && il->INPUTFNAME[ll] == ' ')
               ll -= 1;
             if (ll++ > 0)
               il->INPUTFNAME[ll] = '\0';
-            INP = fopen(il->INPUTFNAME.data(), "r");
+            INPUT = fopen(il->INPUTFNAME.data(), "r");
             il->INPUTFNAME[ll] = ' ';
           }
-          // RESET(INP);
-          if (INP == nullptr) {
+          // RESET(INPUT);
+          if (INPUT == nullptr) {
             print(stdout, "\n");
             print(stdout, "Error In Data Input File %s\n", il->INPUTFNAME);
           } else
             INPUTOPEN = true;
         }
-        if (OUTPUTFILE) {
+        if (OUTPUTFILE_FLAG) {
           if (!OUTPUTOPEN) {
             size_t ll = il->INPUTFNAME.length() - 1;
             while (ll > 0 && il->INPUTFNAME[ll] == ' ')
               ll -= 1;
             if (ll++ > 0)
               il->INPUTFNAME[ll] = '\0';
-            OUTP = fopen(il->OUTPUTFNAME.c_str(), "w");
+            OUTPUT = fopen(il->OUTPUTFNAME.c_str(), "w");
             il->INPUTFNAME[ll] = ' ';
           }
-          // REprint(stdout, OUTP);
-          if (OUTP == nullptr) {
+          // REprint(stdout, OUTPUT);
+          if (OUTPUT == nullptr) {
             print(stdout, "\n");
             print(stdout, "Error In Data Output File %s\n", il->OUTPUTFNAME);
           } else
@@ -1725,7 +1728,7 @@ void INTERPRET() {
       }
       break;
     case COMTYP::BREAKP:
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
@@ -1740,9 +1743,9 @@ void INTERPRET() {
       } else {
         strcpy(il->PROMPT.data(), "At Line:  ");
         K = NUM(il);
-        if (K < 0 || K > LNUM) {
+        if (K < 0 || K > LINE_NUMBER) {
           print(stdout, "Out of Bounds");
-        } else if (LOCATION[K + 1] == LOCATION[K] || !BREAKALLOW[K]) {
+        } else if (LOCATION[K + 1] == LOCATION[K] || !BREAK_ALLOW[K]) {
           print(stdout, "Breakpoints Must Be Set at Executable Lines");
         } else {
           il->BRKLINE[J] = K;
@@ -1756,37 +1759,37 @@ void INTERPRET() {
       print(stdout, "TERMINATE C* SYSTEM\n");
       break;
     case COMTYP::VIEW:
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
       il->FIRST = 1;
-      il->LAST = LNUM;
+      il->LAST = LINE_NUMBER;
       GETRANGE(il->FIRST, il->LAST, il->ERR);
       if (il->ERR) {
         print(stdout, "Error in Range");
         goto L200;
       }
-      if (il->LAST > LNUM) {
-        il->LAST = LNUM;
+      if (il->LAST > LINE_NUMBER) {
+        il->LAST = LINE_NUMBER;
       }
-      if (il->FIRST > LNUM) {
-        il->FIRST = LNUM;
+      if (il->FIRST > LINE_NUMBER) {
+        il->FIRST = LINE_NUMBER;
       }
-      if (SRCOPEN) {
+      if (SOURCEOPEN_FLAG) {
         // RESET(SRC);
-        std::fseek(SRC, 0l, SEEK_SET);
+        std::fseek(SOURCE, 0l, SEEK_SET);
         for (K = 1; K < il->FIRST; K++) {
-          READLN(SRC);
+          READLN(SOURCE);
         }
         for (K = il->FIRST; K <= il->LAST; K++) {
           print(stdout, "%4d", K);
           print(stdout, " ");
-          while (!eoln(SRC)) {
-            CH = (char)fgetc(SRC);
+          while (!eoln(SOURCE)) {
+            CH = (char)fgetc(SOURCE);
             fputc(CH, stdout);
           }
-          // READLN(SRC);
+          // READLN(SOURCE);
           print(stdout, "\n");
         }
       } else {
@@ -1795,7 +1798,7 @@ void INTERPRET() {
       }
       break;
     case COMTYP::CLEAR:
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
@@ -1815,7 +1818,7 @@ void INTERPRET() {
           strcmp(&ID[1], "B             ") == 0) {
         strcpy(il->PROMPT.data(), "From Line: ");
         K = NUM(il);
-        if (K < 0 || K > LNUM) {
+        if (K < 0 || K > LINE_NUMBER) {
           print(stdout, "Not Valid Line Number");
         } else {
           for (I = 1; I <= BRKMAX; I++) {
@@ -1848,7 +1851,7 @@ void INTERPRET() {
       }
       break;
     case COMTYP::DISPLAYP: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
@@ -1916,7 +1919,7 @@ void INTERPRET() {
       break;
     }
     case COMTYP::PROFILE: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
@@ -1964,7 +1967,7 @@ void INTERPRET() {
       break;
     }
     case COMTYP::ALARM: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
@@ -1993,7 +1996,7 @@ void INTERPRET() {
       break;
     }
     case COMTYP::TRACE: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
@@ -2026,7 +2029,7 @@ void INTERPRET() {
       break;
     }
     case COMTYP::WRVAR: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         print(stdout, "Must Open a Program Source File First");
         goto L200;
       }
@@ -2178,7 +2181,7 @@ void INTERPRET() {
       break;
     }
     case COMTYP::PTIME: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
@@ -2192,7 +2195,7 @@ void INTERPRET() {
           il->SPEED = il->SEQTIME / il->CLOCK;
           //                        std::cout << "     Speedup:  " << il->SPEED
           //                        << std::endl; std::cout << std::endl;
-          print(STDOUT, "     Speedup:  %6.2f\n\n", il->SPEED);
+          print(STANDARD_OUTPUT, "     Speedup:  %6.2f\n\n", il->SPEED);
         }
         if (il->OLDTIME != 0) {
           il->R1 = il->CLOCK - il->OLDTIME;
@@ -2203,14 +2206,14 @@ void INTERPRET() {
             il->SPEED = il->R2 / il->R1;
             //                            std::cout << "     Speedup:  " <<
             //                            il->SPEED << std::endl;
-            print(STDOUT, "     Speedup:  %6.2f\n", il->SPEED);
+            print(STANDARD_OUTPUT, "     Speedup:  %6.2f\n", il->SPEED);
           }
         }
       }
       break;
     }
     case COMTYP::UTIL: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
@@ -2248,7 +2251,7 @@ void INTERPRET() {
       break;
     }
     case COMTYP::CDELAY: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
@@ -2266,7 +2269,7 @@ void INTERPRET() {
       break;
     }
     case COMTYP::CONGEST: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
@@ -2385,23 +2388,23 @@ void INTERPRET() {
       break;
     }
     case COMTYP::WRCODE: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
       il->FIRST = 1;
-      il->LAST = LNUM;
+      il->LAST = LINE_NUMBER;
       GETRANGE(il->FIRST, il->LAST, il->ERR);
       if (il->ERR) {
         std::cout << "Error in Range" << std::endl;
         goto L200;
       }
-      if (il->LAST > LNUM) {
-        il->LAST = LNUM;
+      if (il->LAST > LINE_NUMBER) {
+        il->LAST = LINE_NUMBER;
       }
       //                    std::cout << "LINE NUMBER" << "  OPCODE" << "    X
       //                    " << "  Y  " << std::endl;
-      print(STDOUT, "LINE NUMBER  OPCODE    X    Y  \n");
+      print(STANDARD_OUTPUT, "LINE NUMBER  OPCODE    X    Y  \n");
       for (I = il->FIRST; I <= il->LAST; I++) {
         // std::cout << I << "    ";
         print(STDOUT, "%7d    ", I);
@@ -2424,7 +2427,7 @@ void INTERPRET() {
       break;
     }
     case COMTYP::STACK: {
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         std::cout << "Must Open a Program Source File First" << std::endl;
         goto L200;
       }
@@ -2443,45 +2446,45 @@ void INTERPRET() {
       break;
     }
     case COMTYP::OPENF: {
-      if (SRCOPEN) {
+      if (SOURCEOPEN_FLAG) {
         std::cout << "You Must Close Current Source Program First" << std::endl;
         std::cout << std::endl;
         goto L200;
       }
       INFNAME();
-      SRC = fopen(FNAME, "r");
-      if (SRC == nullptr) {
+      SOURCE = fopen(FNAME, "r");
+      if (SOURCE == nullptr) {
         std::cout << "Cannot Open Your Program Source File" << std::endl;
         std::cout << std::endl;
         goto L200;
       }
-      LIS = fopen(il->LISTFNAME.c_str(), "w");
-      if (LIS == nullptr) {
+      LISTFILE = fopen(il->LISTFNAME.c_str(), "w");
+      if (LISTFILE == nullptr) {
         std::cout << "Cannot Open the Program Listing File " << il->LISTFNAME
                   << std::endl;
-        fclose(SRC);
+        fclose(SOURCE);
         std::cout << std::endl;
         goto L200;
       }
-      // fclose(LIS);
-      if (INPUTFILE) {
+      // fclose(LISTFILE);
+      if (INPUTFILE_FLAG) {
         FILE *inp = fopen(il->INPUTFNAME.c_str(), "re");
         if (!inp) {
           // std::cout << "Cannot Open the Input File " << INPUTFNAME <<
           // std::endl;
           print(stdout, "Cannot Open the Input File %s\n", il->INPUTFNAME);
-          fclose(SRC);
+          fclose(SOURCE);
           std::cout << std::endl;
           goto L200;
         }
         fclose(inp);
       }
-      if (OUTPUTFILE) {
+      if (OUTPUTFILE_FLAG) {
         FILE *outp = fopen(il->OUTPUTFNAME.c_str(), "we");
         if (outp == nullptr) {
           std::cout << "Cannot Open the Output File " << il->OUTPUTFNAME
                     << std::endl;
-          fclose(SRC);
+          fclose(SOURCE);
           std::cout << std::endl;
           goto L200;
         }
@@ -2511,14 +2514,14 @@ void INTERPRET() {
       }
       EMIT(31);
       il->ENDLOC = line_count;
-      LOCATION[LNUM + 1] = line_count;
+      LOCATION[LINE_NUMBER + 1] = line_count;
       std::cout << '\n';
       //                    dumpCode();
       if (errors.none()) {
         // std::cout << std::endl;
         // std::cout << "Program Successfully Compiled" << std::endl;
         print(STDOUT, "\n%s Successfully Compiled\n", FNAME);
-        SRCOPEN = true;
+        SOURCEOPEN_FLAG = true;
         if (code_list)
           dumpCode();
         if (block_list)
@@ -2532,19 +2535,19 @@ void INTERPRET() {
       } else {
         error_message();
         std::cout << std::endl;
-        fclose(SRC);
+        fclose(SOURCE);
         std::cout << "PROGRAM SOURCE FILE IS NOW CLOSED TO ALLOW EDITING"
                   << std::endl;
       }
       std::cout << std::endl;
       std::cout << "To View a Complete Program Listing, See File "
                 << il->LISTFNAME << std::endl;
-      fclose(LIS);
+      fclose(LISTFILE);
       break;
     }
     case COMTYP::CLOSEF: {
-      if (SRCOPEN) {
-        SRCOPEN = false;
+      if (SOURCEOPEN_FLAG) {
+        SOURCEOPEN_FLAG = false;
         // std::cout << std::endl;
         // std::cout << "You can now modify your Program Source File" <<
         // std::endl;
@@ -2559,11 +2562,11 @@ void INTERPRET() {
           il->TRCTAB[I].MEMLOC = -1;
         }
         if (OUTPUTOPEN) {
-          fclose(OUTP);
+          fclose(OUTPUT);
           OUTPUTOPEN = false;
         }
         if (INPUTOPEN) {
-          fclose(INP);
+          fclose(INPUT);
           INPUTOPEN = false;
         }
       } else {
@@ -2575,10 +2578,10 @@ void INTERPRET() {
     case COMTYP::INPUTF: {
       EQINFNAME();
       if (INPUTOPEN) {
-        fclose(INP);
+        fclose(INPUT);
       }
       if (0 == strlen(FNAME)) {
-        INPUTFILE = false;
+        INPUTFILE_FLAG = false;
         INPUTOPEN = false;
       } else {
         FILE *inp = fopen(FNAME, "r");
@@ -2587,7 +2590,7 @@ void INTERPRET() {
           std::cout << std::endl;
         } else {
           fclose(inp);
-          INPUTFILE = true;
+          INPUTFILE_FLAG = true;
           strcpy(il->INPUTFNAME.data(), FNAME);
           INPUTOPEN = false;
           MUSTRUN = true;
@@ -2598,10 +2601,10 @@ void INTERPRET() {
     case COMTYP::OUTPUTF: {
       EQINFNAME();
       if (OUTPUTOPEN) {
-        fclose(OUTP);
+        fclose(OUTPUT);
       }
       if (0 == strlen(FNAME)) {
-        OUTPUTFILE = false;
+        OUTPUTFILE_FLAG = false;
         OUTPUTOPEN = false;
       } else {
         FILE *outp = fopen(FNAME, "w");
@@ -2610,7 +2613,7 @@ void INTERPRET() {
           std::cout << std::endl;
         } else {
           fclose(outp);
-          OUTPUTFILE = true;
+          OUTPUTFILE_FLAG = true;
           strcpy(il->OUTPUTFNAME.data(), FNAME);
           OUTPUTOPEN = false;
           MUSTRUN = true;
@@ -2645,7 +2648,7 @@ void INTERPRET() {
     }
     case COMTYP::RESETP: {
       INITINTERP(il);
-      if (!SRCOPEN) {
+      if (!SOURCEOPEN_FLAG) {
         mpi_mode = false;
       }
       std::cout << "All Debugger Settings are now reset to Default values"
@@ -2680,7 +2683,7 @@ void INTERPRET() {
       break;
     }
     case COMTYP::MPI: {
-      if (SRCOPEN) {
+      if (SOURCEOPEN_FLAG) {
         std::cout
             << "You Must Close Your Source Program before changing MPI Mode"
             << std::endl;

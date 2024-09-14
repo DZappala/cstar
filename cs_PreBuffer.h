@@ -3,8 +3,8 @@
 //
 #ifndef CSTAR_CS_PREBUFFER_H
 #define CSTAR_CS_PREBUFFER_H
-#include <cstdio>
-#include <sstream>
+#include <fstream>
+#include <string>
 
 #include "cs_defines.h"
 
@@ -16,31 +16,28 @@ namespace cs {
    * immediately executed before reading from the console starts.  This supports
    * non-interactive compilation and execution.
    */
-  struct PreBuffer {
-    explicit PreBuffer(FILE* file_ptr)
-      : file_ptr(file_ptr) {
-      buffer.sputc('\0');
-    }
+  class PreBuffer final : public std::streambuf {
+    std::ifstream file;
+    std::vector<char> buffer;
 
-    FILE* file_ptr;
-    int buffer_low{};
-    int buffer_high{};
-    std::stringbuf buffer;
-
-    auto getc() -> int {
-      if (buffer_high == buffer_low) {
-        return fgetc(file_ptr);
+    public:
+      explicit PreBuffer(const fs::path &file_name)
+        : file(file_name), buffer(LLNG) {
+        if (!file)
+          throw std::runtime_error("Attempted to open an invalid file");
+        setg(buffer.data(), buffer.data(), buffer.data() + buffer.size());
       }
-      return buffer.str().at(buffer_low++);
-    }
 
-    void setBuffer(const char* data, int size) {
-      if (size < LLNG) {
-        buffer.sputn(data, size);
-        buffer_low = 0;
-        buffer_high = size;
+      /**
+       * @brief Read from the file into the buffer
+       * @return int
+       */
+      auto underflow() -> int override {
+        if (file.eof()) return traits_type::eof();
+        file.read(buffer.data(), static_cast<int64_t>(buffer.size()));
+        setg(buffer.data(), buffer.data(), buffer.data() + file.gcount());
+        return traits_type::to_int_type(*gptr());
       }
-    }
-  } __attribute__((aligned(128))) __attribute__((packed));
-} // namespace Cstar
+  };
+} // namespace cs
 #endif // CSTAR_CS_PREBUFFER_H

@@ -21,7 +21,7 @@ struct ExLocal {
   int TGAP = 0;
   double RH1 = 0;
 
-  cs::ORDER IR{};
+  cs::Order IR{};
   bool B1 = false;
   cs::PROCPNT NEWPROC = nullptr;
   // InterpLocal *il;
