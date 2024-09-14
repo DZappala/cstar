@@ -361,95 +361,87 @@ namespace cs {
 
       auto screen = ScreenInteractive::Fullscreen();
       int shift = 0;
-      constexpr FlexboxConfig main_vertical_flexbox_config{
-        .direction = FlexboxConfig::Direction::Column,
-        .wrap = FlexboxConfig::Wrap::NoWrap,
-        .justify_content = FlexboxConfig::JustifyContent::Center,
-        .align_items = FlexboxConfig::AlignItems::Center,
-        .gap_x = 10,
-      };
 
-      const Element head_paragraph_flexbox = flexbox(
+      const Element header_paragraph =
+        text("C* Compiler \nand parallel computer simulation system")
+        | hcenter | bold;
+      const Element subheading = text("(Ver. 3.0c++)") | hcenter | dim;
+      const Element copyright =
+        text("(C) Copyright 2007 by Bruce P. Lester, All Rights Reserved")
+        | hcenter | dim;
+
+      const Elements header_content = {header_paragraph, subheading, copyright};
+      const Component header_renderer = Renderer(
         [&] {
-          const string heading =
-            "C* Compiler \nand parallel computer simulation system";
-          const string subheading = "(Ver. 3.0c++)";
-          const string copyright =
-            "(C) Copyright 2007 by Bruce P. Lester, All Rights Reserved";
-          return Elements{
-            text(heading) | hcenter | bold,
-            text(subheading) | hcenter | dim,
-            text(copyright) | hcenter | dim
-          };
-        }(),
-        {
-          .direction = FlexboxConfig::Direction::Column,
-          .wrap = FlexboxConfig::Wrap::NoWrap,
-          .justify_content = FlexboxConfig::JustifyContent::Center,
-          .align_items = FlexboxConfig::AlignItems::Center,
-          .gap_x = 10,
+          return vbox({vbox(header_content) | flex | center});
         }
       );
 
-      const Element basic_usage_flexbox = flexbox(
+      const Element open = text(
+        "*(O)PEN filename - Open and Compile your program source file"
+      );
+      const Element run = text(
+        "*(R)UN - Initialize and run your program from the beginning"
+      );
+      const Element close = text(
+        "*(C)LOSE - Close your program source file to allow editing"
+      );
+      const Element exit = text("*(E)XIT - Terminate this C* System");
+      const Element help = text("*(H)ELP - Show a complete list of commands");
+
+      const Elements tutorial_content = {open, run, close, exit, help,};
+      const Component tutorial_renderer = Renderer(
         [&] {
-          const string basic_usage = "Basic Commands:";
-          const string open =
-            "*(O)PEN filename - Open and Compile your program source file";
-          const string run =
-            "*(R)UN - Initialize and run your program from the beginning";
-          const string close =
-            "*(C)LOSE - Close your program source file to allow editing";
-          const string exit = "*(E)XIT - Terminate this C* System";
-          const string help = "*(H)ELP - Show a complete list of commands";
-          return Elements{
-            text(basic_usage) | bold,
-            text(open),
-            text(run),
-            text(close),
-            text(exit),
-            text(help)
-          };
-        }(),
-        {
-          .direction = FlexboxConfig::Direction::Column,
-          .wrap = FlexboxConfig::Wrap::NoWrap,
-          .justify_content = FlexboxConfig::JustifyContent::Center,
-          .align_items = FlexboxConfig::AlignItems::FlexStart,
-          .gap_x = 10,
+          return vbox(
+            {
+              window(
+                text("Basic Commands"),
+                vbox(tutorial_content) | flex
+              )
+            }
+          );
         }
       );
 
-      const Component exit_button = Button(
-        "Exit",
-        [&] { screen.Exit(); },
-        ButtonOption::Animated()
+      const Component exit_button =
+        Button(
+          "Exit",
+          [&] { screen.Exit(); },
+          ButtonOption::Animated(
+            Color::RGB(18, 18, 18),
+            Color::RGB(0xf1, 0xf1, 0xf1),
+            Color::RGB(0xf1, 0xf1, 0xf1),
+            Color::RGB(18, 18, 18)
+          )
+        )
+        | hcenter;
+      const Component main_container = Vertical(
+        {
+          Horizontal(
+            {
+              /* button greup */
+              exit_button
+            }
+          ),
+          header_renderer,
+          tutorial_renderer
+        }
       );
 
-      const auto main_flex = [&] {
-        return flexbox(
-          [&] {
-            return Elements{
-              head_paragraph_flexbox,
-              basic_usage_flexbox,
-            };
-          }(),
-          {
-            .direction = FlexboxConfig::Direction::Column,
-            .wrap = FlexboxConfig::Wrap::NoWrap,
-            .justify_content = FlexboxConfig::JustifyContent::Center,
-            .align_items = FlexboxConfig::AlignItems::Center,
-            .gap_x = 10,
-          }
-        );
-      };
-
-      const auto main_container = Vertical({{exit_button},});
-
-      const Component main_renderer = Renderer(
+      Component main_renderer = Renderer(
         main_container,
-        [&] { return vbox({main_flex(),}); }
+        [&] {
+          return vbox(
+            {
+              header_renderer->Render() | flex,
+              tutorial_renderer->Render() | flex,
+              exit_button->Render() | size(WIDTH, EQUAL, 10) | hcenter
+            }
+          );
+        }
       );
+
+      main_renderer = main_renderer | borderEmpty;
 
       std::atomic refresh_ui_continue = true;
       std::thread refresh_ui(
