@@ -23,16 +23,16 @@ struct ExlibLocal {
   bool B1, B2;
   double R1, R2, R3;
   COORTYPE COORD[MAXDIM + 1];
-  InterpLocal *il;
+  Interpreter *il;
 };
 
-extern int FINDFRAME(InterpLocal *il, int LENGTH);
-extern void RELEASE(InterpLocal *il, int BASE, int LENGTH);
-extern void CHKVAR(InterpLocal *il, int STKLOC);
-extern void TIMEINC(InterpLocal *, int, const char *);
-extern int COMMDELAY(InterpLocal *, int, int, int);
+extern int FINDFRAME(Interpreter *il, int LENGTH);
+extern void RELEASE(Interpreter *il, int BASE, int LENGTH);
+extern void CHKVAR(Interpreter *il, int STKLOC);
+extern void TIMEINC(Interpreter *, int, const char *);
+extern int COMMDELAY(Interpreter *, int, int, int);
 extern int BTOI(bool);
-void INITCHAN(InterpLocal *il, int CHID) {
+void INITCHAN(Interpreter *il, int CHID) {
   if (il->CHAN[CHID].HEAD == -1) {
     il->CHAN[CHID].HEAD = 0;
     il->CHAN[CHID].WAIT = nullptr;
@@ -104,7 +104,7 @@ int HOPS(int SOURCE, int DEST) {
   return DIST;
 }
 
-int GRPDELAY(InterpLocal *il, int lSOURCE, int DEST, int LEN) {
+int GRPDELAY(Interpreter *il, int lSOURCE, int DEST, int LEN) {
   int NUMPACK, NUMHOP, TD, T1, T2;
   int AVEFAN = 0, MAXFAN = 0;
   NUMPACK = LEN / 3;
@@ -152,16 +152,16 @@ int GRPDELAY(InterpLocal *il, int lSOURCE, int DEST, int LEN) {
   return TD;
 }
 bool CHKBUF(ExlibLocal *xl, int STRLOC, int ILEN) {
-  InterpLocal *il = xl->il;
+  Interpreter *il = xl->il;
   if (STRLOC <= 0 || ILEN <= 0 || STRLOC + ILEN > STMAX ||
       il->STARTMEM[STRLOC] <= 0) {
-    il->PS = InterpLocal::PS::REFCHK;
+    il->PS = Interpreter::PS::REFCHK;
     return false;
   }
 
   for (int i = 1; i < ILEN; i++) {
     if (il->STARTMEM[STRLOC + i] != il->STARTMEM[STRLOC]) {
-      il->PS = InterpLocal::PS::REFCHK;
+      il->PS = Interpreter::PS::REFCHK;
       return false;
     }
     if (il->NUMTRACE > 0) {
@@ -174,7 +174,7 @@ bool CHKBUF(ExlibLocal *xl, int STRLOC, int ILEN) {
 
 int GETRANK(ExlibLocal *el, int IROW, const int COOR[MAXDIM]) {
   int I, THISMAX, RANK, NDIM, THISCOOR;
-  InterpLocal *il = el->il;
+  Interpreter *il = el->il;
   NDIM = il->MPICART[IROW][0];
   RANK = 0;
   for (I = 1; I <= NDIM; I++) {
@@ -215,32 +215,32 @@ bool CHKCOMM(ExlibLocal *el, int COMMCODE) {
 }
 
 int CHKLEN(ExlibLocal *el, int STRPNT) {
-  InterpLocal *il = el->il;
+  Interpreter *il = el->il;
   if (STRPNT < 0 || STRPNT > STMAX) {
-    il->PS = InterpLocal::PS::REFCHK;
+    il->PS = Interpreter::PS::REFCHK;
     return -1;
   }
   if (il->STARTMEM[STRPNT] <= 0) {
-    il->PS = InterpLocal::PS::REFCHK;
+    il->PS = Interpreter::PS::REFCHK;
     return -1;
   }
   int I = STRPNT;
   int LEN = 0;
   while (il->S[I] != 0) {
     if (il->S[I] < CHARL || il->S[I] > CHARH) {
-      il->PS = InterpLocal::PS::STRCHK;
+      il->PS = Interpreter::PS::STRCHK;
       return -1;
     }
     LEN++;
     I++;
     if (il->STARTMEM[I] != il->STARTMEM[STRPNT]) {
-      il->PS = InterpLocal::PS::STRCHK;
+      il->PS = Interpreter::PS::STRCHK;
       return -1;
     }
   }
   return LEN;
 }
-void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
+void EXECLIB(Interpreter *il, ExLocal *el, PROCPNT CURPR, int lID) {
   long rnd;
   ExlibLocal xl = {0};
   PROCPNT proc;
@@ -352,7 +352,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     if (xl.H1 < 0 || xl.H1 >= STMAX || (il->STARTMEM[xl.H1] != xl.H1) ||
         (il->STARTMEM[xl.H1] == il->STARTMEM[xl.H1 - 1]) ||
         (il->STARTMEM[xl.H1 - 1] < 0)) {
-      il->PS = InterpLocal::PS::REFCHK;
+      il->PS = Interpreter::PS::REFCHK;
       break;
     }
     xl.H3 = 1;
@@ -392,19 +392,19 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     //                    il->PS = InterpLocal::PS::REFCHK;
     //                    break;
     if (xl.H1 < 0 || xl.H1 >= STMAX) {
-      il->PS = InterpLocal::PS::REFCHK;
+      il->PS = Interpreter::PS::REFCHK;
       break;
     }
     if (il->STARTMEM[xl.H1] != xl.H1) {
-      il->PS = InterpLocal::PS::REFCHK;
+      il->PS = Interpreter::PS::REFCHK;
       break;
     }
     if (il->STARTMEM[xl.H1] == il->STARTMEM[xl.H1 - 1]) {
-      il->PS = InterpLocal::PS::REFCHK;
+      il->PS = Interpreter::PS::REFCHK;
       break;
     }
     if (il->STARTMEM[xl.H1 - 1] < 0) {
-      il->PS = InterpLocal::PS::REFCHK;
+      il->PS = Interpreter::PS::REFCHK;
       break;
     }
     xl.H2 = 1;
@@ -424,12 +424,12 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       break;
     }
     if (xl.H1 + xl.H3 + xl.H4 > STMAX) {
-      il->PS = InterpLocal::PS::STKCHK;
+      il->PS = Interpreter::PS::STKCHK;
       break;
     }
     for (xl.I = 0; xl.I <= xl.H4; xl.I++) {
       if (il->STARTMEM[xl.H1 + xl.H3 + xl.I] != il->STARTMEM[xl.H1]) {
-        il->PS = InterpLocal::PS::REFCHK;
+        il->PS = Interpreter::PS::REFCHK;
         break;
       }
     }
@@ -446,7 +446,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       break;
     }
     if (xl.H2 < CHARL || xl.H2 > CHARH) {
-      il->PS = InterpLocal::PS::CHRCHK;
+      il->PS = Interpreter::PS::CHRCHK;
       break;
     }
     il->S[CURPR->T] = 0;
@@ -505,11 +505,11 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       break;
     }
     if (xl.H1 + xl.H3 > STMAX) {
-      il->PS = InterpLocal::PS::STKCHK;
+      il->PS = Interpreter::PS::STKCHK;
       break;
     }
     if (il->STARTMEM[xl.H1 + xl.H3] != il->STARTMEM[xl.H1]) {
-      il->PS = InterpLocal::PS::REFCHK;
+      il->PS = Interpreter::PS::REFCHK;
       break;
     }
     for (xl.I = 0; xl.I <= xl.H3; xl.I++) {
@@ -647,18 +647,18 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     }
     break;
   case 40:
-    il->PS = InterpLocal::PS::USERSTOP;
+    il->PS = Interpreter::PS::USERSTOP;
     break;
   case 41:
     CURPR->T = CURPR->T - 1;
     if (CURPR->FORKCOUNT > 1) {
-      CURPR->STATE = PROCESSDESCRIPTOR::STATE::BLOCKED;
+      CURPR->STATE = ProcessDescriptor::STATE::BLOCKED;
       CURPR->PC -= 1;
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
       CURPR->FORKCOUNT -= 1;
     } else {
-      il->PS = InterpLocal::PS::FIN;
-      CURPR->STATE = PROCESSDESCRIPTOR::STATE::TERMINATED;
+      il->PS = Interpreter::PS::FIN;
+      CURPR->STATE = ProcessDescriptor::STATE::TERMINATED;
     }
     break;
   //      BEGIN
@@ -680,11 +680,11 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     xl.H2 = il->S[CURPR->T];
     CURPR->T = CURPR->T - 1;
     if (xl.H2 == 0)
-      il->PS = InterpLocal::PS::DIVCHK;
+      il->PS = Interpreter::PS::DIVCHK;
     else {
       xl.H3 = FINDFRAME(il, 2);
       if (xl.H3 < 0) {
-        il->PS = InterpLocal::PS::STKCHK;
+        il->PS = Interpreter::PS::STKCHK;
         break;
       }
       il->S[xl.H3] = xl.H1 / xl.H2;
@@ -708,7 +708,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     break;
   case 51: // finalize
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     il->MPIFIN[CURPR->PROCESSOR] = true;
@@ -723,11 +723,11 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     break;
   case 52:
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (CHKCOMM(&xl, il->S[CURPR->T - 1])) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     xl.H1 = il->S[CURPR->T];
@@ -740,11 +740,11 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     break;
   case 53:
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (CHKCOMM(&xl, il->S[CURPR->T - 1])) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     xl.H1 = il->S[CURPR->T];
@@ -757,7 +757,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     break;
   case 54:
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (CHKCOMM(&xl, il->S[CURPR->T]) || (il->S[CURPR->T - 1] < 0) ||
@@ -765,7 +765,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         (il->S[CURPR->T - 2] > highest_processor) ||
         (il->S[CURPR->T - 3] != MPIINT && il->S[CURPR->T - 3] != MPIFLOAT &&
          il->S[CURPR->T - 3] != MPICHAR)) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     il->CNUM = il->S[CURPR->T - 2];
@@ -786,7 +786,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     il->S[xl.H4 + 3] = il->S[CURPR->T - 1];
     for (xl.I = 0; xl.I < xl.H3; xl.I++) {
       if (il->STARTMEM[xl.H1 + xl.I] != il->STARTMEM[xl.H1]) {
-        il->PS = InterpLocal::PS::REFCHK;
+        il->PS = Interpreter::PS::REFCHK;
         break;
       }
       il->S[xl.H4 + xl.I + 4] = il->S[xl.H1 + xl.I];
@@ -794,17 +794,17 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         if (il->S[xl.H1 + xl.I] == RTAG) {
           il->RS[xl.H4 + xl.I + 4] = il->RS[xl.H1 + xl.I];
         } else if (il->S[xl.H1 + xl.I] != 0) {
-          il->PS = InterpLocal::PS::MPITYPECHK;
+          il->PS = Interpreter::PS::MPITYPECHK;
           break;
         }
       } else if (il->S[xl.H1 + xl.I] == RTAG) {
-        il->PS = InterpLocal::PS::MPITYPECHK;
+        il->PS = Interpreter::PS::MPITYPECHK;
         break;
       }
     }
     TIMEINC(il, xl.H3 / 3, "xl54");
     if (il->FREE == 0) {
-      il->PS = InterpLocal::PS::BUFCHK;
+      il->PS = Interpreter::PS::BUFCHK;
       break;
     }
     TIMEINC(il, CHANTIME, "xl54+");
@@ -844,7 +844,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     }
     if (il->CHAN[il->CNUM].WAIT != nullptr) {
       PROCPNT wt = il->CHAN[il->CNUM].WAIT->PDES;
-      wt->STATE = PROCESSDESCRIPTOR::STATE::DELAYED;
+      wt->STATE = ProcessDescriptor::STATE::DELAYED;
       if (il->DATE[il->K] < wt->WAKETIME) {
         wt->WAKETIME = il->DATE[il->K];
       }
@@ -856,7 +856,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     break;
   case 55:
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (il->S[CURPR->T] <= 0 || CHKCOMM(&xl, il->S[CURPR->T - 1]) ||
@@ -865,7 +865,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         (il->S[CURPR->T - 3] > highest_processor) ||
         (il->S[CURPR->T - 4] != MPIINT && il->S[CURPR->T - 4] != MPIFLOAT &&
          il->S[CURPR->T - 4] != MPICHAR)) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     xl.H1 = il->S[CURPR->T - 6];
@@ -895,16 +895,16 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       xl.B2 = il->DATE[xl.PNT] > CURPR->TIME;
     }
     if (xl.B1 || xl.B2) {
-      il->PTEMP = (ACTPNT)calloc(1, sizeof(ACTIVEPROCESS));
+      il->PTEMP = (ACTPNT)calloc(1, sizeof(ActiveProcess));
       il->PTEMP->PDES = CURPR;
       il->PTEMP->NEXT = nullptr;
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
       il->CHAN[il->CNUM].WAIT = il->PTEMP;
       if (xl.B2) {
-        CURPR->STATE = PROCESSDESCRIPTOR::STATE::DELAYED;
+        CURPR->STATE = ProcessDescriptor::STATE::DELAYED;
         CURPR->WAKETIME = il->DATE[xl.PNT];
       } else {
-        CURPR->STATE = PROCESSDESCRIPTOR::STATE::BLOCKED;
+        CURPR->STATE = ProcessDescriptor::STATE::BLOCKED;
       }
       CURPR->PC -= 1;
       il->NOSWITCH = false;
@@ -931,17 +931,17 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->S[xl.H5 + 1] = il->S[xl.H4 + 3];
       il->S[xl.H5 + 2] = 0;
       if (il->S[xl.H4] > il->S[CURPR->T - 5]) {
-        il->PS = InterpLocal::PS::MPICNTCHK;
+        il->PS = Interpreter::PS::MPICNTCHK;
         break;
       }
       il->RS[xl.H5 + 2] = il->S[xl.H4];
       if (il->S[xl.H4 + 1] != il->S[CURPR->T - 4]) {
-        il->PS = InterpLocal::PS::MPITYPECHK;
+        il->PS = Interpreter::PS::MPITYPECHK;
         break;
       }
       for (xl.I = 0; xl.I < il->S[xl.H4]; xl.I++) {
         if (il->STARTMEM[xl.H1 + xl.I] != il->STARTMEM[xl.H1]) {
-          il->PS = InterpLocal::PS::REFCHK;
+          il->PS = Interpreter::PS::REFCHK;
           break;
         }
         il->S[xl.H1 + xl.I] = il->S[xl.H4 + xl.I + 4];
@@ -957,14 +957,14 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     break;
   case 56:
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (il->S[CURPR->T] <= 1 ||
         !(il->S[CURPR->T - 1] == MPIINT || il->S[CURPR->T - 1] == MPIFLOAT ||
           il->S[CURPR->T - 1] == MPICHAR) ||
         il->S[CURPR->T - 2] <= 0) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     xl.H1 = il->S[CURPR->T - 2];
@@ -974,11 +974,11 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     }
     if (il->S[xl.H1] < 0 || il->S[xl.H1] > highest_processor ||
         il->S[xl.H1 + 1] < 0 || il->S[xl.H1 + 2] != 0) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->STARTMEM[xl.H2] <= 0) {
-      il->PS = InterpLocal::PS::REFCHK;
+      il->PS = Interpreter::PS::REFCHK;
       break;
     }
     il->S[xl.H2] = (int)il->RS[xl.H1 + 2];
@@ -987,11 +987,11 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     break;
   case 57:
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (CHKCOMM(&xl, il->S[CURPR->T])) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->MPICODE == -1) {
@@ -999,7 +999,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPITIME = 0;
       il->MPISEM = highest_processor + 1;
     } else if (il->MPICODE != 57) {
-      il->PS = InterpLocal::PS::MPIGRPCHK;
+      il->PS = Interpreter::PS::MPIGRPCHK;
       break;
     }
     il->MPISEM = il->MPISEM - 1;
@@ -1019,7 +1019,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       proc = il->PTEMP->PDES;
       do {
         xl.H2 = GRPDELAY(xl.il, xl.H1, proc->PROCESSOR, 1);
-        proc->STATE = PROCESSDESCRIPTOR ::STATE::DELAYED;
+        proc->STATE = ProcessDescriptor ::STATE::DELAYED;
         proc->WAKETIME = il->MPITIME + xl.H2;
         il->PTEMP = il->PTEMP->NEXT;
         proc = il->PTEMP->PDES; // ?? is this the way Pascal "with" works
@@ -1028,19 +1028,19 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPICODE = -1;
     } else {
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-      CURPR->STATE = PROCESSDESCRIPTOR ::STATE::BLOCKED;
+      CURPR->STATE = ProcessDescriptor ::STATE::BLOCKED;
     }
     break;
   case 58: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (CHKCOMM(&xl, il->S[CURPR->T]) || (il->S[CURPR->T - 1] < 0) ||
         (il->S[CURPR->T - 1] > highest_processor) ||
         (il->S[CURPR->T - 2] != MPIINT && il->S[CURPR->T - 2] != MPIFLOAT &&
          il->S[CURPR->T - 2] != MPICHAR)) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (!CHKBUF(&xl, il->S[CURPR->T - 4], il->S[CURPR->T - 3])) {
@@ -1056,7 +1056,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     } else if (il->MPICODE != 58 || il->S[CURPR->T - 1] != il->MPIROOT ||
                il->S[CURPR->T - 2] != il->MPITYPE ||
                il->S[CURPR->T - 3] != il->MPICNT) {
-      il->PS = InterpLocal::PS::MPIGRPCHK;
+      il->PS = Interpreter::PS::MPIGRPCHK;
       break;
     }
     xl.H2 = il->S[CURPR->T - 4];
@@ -1070,7 +1070,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       if (il->MPITYPE == MPIFLOAT) {
         for (xl.I = xl.H1; xl.I < xl.H1 + il->MPICNT; xl.I++) {
           if (il->S[xl.I] != RTAG && il->S[xl.I] != 0) {
-            il->PS = InterpLocal::PS::MPITYPECHK;
+            il->PS = Interpreter::PS::MPITYPECHK;
             break;
           }
         }
@@ -1089,11 +1089,11 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         proc = il->PTEMP->PDES;
         xl.R1 = il->MPITIME +
                 GRPDELAY(il, il->MPIROOT, proc->PROCESSOR, il->MPICNT);
-        proc->STATE = PROCESSDESCRIPTOR::STATE::DELAYED;
+        proc->STATE = ProcessDescriptor::STATE::DELAYED;
         if (proc->TIME < xl.R1)
           proc->WAKETIME = xl.R1;
         else
-          proc->STATE = PROCESSDESCRIPTOR::STATE::READY;
+          proc->STATE = ProcessDescriptor::STATE::READY;
         il->PTEMP = il->PTEMP->NEXT;
         proc->T = proc->T - 4;
         il->S[proc->T] = MPISUCCESS;
@@ -1101,13 +1101,13 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPICODE = -1;
     } else {
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-      CURPR->STATE = PROCESSDESCRIPTOR::STATE::BLOCKED;
+      CURPR->STATE = ProcessDescriptor::STATE::BLOCKED;
     }
     break;
   }
   case 59: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (CHKCOMM(&xl, il->S[CURPR->T]) || (il->S[CURPR->T - 1] < 0) ||
@@ -1117,7 +1117,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         (il->S[CURPR->T - 3] <= 0) || (il->S[CURPR->T - 4] <= 0) ||
         ((il->S[CURPR->T - 5] != MPIINT && il->S[CURPR->T - 5] != MPIFLOAT &&
           il->S[CURPR->T - 5] != MPICHAR))) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (!CHKBUF(&xl, il->S[CURPR->T - 7], il->S[CURPR->T - 6])) {
@@ -1133,7 +1133,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     } else if ((il->MPICODE != 60) || (il->S[CURPR->T - 1] != il->MPIROOT) ||
                (il->S[CURPR->T - 5] != il->MPITYPE) ||
                (il->S[CURPR->T - 6] != il->MPICNT)) {
-      il->PS = InterpLocal::PS::MPIGRPCHK;
+      il->PS = Interpreter::PS::MPIGRPCHK;
       break;
     }
     xl.H2 = il->S[CURPR->T - 7];
@@ -1143,14 +1143,14 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
            (il->S[xl.H2 + xl.I] == RTAG)) ||
           ((il->MPITYPE == MPIFLOAT) && (il->S[xl.H2 + xl.I] != RTAG)) &&
               (il->S[xl.H2 + xl.I] != 0)) {
-        il->PS = InterpLocal::PS::MPITYPECHK;
+        il->PS = Interpreter::PS::MPITYPECHK;
         break;
       }
     }
     if (CURPR->PID == il->MPIROOT) {
       if ((il->S[CURPR->T - 2] != il->MPITYPE) ||
           (il->S[CURPR->T - 3] != il->MPICNT) || (il->S[CURPR->T - 4] <= 0)) {
-        il->PS = InterpLocal::PS::MPIPARCHK;
+        il->PS = Interpreter::PS::MPIPARCHK;
         break;
       }
       xl.H2 = il->S[CURPR->T - 4];
@@ -1185,7 +1185,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         il->PTEMP->PDES->WAKETIME =
             il->MPITIME +
             GRPDELAY(il, il->MPIROOT, il->PTEMP->PDES->PROCESSOR, 1);
-        il->PTEMP->PDES->STATE = PROCESSDESCRIPTOR::STATE::DELAYED;
+        il->PTEMP->PDES->STATE = ProcessDescriptor::STATE::DELAYED;
         il->PTEMP = il->PTEMP->NEXT;
         il->PTEMP->PDES->T = il->PTEMP->PDES->T - 7;
         il->S[il->PTEMP->PDES->T] = MPISUCCESS;
@@ -1193,13 +1193,13 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPICODE = -1;
     } else {
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-      CURPR->STATE = PROCESSDESCRIPTOR::STATE::BLOCKED;
+      CURPR->STATE = ProcessDescriptor::STATE::BLOCKED;
     }
     break;
   }
   case 60: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (CHKCOMM(&xl, il->S[CURPR->T]) || (il->S[CURPR->T - 1] < 0) ||
@@ -1210,7 +1210,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         (!(il->S[CURPR->T - 5] == MPIINT || il->S[CURPR->T - 5] == MPIFLOAT ||
            il->S[CURPR->T - 5] == MPICHAR)) ||
         (il->S[CURPR->T - 6] <= 0) || (il->S[CURPR->T - 7] <= 0)) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->MPICODE == -1) {
@@ -1223,7 +1223,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     } else if (il->MPICODE != 60 || il->S[CURPR->T - 1] != il->MPIROOT ||
                il->S[CURPR->T - 2] != il->MPITYPE ||
                il->S[CURPR->T - 3] != il->MPICNT) {
-      il->PS = InterpLocal::PS::MPIGRPCHK;
+      il->PS = Interpreter::PS::MPIGRPCHK;
       break;
     }
     xl.H2 = il->S[CURPR->T - 4];
@@ -1234,7 +1234,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     if (CURPR->PID == il->MPIROOT) {
       if (il->S[CURPR->T - 5] != il->MPITYPE ||
           il->S[CURPR->T - 6] != il->MPICNT || il->S[CURPR->T - 7] <= 0) {
-        il->PS = InterpLocal::PS::MPIPARCHK;
+        il->PS = Interpreter::PS::MPIPARCHK;
         break;
       }
       xl.H2 = il->S[CURPR->T - 7];
@@ -1247,7 +1247,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
              il->S[xl.H2 + xl.I] == RTAG) ||
             (il->MPITYPE == MPIFLOAT && il->S[xl.H2 + xl.I] != RTAG &&
              il->S[xl.H2 + xl.I] != 0)) {
-          il->PS = InterpLocal::PS::MPITYPECHK;
+          il->PS = Interpreter::PS::MPITYPECHK;
           break;
         }
       }
@@ -1273,18 +1273,18 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       do {
         proc = il->PTEMP->PDES;
         if (proc->PID == il->MPIROOT) {
-          proc->STATE = PROCESSDESCRIPTOR::STATE::DELAYED;
+          proc->STATE = ProcessDescriptor::STATE::DELAYED;
           proc->WAKETIME =
               il->MPITIME +
               (highest_processor * (MPINODETIME + (int)(il->MPICNT / 3)));
         } else {
           xl.R1 = il->MPITIME +
                   COMMDELAY(il, il->MPIROOT, proc->PROCESSOR, il->MPICNT);
-          proc->STATE = PROCESSDESCRIPTOR::STATE::DELAYED;
+          proc->STATE = ProcessDescriptor::STATE::DELAYED;
           if (proc->TIME < xl.R1) {
             proc->WAKETIME = xl.R1;
           } else {
-            proc->STATE = PROCESSDESCRIPTOR::STATE::READY;
+            proc->STATE = ProcessDescriptor::STATE::READY;
           }
         }
         il->PTEMP = il->PTEMP->NEXT;
@@ -1294,13 +1294,13 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPICODE = -1;
     } else {
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-      CURPR->STATE = PROCESSDESCRIPTOR::STATE::BLOCKED;
+      CURPR->STATE = ProcessDescriptor::STATE::BLOCKED;
     }
     break;
   }
   case 61: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (CHKCOMM(&xl, il->S[CURPR->T]) || (il->S[CURPR->T - 1] < 0) ||
@@ -1315,7 +1315,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         ((il->S[CURPR->T - 2] == MPILAND || il->S[CURPR->T - 2] == MPILOR ||
           il->S[CURPR->T - 2] == MPILXOR) &&
          (il->S[CURPR->T - 3] == MPIFLOAT))) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->MPICODE == -1) {
@@ -1330,7 +1330,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
                il->S[CURPR->T - 3] != il->MPITYPE ||
                il->S[CURPR->T - 4] != il->MPICNT ||
                il->S[CURPR->T - 1] != il->MPIROOT) {
-      il->PS = InterpLocal::PS::MPIGRPCHK;
+      il->PS = Interpreter::PS::MPIGRPCHK;
       break;
     }
     xl.H2 = il->S[CURPR->T - 6];
@@ -1417,7 +1417,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
           } else if (il->S[il->MPIPNT[0] + xl.J] == 0) {
             xl.R2 = 0.0;
           } else {
-            il->PS = InterpLocal::PS::MPITYPECHK;
+            il->PS = Interpreter::PS::MPITYPECHK;
             break;
           }
           if (il->MPIOP == MPISUM) {
@@ -1432,7 +1432,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
             } else if (il->S[il->MPIPNT[xl.I] + xl.J] == 0) {
               xl.R3 = 0.0;
             } else {
-              il->PS = InterpLocal::PS::MPITYPECHK;
+              il->PS = Interpreter::PS::MPITYPECHK;
               break;
             }
             switch (il->MPIOP) {
@@ -1463,11 +1463,11 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       do {
         proc = il->PTEMP->PDES;
         xl.R1 = il->MPITIME + GRPDELAY(il, il->MPIROOT, proc->PROCESSOR, 1);
-        proc->STATE = PROCESSDESCRIPTOR::STATE::DELAYED;
+        proc->STATE = ProcessDescriptor::STATE::DELAYED;
         if (proc->TIME < xl.R1) {
           proc->WAKETIME = xl.R1;
         } else {
-          proc->STATE = PROCESSDESCRIPTOR::STATE::READY;
+          proc->STATE = ProcessDescriptor::STATE::READY;
         }
         il->PTEMP = il->PTEMP->NEXT;
         il->PTEMP->PDES->T -= 6;
@@ -1476,13 +1476,13 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPICODE = -1;
     } else {
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-      CURPR->STATE = PROCESSDESCRIPTOR::STATE::BLOCKED;
+      CURPR->STATE = ProcessDescriptor::STATE::BLOCKED;
     }
     break;
   }
   case 62: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (CHKCOMM(&xl, il->S[CURPR->T]) ||
@@ -1496,7 +1496,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         ((il->S[CURPR->T - 1] == MPILAND || il->S[CURPR->T - 1] == MPILOR ||
           il->S[CURPR->T - 1] == MPILXOR) &&
          (il->S[CURPR->T - 2] == MPIFLOAT))) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->MPICODE == -1) {
@@ -1509,7 +1509,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     } else if (il->MPICODE != 62 || il->S[CURPR->T - 1] != il->MPIOP ||
                il->S[CURPR->T - 2] != il->MPITYPE ||
                il->S[CURPR->T - 3] != il->MPICNT) {
-      il->PS = InterpLocal::PS::MPIGRPCHK;
+      il->PS = Interpreter::PS::MPIGRPCHK;
       break;
     }
     xl.H2 = il->S[CURPR->T - 5];
@@ -1594,7 +1594,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
           } else if (il->S[il->MPIPNT[0] + xl.J] == 0) {
             xl.R2 = 0.0;
           } else {
-            il->PS = InterpLocal::PS::MPITYPECHK;
+            il->PS = Interpreter::PS::MPITYPECHK;
             break;
           }
           if (il->MPIOP == MPISUM) {
@@ -1609,7 +1609,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
             } else if (il->S[il->MPIPNT[xl.I] + xl.J] == 0) {
               xl.R3 = 0.0;
             } else {
-              il->PS = InterpLocal::PS::MPITYPECHK;
+              il->PS = Interpreter::PS::MPITYPECHK;
               break;
             }
             switch (il->MPIOP) {
@@ -1650,11 +1650,11 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       do {
         proc = il->PTEMP->PDES;
         xl.R1 = il->MPITIME + GRPDELAY(il, xl.H1, proc->PROCESSOR, il->MPICNT);
-        proc->STATE = PROCESSDESCRIPTOR::STATE::DELAYED;
+        proc->STATE = ProcessDescriptor::STATE::DELAYED;
         if (proc->TIME < xl.R1) {
           proc->WAKETIME = xl.R1;
         } else {
-          proc->STATE = PROCESSDESCRIPTOR::STATE::READY;
+          proc->STATE = ProcessDescriptor::STATE::READY;
         }
         il->PTEMP = il->PTEMP->NEXT;
         il->PTEMP->PDES->T -= 5;
@@ -1663,13 +1663,13 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPICODE = -1;
     } else {
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-      CURPR->STATE = PROCESSDESCRIPTOR::STATE::BLOCKED;
+      CURPR->STATE = ProcessDescriptor::STATE::BLOCKED;
     }
     break;
   }
   case 63: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if ((il->S[CURPR->T] <= 0) || (il->S[CURPR->T] > STMAX) ||
@@ -1678,7 +1678,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         ((il->S[CURPR->T - 3] < 0) && (il->S[CURPR->T - 3] != MPIANYTAG)) ||
         ((il->S[CURPR->T - 4] < 0) && (il->S[CURPR->T - 4] != MPIANYSOURCE)) ||
         (il->S[CURPR->T - 4] > highest_processor)) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     xl.H1 = il->S[CURPR->T - 1];
@@ -1724,12 +1724,12 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
   }
   case 64: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if ((il->S[CURPR->T - 4] > MAXDIM) || (il->S[CURPR->T - 4] <= 0) ||
         CHKCOMM(&xl, il->S[CURPR->T - 5])) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (!CHKBUF(&xl, il->S[CURPR->T - 2], il->S[CURPR->T - 4]) ||
@@ -1753,7 +1753,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         }
       }
       if (xl.H1 == -1) {
-        il->PS = InterpLocal::PS::CARTOVR;
+        il->PS = Interpreter::PS::CARTOVR;
         break;
       }
       xl.H2 = il->S[CURPR->T - 4];
@@ -1769,12 +1769,12 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         xl.H4 = xl.H4 * il->S[xl.H3 + xl.I - 1];
       }
       if (xl.H4 != highest_processor + 1) {
-        il->PS = InterpLocal::PS::MPIPARCHK;
+        il->PS = Interpreter::PS::MPIPARCHK;
         break;
       }
     } else {
       if (il->MPICODE != 64) {
-        il->PS = InterpLocal::PS::MPIGRPCHK;
+        il->PS = Interpreter::PS::MPIGRPCHK;
         break;
       }
       xl.H1 = il->MPICOMM - CARTSTART;
@@ -1796,7 +1796,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
         }
       }
       if (xl.B2) {
-        il->PS = InterpLocal::PS::MPIPARCHK;
+        il->PS = Interpreter::PS::MPIPARCHK;
         break;
       }
     }
@@ -1817,7 +1817,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       do {
         proc = il->PTEMP->PDES;
         xl.H2 = GRPDELAY(il, xl.H1, proc->PROCESSOR, 1);
-        proc->STATE = PROCESSDESCRIPTOR ::STATE::DELAYED;
+        proc->STATE = ProcessDescriptor ::STATE::DELAYED;
         proc->WAKETIME = il->MPITIME + xl.H2;
         il->PTEMP = il->PTEMP->NEXT;
         il->PTEMP->PDES->T = il->PTEMP->PDES->T - 5;
@@ -1826,18 +1826,18 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPICODE = -1;
     } else {
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-      CURPR->STATE = PROCESSDESCRIPTOR ::STATE::BLOCKED;
+      CURPR->STATE = ProcessDescriptor ::STATE::BLOCKED;
     }
     break;
   }
   case 65: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (il->S[CURPR->T - 1] <= CARTSTART ||
         il->S[CURPR->T - 1] > CARTSTART + CARTMAX) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->NUMTRACE > 0) {
@@ -1845,7 +1845,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     }
     xl.H1 = il->S[CURPR->T - 1] - CARTSTART;
     if (il->MPICART[xl.H1][0] == -1) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     il->S[il->S[CURPR->T]] = il->MPICART[xl.H1][0];
@@ -1855,13 +1855,13 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
   }
   case 66: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (il->S[CURPR->T - 4] <= CARTSTART ||
         il->S[CURPR->T - 4] > CARTSTART + CARTMAX ||
         il->S[CURPR->T - 3] > MAXDIM || il->S[CURPR->T - 3] <= 0) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->NUMTRACE > 0) {
@@ -1872,7 +1872,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     xl.H1 = il->S[CURPR->T - 4] - CARTSTART;
     if (il->MPICART[xl.H1][0] == -1 ||
         il->MPICART[xl.H1][0] != il->S[CURPR->T - 3]) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     xl.H2 = il->S[CURPR->T];
@@ -1893,12 +1893,12 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
   }
   case 67: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (il->S[CURPR->T - 2] <= CARTSTART ||
         il->S[CURPR->T - 2] > CARTSTART + CARTMAX) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->NUMTRACE > 0) {
@@ -1908,7 +1908,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     xl.H1 = il->S[CURPR->T - 2] - CARTSTART;
     xl.H2 = il->MPICART[xl.H1][0];
     if (xl.H2 == -1) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (!CHKBUF(&xl, il->S[CURPR->T - 1], xl.H2)) {
@@ -1927,14 +1927,14 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
   }
   case 68: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (il->S[CURPR->T - 3] <= CARTSTART ||
         il->S[CURPR->T - 3] > CARTSTART + CARTMAX ||
         il->S[CURPR->T - 1] > MAXDIM || il->S[CURPR->T - 2] < 0 ||
         il->S[CURPR->T - 2] > highest_processor) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (!CHKBUF(&xl, il->S[CURPR->T], il->S[CURPR->T - 1])) {
@@ -1943,7 +1943,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     xl.H1 = il->S[CURPR->T - 3] - CARTSTART;
     if (il->MPICART[xl.H1][0] == -1 ||
         il->MPICART[xl.H1][0] != il->S[CURPR->T - 1]) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     xl.H2 = il->S[CURPR->T];
@@ -1958,13 +1958,13 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
   }
   case 69: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     if (il->S[CURPR->T - 4] <= CARTSTART ||
         il->S[CURPR->T - 4] > CARTSTART + CARTMAX || il->S[CURPR->T - 3] < 0 ||
         il->S[CURPR->T - 3] >= MAXDIM) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->NUMTRACE > 0) {
@@ -1974,7 +1974,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
     xl.H1 = il->S[CURPR->T - 4] - CARTSTART;
     xl.H2 = il->MPICART[xl.H1][0];
     if (xl.H2 == -1 || xl.H2 < il->S[CURPR->T - 3]) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     xl.H3 = il->S[CURPR->T - 2];
@@ -1998,12 +1998,12 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
   }
   case 70: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     xl.H1 = il->S[CURPR->T];
     if (il->S[xl.H1] <= CARTSTART || il->S[xl.H1] > CARTSTART + CARTMAX) {
-      il->PS = InterpLocal::PS::MPIPARCHK;
+      il->PS = Interpreter::PS::MPIPARCHK;
       break;
     }
     if (il->NUMTRACE > 0) {
@@ -2015,16 +2015,16 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPISEM = highest_processor + 1;
       il->MPICNT = il->S[xl.H1];
       if (il->MPICART[il->MPICNT - CARTSTART][0] == -1) {
-        il->PS = InterpLocal::PS::MPIPARCHK;
+        il->PS = Interpreter::PS::MPIPARCHK;
         break;
       }
     } else {
       if (il->MPICODE != 70) {
-        il->PS = InterpLocal::PS::MPIGRPCHK;
+        il->PS = Interpreter::PS::MPIGRPCHK;
         break;
       }
       if (il->MPICNT != il->S[xl.H1]) {
-        il->PS = InterpLocal::PS::MPIPARCHK;
+        il->PS = Interpreter::PS::MPIPARCHK;
         break;
       }
     }
@@ -2044,7 +2044,7 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       do {
         proc = il->PTEMP->PDES;
         xl.H2 = GRPDELAY(il, xl.H1, proc->PROCESSOR, 1);
-        proc->STATE = PROCESSDESCRIPTOR::STATE::DELAYED;
+        proc->STATE = ProcessDescriptor::STATE::DELAYED;
         proc->WAKETIME = il->MPITIME + xl.H2;
         il->PTEMP = il->PTEMP->NEXT;
         il->S[il->S[il->PTEMP->PDES->T]] = MPICOMMNULL;
@@ -2054,18 +2054,18 @@ void EXECLIB(InterpLocal *il, ExLocal *el, PROCPNT CURPR, int lID) {
       il->MPICART[il->MPICNT - CARTSTART][0] = -1;
     } else {
       il->PROCTAB[CURPR->PROCESSOR].RUNPROC = nullptr;
-      CURPR->STATE = PROCESSDESCRIPTOR::STATE::BLOCKED;
+      CURPR->STATE = ProcessDescriptor::STATE::BLOCKED;
     }
     break;
   }
   case 71: {
     if (!il->MPIINIT[CURPR->PROCESSOR]) {
-      il->PS = InterpLocal::PS::MPIINITCHK;
+      il->PS = Interpreter::PS::MPIINITCHK;
       break;
     }
     CURPR->T = CURPR->T + 1;
     if (CURPR->T > CURPR->STACKSIZE) {
-      il->PS = InterpLocal::PS::STKCHK;
+      il->PS = Interpreter::PS::STKCHK;
     } else {
       il->S[CURPR->T] = RTAG;
       il->RS[CURPR->T] = CURPR->TIME;

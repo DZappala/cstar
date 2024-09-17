@@ -17,7 +17,8 @@ namespace cs {
   void error_exit();
   void error_message();
   void fatal(int);
+
   ERRORS_CS_EXPORT std::bitset<ERMAX> errors;
   ERRORS_CS_EXPORT bool fatal_error;
-} // namespace Cstar
+} // namespace cs
 #endif // CSTAR_CS_ERRORS_H

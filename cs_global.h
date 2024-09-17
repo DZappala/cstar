@@ -42,7 +42,7 @@ namespace cs {
     int F = 0;
     int X = 0;
     int Y = 0;
-  } __attribute__((aligned(16)));
+  };
 
   enum class Objects : std::uint8_t {
     Constant,
@@ -105,8 +105,12 @@ namespace cs {
   GLOBAL_CS_EXPORT inline int STRING_LENGTH;
   GLOBAL_CS_EXPORT inline char CH;
   GLOBAL_CS_EXPORT inline std::array<double, RCMAX + 1> CONTABLE;
-  void EMIT(int FCT);
-  void EMIT1(int FCT, int B);
-  void EMIT2(int FCT, int A, int B);
-} // namespace Cstar
+  /**
+    * @brief Emit a the following variables
+    * @param FCT
+    * @param lA default 0
+    * @param lB default 0
+    */
+  void emit(int FCT, int lA = 0, int lb = 0);
+} // namespace cs
 #endif // CSTAR_CS_GLOBAL_H

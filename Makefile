@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/dom/projects/pace/parallel/cstar_dev
+CMAKE_SOURCE_DIR = /home/dom/projects/pace/parallel/cstar-dev
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/dom/projects/pace/parallel/cstar_dev
+CMAKE_BINARY_DIR = /home/dom/projects/pace/parallel/cstar-dev
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -78,7 +78,7 @@ package/fast: package
 # Special rule for the target package_source
 package_source:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Run CPack packaging tool for source..."
-	/usr/bin/cpack --config ./CPackSourceConfig.cmake /home/dom/projects/pace/parallel/cstar_dev/CPackSourceConfig.cmake
+	/usr/bin/cpack --config ./CPackSourceConfig.cmake /home/dom/projects/pace/parallel/cstar-dev/CPackSourceConfig.cmake
 .PHONY : package_source
 
 # Special rule for the target package_source
@@ -152,9 +152,9 @@ install/strip/fast: preinstall/fast
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar_dev/CMakeFiles /home/dom/projects/pace/parallel/cstar_dev//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar-dev/CMakeFiles /home/dom/projects/pace/parallel/cstar-dev//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar_dev/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/dom/projects/pace/parallel/cstar-dev/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

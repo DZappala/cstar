@@ -1,12 +1,10 @@
+#pragma once
 //
 // Created by Dan Evans on 5/13/24.
 //
-#ifndef CSTAR_CS_PREBUFFER_H
-#define CSTAR_CS_PREBUFFER_H
 #include <fstream>
-#include <string>
-
-#include "cs_defines.h"
+#include <stdexcept>
+#include <streambuf>
 
 namespace cs {
   /*
@@ -18,7 +16,7 @@ namespace cs {
    */
   class PreBuffer final : public std::streambuf {
     std::ifstream file;
-    std::vector<char> buffer;
+    std::vector<char> buffer{};
 
     public:
       explicit PreBuffer(const fs::path &file_name)
@@ -40,4 +38,3 @@ namespace cs {
       }
   };
 } // namespace cs
-#endif // CSTAR_CS_PREBUFFER_H

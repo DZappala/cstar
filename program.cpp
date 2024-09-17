@@ -251,7 +251,7 @@ namespace cs {
     LINE_NUMBER = 0;
     error_position = 0;
     errors = 0;
-    INSYMBOL();
+    in_symbol();
     execution_count = 0;
     eof_count = 0;
     tab_index = -1;

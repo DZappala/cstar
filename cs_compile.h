@@ -24,7 +24,7 @@ namespace cs {
   // nb: Message Passing Interface, see https://www.mpi-forum.org
   COMPILE_CS_EXPORT bool mpi_mode; // global ?
 
-  COMPILE_CS_EXPORT std::stringbuf line, line2;
+  COMPILE_CS_EXPORT std::vector<char> line, line2;
   COMPILE_CS_EXPORT int SX, CC, C1, C2, CC2;
   COMPILE_CS_EXPORT int line_count;
   COMPILE_CS_EXPORT int LL, LL2;
@@ -39,7 +39,7 @@ namespace cs {
 
   // COMPILE_CS_EXPORT int ERRS;   // range 0..ERMAX
   COMPILE_CS_EXPORT int ITPNT; // range 0 ..INITMAX
-  COMPILE_CS_EXPORT void INSYMBOL();
+  COMPILE_CS_EXPORT void in_symbol();
 
   using SymbolSet = std::bitset<95>;
   using Index = int; // range from -XMAX to +XMAX
@@ -173,44 +173,44 @@ namespace cs {
     Index FREF;
     int FORLEV;
     bool PNTPARAM;
-  } __attribute__((aligned(64))) __attribute__((packed));
+  } ;
 
   struct INITPAIR {
     int IVAL;
     double RVAL;
-  } __attribute__((aligned(16)));
+  } ;
 
   struct ATABREC {
     Types INXTYP;
     Types ELTYP;
     int ELREF, LOW, HIGH, ELSIZE, SIZE;
-  } __attribute__((aligned(32))) __attribute__((packed));
+  } ;
 
   struct BTABREC {
     int LAST, LASTPAR, PSIZE, VSIZE, PARCNT;
-  } __attribute__((aligned(32)));
+  } ;
 
   struct CTABREC {
     Types ELTYP;
     int ELREF, ELSIZE;
-  } __attribute__((aligned(16))) __attribute__((packed));
+  } ;
 
   struct Item {
-    enum Types types;
+    Types types;
     int reference;
     int64_t size;
     bool is_address;
-  } __attribute__((aligned(16))) __attribute__((packed));
+  } ;
 
   struct LIBREC {
     ALFA NAME;
     int IDNUM;
-  } __attribute__((aligned(32)));
+  } ;
 
   struct CONREC {
     Types TP;
     int64_t I;
-  } __attribute__((aligned(16)));
+  } ;
 
   // typedef SYMBOL SYMSET[EMAX];
   //    std::string KEY[] = {

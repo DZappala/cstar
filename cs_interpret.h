@@ -12,49 +12,50 @@
 #endif
 #include "cs_compile.h"
 #include "cs_defines.h"
-#define NAMELEN 20
-#define CHANTIME 3
-#define SWITCHLIMIT 50
-#define TIMESTEP 10
-#define CHARL 0
-#define CHARH 127
-#define MPINODETIME 10
-#define MAXDIM 10
-#define CARTSTART 200
-#define CARTMAX 100
-#define BRKMAX 10
-#define VARMAX 10
-#define COMMAX 30
+constexpr uint32_t NAMELEN = 20;
+constexpr uint32_t CHANTIME = 3;
+constexpr uint32_t SWITCHLIMIT = 50;
+constexpr uint32_t TIMESTEP = 10;
+constexpr uint32_t CHARL = 0;
+constexpr uint32_t CHARH = 127;
+constexpr uint32_t MPINODETIME = 10;
+constexpr uint32_t MAXDIM = 10;
+constexpr uint32_t CARTSTART = 200;
+constexpr uint32_t CARTMAX = 100;
+constexpr uint32_t BRKMAX = 10;
+constexpr uint32_t VARMAX = 10;
+constexpr uint32_t COMMAX = 30;
 
 namespace cs {
   using VARTYP = std::string;
   using BLKPNT = struct BLOCKR*;
-  using ACTPNT = struct ACTIVEPROCESS*;
-  using PROCPNT = struct PROCESSDESCRIPTOR*; // from interpret
+  using ACTPNT = struct ActiveProcess*;
+  using PROCPNT = struct ProcessDescriptor*; // from interpret
   using BUSYPNT = struct BUSYTYPE*;
   using BLOCKR = struct BLOCKR {
     int START; // range 0..STMAX
     int SIZE; // range 0..STMAX
     BLKPNT NEXT;
-  } __attribute__((aligned(16)));
+  };
 
-  struct ACTIVEPROCESS;
-  using ACTIVEPROCESS = struct ACTIVEPROCESS {
+  struct ActiveProcess;
+  struct ActiveProcess {
     PROCPNT PDES;
     ACTPNT NEXT;
-  } __attribute__((aligned(16)));
+  };
 
-  using BUSYTYPE = struct BUSYTYPE {
+  struct BUSYTYPE {
     double FIRST;
     double LAST;
     BUSYPNT NEXT;
-  } __attribute__((aligned(32)));
+  };
 
   using STYPE = int;
   using RSTYPE = double;
   using BUFINTTYPE = int;
   using BUFREALTYPE = double;
-  using COMTYP = enum class COMTYP : std::uint8_t {
+
+  enum class COMTYP : std::uint8_t {
     RUNP,
     CONT,
     EXIT2,
@@ -88,7 +89,19 @@ namespace cs {
     VERSION
   };
 
-  using PROCESSDESCRIPTOR = struct PROCESSDESCRIPTOR {
+  enum class State : std::uint8_t {
+    READY,
+    RUNNING,
+    BLOCKED,
+    DELAYED,
+    TERMINATED,
+    SPINNING
+  };
+
+  enum class ReadStatus : std::uint8_t { NONE, ATCHANNEL, HASTICKET };
+  enum class PRIORITY : std::uint8_t { LOW, HIGH };
+
+  struct ProcessDescriptor {
     // from interpret
     int T; // process's stack top index
     int B;
@@ -105,111 +118,106 @@ namespace cs {
     int PROCESSOR;
     int ALTPROC;
     double WAKETIME;
-
-    enum class STATE : std::uint8_t {
-      READY,
-      RUNNING,
-      BLOCKED,
-      DELAYED,
-      TERMINATED,
-      SPINNING
-    } STATE;
-
+    State STATE;
     int PID;
     double VIRTUALTIME;
-
-    enum class READSTATUS : std::uint8_t {
-      NONE, ATCHANNEL, HASTICKET
-    } READSTATUS;
-
+    ReadStatus READSTATUS;
     int FORKCOUNT;
     int JOINSEM;
     double MAXFORKTIME;
-
-    enum class PRIORITY : std::uint8_t { LOW, HIGH } PRIORITY;
-
+    PRIORITY PRIORITY;
     bool SEQON;
     bool GROUPREP;
-  } __attribute__((aligned(128))) __attribute__((packed));
+  };
 
-  using InterpLocal = struct InterpLocal {
+  struct TraceTab {
+    VARTYP NAME;
+    int MEMLOC; // range -1..STMAX
+  };
+
+  enum class PS : std::uint8_t {
+    RUN,
+    FIN,
+    DIVCHK,
+    INXCHK,
+    STKCHK,
+    LINCHK,
+    LNGCHK,
+    REDCHK,
+    DEAD,
+    CHRCHK,
+    STORCHK,
+    GRPCHK,
+    REFCHK,
+    LOCKCHK,
+    MPICNTCHK,
+    MPIGRPCHK,
+    MPIINITCHK,
+    MPIFINCHK,
+    MPIPARCHK,
+    FUNCCHK,
+    MPITYPECHK,
+    INTCHK,
+    CASCHK,
+    CHANCHK,
+    BUFCHK,
+    PROCCHK,
+    CPUCHK,
+    BREAK,
+    REMCHK,
+    CARTOVR,
+    STRCHK,
+    USERSTOP,
+    DATACHK,
+    OVRCHK
+  }; // from interpret
+
+  enum class Status : std::uint8_t {
+    NEVERUSED,
+    EMPTY,
+    RESERVED,
+    FULL
+  };
+
+  struct ProcessTable {
+    Status STATUS;
+    double VIRTIME;
+    double BRKTIME;
+    double PROTIME;
+    PROCPNT RUNPROC;
+    int NUMPROC;
+    double STARTTIME;
+    BUSYPNT BUSYLIST;
+    float SPEED;
+  };
+
+  struct Channel {
+    int HEAD;
+    int SEM;
+    ACTPNT WAIT;
+    double READTIME;
+    bool MOVED;
+    int READER;
+  };
+
+  struct Interpreter {
     PROCPNT CURPR;
+    PS PS;
 
-    enum class PS : std::uint8_t {
-      RUN,
-      FIN,
-      DIVCHK,
-      INXCHK,
-      STKCHK,
-      LINCHK,
-      LNGCHK,
-      REDCHK,
-      DEAD,
-      CHRCHK,
-      STORCHK,
-      GRPCHK,
-      REFCHK,
-      LOCKCHK,
-      MPICNTCHK,
-      MPIGRPCHK,
-      MPIINITCHK,
-      MPIFINCHK,
-      MPIPARCHK,
-      FUNCCHK,
-      MPITYPECHK,
-      INTCHK,
-      CASCHK,
-      CHANCHK,
-      BUFCHK,
-      PROCCHK,
-      CPUCHK,
-      BREAK,
-      REMCHK,
-      CARTOVR,
-      STRCHK,
-      USERSTOP,
-      DATACHK,
-      OVRCHK
-    } PS; // from interpret
-
-    int LNCNT, CHRCNT;
+    int LNCNT;
+    int CHRCNT;
     std::array<int, 4 + 1> FLD;
     STYPE *S, *SLOCATION;
     STYPE* STARTMEM;
     RSTYPE* RS;
     PROCPNT MAINPROC;
-
-    struct PROCTAB {
-      enum class STATUS : std::uint8_t {
-        NEVERUSED,
-        EMPTY,
-        RESERVED,
-        FULL
-      } STATUS;
-
-      double VIRTIME;
-      double BRKTIME;
-      double PROTIME;
-      PROCPNT RUNPROC;
-      int NUMPROC;
-      double STARTTIME;
-      BUSYPNT BUSYLIST;
-      float SPEED;
-    } __attribute__((aligned(64))) __attribute__((packed)) PROCTAB[PMAX + 1];
+    std::array<ProcessTable, PMAX + 1> PROCTAB;
 
     int CNUM, H1;
     // int I;
     int J, K, PNT, FREE;
 
-    struct Channel {
-      int HEAD;
-      int SEM;
-      ACTPNT WAIT;
-      double READTIME;
-      bool MOVED;
-      int READER;
-    } __attribute__((aligned(32))) CHAN[OPCHMAX + 1];
-
+    std::array<Channel, OPCHMAX + 1> CHAN;
     BUFINTTYPE *VALUE, *LINK;
     BUFREALTYPE *DATE, *RVALUE;
     double SEQTIME;
@@ -257,12 +265,7 @@ namespace cs {
     int USEDPROCS;
     VARTYP VARNAME;
     int NUMTRACE;
-
-    struct {
-      VARTYP NAME;
-      int MEMLOC; // range -1..STMAX
-    } __attribute__((aligned(32))) __attribute__((packed)) TRCTAB[VARMAX + 1];
-
+    std::array<TraceTab, VARMAX + 1> TRCTAB;
     bool PROFILEON;
     float USAGE;
     double SPEED;
@@ -282,8 +285,8 @@ namespace cs {
     std::array<COMTYP, COMMAX + 1> COMJMP;
     COMTYP COMMLABEL;
     int LINECNT;
-  } __attribute__((aligned(128))) __attribute__((packed));
+  };
 
   // int HIGHESTPROCESSOR;
-} // namespace Cstar
+} // namespace cs
 #endif // CSTAR_CS_INTERPRET_H

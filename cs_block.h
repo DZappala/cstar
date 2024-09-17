@@ -26,7 +26,7 @@ namespace cs {
     bool CREATEFLAG{};
     bool ISDECLARATION{};
     bool UNDEFMSGFLAG{};
-    InterpLocal* blkil{};
-  } __attribute__((aligned(128))) __attribute__((packed));
+    Interpreter* blkil{};
+  };
 } // namespace Cstar
 #endif // CSTAR_CS_BLOCK_H

@@ -4,7 +4,8 @@
 
 #ifndef CSTAR_CS_EXEC_H
 #define CSTAR_CS_EXEC_H
-#include <sstream>
+
+#include <string>
 
 #include "cs_global.h"
 #include "cs_interpret.h"
@@ -26,7 +27,7 @@ struct ExLocal {
   cs::PROCPNT NEWPROC = nullptr;
   // InterpLocal *il;
   double log10 = 0.0;
-  std::stringbuf buf;
-} __attribute__((aligned(128))) __attribute__((packed));
+  std::string buf;
+};
 
 #endif // CSTAR_CS_EXEC_H
