@@ -1,1 +1,6 @@
-/out
+CMakeFiles
+_deps
+out
+/CMakeCache.txt
+.cache
+.idea
