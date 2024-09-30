@@ -545,7 +545,7 @@ namespace cs {
         continue;
       }
 
-      exec.IR = code.at(current_process->PC);
+      exec.IR = CODE.at(current_process->PC);
       current_process->PC++;
       TIMEINC(interp, 1, "exe1");
 
@@ -990,13 +990,13 @@ namespace cs {
             exec.H2 = exec.IR.Y;
             exec.H3 = 0;
             do {
-              if (code[exec.H2].F != 13) {
+              if (CODE[exec.H2].F != 13) {
                 exec.H3 = 1;
                 interp->PS = PS::CASCHK;
-              } else if (code[exec.H2].X == -1 ||
-                         code[exec.H2].Y == exec.H1) {
+              } else if (CODE[exec.H2].X == -1 ||
+                         CODE[exec.H2].Y == exec.H1) {
                 exec.H3 = 1;
-                current_process->PC = code[exec.H2 + 1].Y;
+                current_process->PC = CODE[exec.H2 + 1].Y;
               } else
                 exec.H2 = exec.H2 + 2;
             } while (exec.H3 == 0);

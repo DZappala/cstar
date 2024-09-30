@@ -2538,16 +2538,16 @@ namespace cs {
               fputc('\n', STDOUT);
             } else {
               J = LOCATION[I];
-              print(STDOUT, "%6d%6d%6d\n", code[J].F, code[J].X, code[J].Y);
+              print(STDOUT, "%6d%6d%6d\n", CODE[J].F, CODE[J].X, CODE[J].Y);
               for (J = LOCATION[I] + 1; J <= LOCATION[I + 1] - 1; J++) {
                 // std::cout << CODE[J].F << " " << CODE[J].X << " " << CODE[J].Y <<
                 // std::endl;
                 print(
                   STDOUT,
                   "           %6d%6d%6d\n",
-                  code[J].F,
-                  code[J].X,
-                  code[J].Y
+                  CODE[J].F,
+                  CODE[J].X,
+                  CODE[J].Y
                 );
               }
             }

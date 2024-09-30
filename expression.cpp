@@ -67,21 +67,20 @@ namespace cs {
     int A = 0;
     if (symbol == Symbol::PERIOD)
       in_symbol();
-    if (symbol != Symbol::IDENT) {
+    if (symbol != Symbol::IDENT)
       error(2);
-    } else if (V.types != Types::RECS) {
+    else if (V.types != Types::RECS)
       error(31);
-    } else {
+    else {
       A = V.reference;
       TAB[0].name = ID;
-      while (strcmp(TAB[A].name.c_str(), ID.c_str()) != 0) {
+      while (strcmp(TAB[A].name.c_str(), ID.c_str()) != 0)
         A = TAB[A].link;
-      }
       if (A == 0)
         error(0);
       else {
-        EMIT1(24, TAB[A].address);
-        EMIT(15);
+        emit(24, TAB[A].address);
+        emit(15);
         V.types = TAB[A].types;
         V.reference = TAB[A].reference;
         V.size = TAB[A].size;
@@ -93,14 +92,14 @@ namespace cs {
   void PNTSELECT(Item &V) {
     int A;
     in_symbol();
-    if (V.types != Types::PNTS) {
+    if (V.types != Types::PNTS)
       error(13);
-    } else {
+    else {
       A = V.reference;
       V.types = CTAB[A].ELTYP;
       V.reference = CTAB[A].ELREF;
       V.size = CTAB[A].ELSIZE;
-      EMIT(34);
+      emit(34);
       RSELECT(V);
     }
   }
@@ -109,9 +108,8 @@ namespace cs {
     Item X{};
     int A = 0;
     SymbolSet su;
-    if (V.types == Types::CHANS) {
+    if (V.types == Types::CHANS)
       error(11);
-    }
 
     su.set(static_cast<int>(Symbol::COMMA), true);
     su.set(static_cast<int>(Symbol::RBRACK), true);
@@ -127,7 +125,7 @@ namespace cs {
             if (ATAB[A].INXTYP != X.types)
               error(26);
             else
-              EMIT1(21, A);
+              emit(21, A);
             V.types = ATAB[A].ELTYP;
             V.reference = ATAB[A].ELREF;
             V.size = ATAB[A].ELSIZE;
@@ -180,9 +178,8 @@ namespace cs {
           break;
         default: break;
       }
-    } else {
+    } else
       rtn = false;
-    }
     return rtn;
   }
 
@@ -190,17 +187,15 @@ namespace cs {
     bool DIM_OK = true;
     while (V.types == Types::ARRAYS && W.types == Types::ARRAYS) {
       if (ATAB[V.reference].HIGH != ATAB[W.reference].HIGH ||
-          ATAB[V.reference].ELTYP != ATAB[W.reference].ELTYP) {
+          ATAB[V.reference].ELTYP != ATAB[W.reference].ELTYP)
         DIM_OK = false;
-      }
       V.types = ATAB[V.reference].ELTYP;
       V.reference = ATAB[V.reference].ELREF;
       W.types = ATAB[W.reference].ELTYP;
       W.reference = ATAB[W.reference].ELREF;
     }
-    if (DIM_OK) {
+    if (DIM_OK)
       return COMPATIBLE(V, W);
-    }
     return false;
   }
 
@@ -230,17 +225,14 @@ namespace cs {
              (x.types == Types::CHARS && y.types == Types::INTS);
     }
 
-    if (x.types == Types::RECS && y.types == Types::RECS) {
+    if (x.types == Types::RECS && y.types == Types::RECS)
       return x.reference == y.reference;
-    }
 
-    if (x.types == Types::ARRAYS && y.types == Types::ARRAYS) {
+    if (x.types == Types::ARRAYS && y.types == Types::ARRAYS)
       return ARRAY_COMPATIBLE(x, y);
-    }
 
-    if (x.types == Types::PNTS && y.types == Types::PNTS) {
+    if (x.types == Types::PNTS && y.types == Types::PNTS)
       return PNT_COMPATIBLE(x, y);
-    }
 
     if (x.types == Types::PNTS && y.types == Types::ARRAYS) {
       x.types = CTAB[x.reference].ELTYP;
@@ -265,41 +257,34 @@ namespace cs {
 
   auto RESULTTYPE(Types A, Types B) -> Types {
     if ((A == Types::INTS && B == Types::CHARS) ||
-        (A == Types::CHARS && B == Types::INTS)) {
+        (A == Types::CHARS && B == Types::INTS))
       return Types::CHARS;
-    }
     if (A > Types::INTS || B > Types::INTS) {
       error(33);
       return Types::NOTYP;
     }
-    if (A == Types::NOTYP || B == Types::NOTYP) {
+    if (A == Types::NOTYP || B == Types::NOTYP)
       return Types::NOTYP;
-    }
-    if (A == Types::REALS || B == Types::REALS) {
+    if (A == Types::REALS || B == Types::REALS)
       return Types::REALS;
-    }
     return Types::INTS;
   }
 
   auto SUMRESULTTYPE(Types A, Types B) -> Types {
     if ((A == Types::INTS && B == Types::CHARS) ||
-        (A == Types::CHARS && B == Types::INTS)) {
+        (A == Types::CHARS && B == Types::INTS))
       return Types::CHARS;
-    }
     if ((A == Types::INTS && B == Types::PNTS) ||
-        (A == Types::PNTS && B == Types::INTS)) {
+        (A == Types::PNTS && B == Types::INTS))
       return Types::PNTS;
-    }
     if (A > Types::INTS || B > Types::INTS) {
       error(33);
       return Types::NOTYP;
     }
-    if (A == Types::NOTYP || B == Types::NOTYP) {
+    if (A == Types::NOTYP || B == Types::NOTYP)
       return Types::NOTYP;
-    }
-    if (A == Types::REALS || B == Types::REALS) {
+    if (A == Types::REALS || B == Types::REALS)
       return Types::REALS;
-    }
     return Types::INTS;
   }
 
@@ -321,25 +306,24 @@ namespace cs {
       I = loc(bx->block_local, ID);
       in_symbol();
       switch (TAB[I].object) {
-        case OBJECTS::KONSTANT: X.types = TAB[I].types;
+        case Objects::Constant: X.types = TAB[I].types;
           X.reference = 0;
           X.is_address = false;
-          if (TAB[I].types == Types::REALS) {
-            EMIT1(87, TAB[I].address);
-          } else {
-            EMIT1(24, TAB[I].address);
-          }
+          if (TAB[I].types == Types::REALS)
+            emit(87, TAB[I].address);
+          else
+            emit(24, TAB[I].address);
           break;
-        case OBJECTS::VARIABLE: X.types = TAB[I].types;
+        case Objects::Variable: X.types = TAB[I].types;
           X.reference = TAB[I].reference;
           X.size = TAB[I].size;
           if (selection_set.test(static_cast<int>(symbol))) {
-            bx->factor = (TAB[I].normal) ? 0 : 1;
-            EMIT2(bx->factor, TAB[I].LEV, TAB[I].address);
+            bx->factor = TAB[I].normal ? 0 : 1;
+            emit(bx->factor, TAB[I].LEV, TAB[I].address);
             SELECTOR(bx->block_local, FSYS | su, X);
             if (X.types == Types::CHANS && symbol == Symbol::DBLQUEST) {
               in_symbol();
-              EMIT(94);
+              emit(94);
               X.types = Types::BOOLS;
               X.is_address = false;
             }
@@ -349,50 +333,45 @@ namespace cs {
                 in_symbol();
                 X.types = Types::BOOLS;
                 X.is_address = false;
-                if (TAB[I].normal) {
+                if (TAB[I].normal)
                   bx->factor = 95;
-                } else {
+                else
                   bx->factor = 96;
-                }
               } else {
-                if (TAB[I].normal) {
+                if (TAB[I].normal)
                   bx->factor = 0;
-                } else {
+                else
                   bx->factor = 1;
-                }
               }
 
-              EMIT2(bx->factor, TAB[I].LEV, TAB[I].address);
+              emit(bx->factor, TAB[I].LEV, TAB[I].address);
 
-              if (bx->factor == 0 && TAB[I].PNTPARAM) {
+              if (bx->factor == 0 && TAB[I].PNTPARAM)
                 bx->factor = 1;
-              }
             } else {
               X.is_address = false;
-              if (TAB[I].FORLEV > 0) {
-                EMIT2(73, TAB[I].LEV, TAB[I].address);
-              } else {
-                EMIT(81);
-              }
+              if (TAB[I].FORLEV > 0)
+                emit(73, TAB[I].LEV, TAB[I].address);
+              else
+                emit(81);
             }
           }
           break;
-        case OBJECTS::TYPE1:
-        case OBJECTS::PROZEDURE:
-        case OBJECTS::COMPONENT: error(44);
+        case Objects::Type1:
+        case Objects::PROZEDURE:
+        case Objects::COMPONENT: error(44);
           break;
-        case OBJECTS::FUNKTION: X.types = TAB[I].types;
+        case Objects::FUNKTION: X.types = TAB[I].types;
           X.reference = TAB[I].FREF;
           X.size = TAB[I].size;
           X.is_address = false;
-          if (TAB[I].LEV != 0) {
+          if (TAB[I].LEV != 0)
             call(bx->block_local, FSYS, I);
-          } else if (TAB[I].address == 24) {
-            if (symbol == Symbol::LPARENT) {
+          else if (TAB[I].address == 24) {
+            if (symbol == Symbol::LPARENT)
               in_symbol();
-            } else {
+            else
               error(9);
-            }
 
             su = 0;
             su.set(static_cast<int>(Symbol::IDENT), true);
@@ -402,57 +381,50 @@ namespace cs {
             test(su, sv, 6);
             if (symbol == Symbol::IDENT) {
               int I = loc(bx->block_local, ID);
-              if (TAB[I].object == OBJECTS::VARIABLE) {
-                EMIT1(24, TAB[I].size);
-              } else if (TAB[I].object == OBJECTS::TYPE1) {
-                EMIT1(24, TAB[I].address);
-              } else {
+              if (TAB[I].object == Objects::VARIABLE)
+                emit(24, TAB[I].size);
+              else if (TAB[I].object == Objects::Type1)
+                emit(24, TAB[I].address);
+              else
                 error(6);
-              }
             } else if (symbol == Symbol::STRUCTSY) {
               in_symbol();
               if (symbol == Symbol::IDENT) {
                 int I = loc(bx->block_local, ID);
                 if (I != 0) {
-                  if (TAB[I].object != OBJECTS::STRUCTAG) {
+                  if (TAB[I].object != Objects::STRUCTAG)
                     error(108);
-                  } else {
-                    EMIT1(24, TAB[I].address);
-                  }
+                  else
+                    emit(24, TAB[I].address);
                 }
-              } else {
+              } else
                 error(6);
-              }
-            } else {
+            } else
               error(6);
-            }
             in_symbol();
-            if (symbol == Symbol::RPARENT) {
+            if (symbol == Symbol::RPARENT)
               in_symbol();
-            } else {
+            else
               error(4);
-            }
           } else {
             if (symbol == Symbol::LPARENT) {
               in_symbol();
-              if (symbol == Symbol::RPARENT) {
+              if (symbol == Symbol::RPARENT)
                 in_symbol();
-              } else {
+              else
                 error(4);
-              }
             }
-            EMIT1(8, TAB[I].address);
+            emit(8, TAB[I].address);
           }
           break;
         default: break;
       }
     } else if (symbol == Symbol::CHARCON || symbol == Symbol::INTCON) {
-      if (symbol == Symbol::CHARCON) {
+      if (symbol == Symbol::CHARCON)
         X.types = Types::CHARS;
-      } else {
+      else
         X.types = Types::INTS;
-      }
-      EMIT1(24, INUM);
+      emit(24, INUM);
       X.reference = 0;
       X.is_address = false;
       in_symbol();
@@ -464,17 +436,16 @@ namespace cs {
       CTAB[ctab_index].ELSIZE = 1;
       X.reference = ctab_index;
       X.is_address = false;
-      EMIT2(13, INUM, STRING_LENGTH);
+      emit(13, INUM, STRING_LENGTH);
       in_symbol();
     } else if (symbol == Symbol::REALCON) {
       X.types = Types::REALS;
       CONTABLE.at(CPNT) = RNUM;
-      EMIT1(87, CPNT);
-      if (CPNT >= RCMAX) {
+      emit(87, CPNT);
+      if (CPNT >= RCMAX)
         fatal(9);
-      } else {
+      else
         CPNT = CPNT + 1;
-      }
       X.reference = 0;
       X.is_address = false;
       in_symbol();
@@ -483,50 +454,42 @@ namespace cs {
       TYPCAST = Types::NOTYP;
       if (symbol == Symbol::IDENT) {
         int I = loc(bx->block_local, ID);
-        if (TAB[I].object == OBJECTS::TYPE1) {
+        if (TAB[I].object == Objects::Type1) {
           TYPCAST = TAB[I].types;
           in_symbol();
           if (symbol == Symbol::TIMES) {
             TYPCAST = Types::PNTS;
             in_symbol();
           }
-          if (symbol != Symbol::RPARENT) {
+          if (symbol != Symbol::RPARENT)
             error(121);
-          } else {
+          else
             in_symbol();
-          }
           if (!standard_set.test(static_cast<int>(TYPCAST)) &&
-              TYPCAST != Types::PNTS) {
+              TYPCAST != Types::PNTS)
             error(121);
-          }
           FACTOR(bx, FSYS, X);
-          if (X.is_address) {
+          if (X.is_address)
             LOADVAL(X);
-          }
           if (TYPCAST == Types::INTS) {
-            if (X.types == Types::REALS) {
-              EMIT1(8, 10);
-            }
+            if (X.types == Types::REALS)
+              emit(8, 10);
           } else if (TYPCAST == Types::BOOLS) {
-            if (X.types == Types::REALS) {
-              EMIT1(8, 10);
-            }
-            EMIT(114);
+            if (X.types == Types::REALS)
+              emit(8, 10);
+            emit(114);
           } else if (TYPCAST == Types::CHARS) {
-            if (X.types == Types::REALS) {
-              EMIT1(8, 10);
-            }
-            EMIT1(8, 5);
-          } else if (TYPCAST == Types::REALS) {
-            EMIT(26);
-          } else if (TYPCAST == Types::PNTS) {
+            if (X.types == Types::REALS)
+              emit(8, 10);
+            emit(8, 5);
+          } else if (TYPCAST == Types::REALS)
+            emit(26);
+          else if (TYPCAST == Types::PNTS) {
             if (X.types != Types::PNTS ||
-                CTAB[X.reference].ELTYP != Types::VOIDS) {
+                CTAB[X.reference].ELTYP != Types::VOIDS)
               error(121);
-            }
-          } else {
+          } else
             error(121);
-          }
           X.types = TYPCAST;
         }
       }
@@ -534,73 +497,62 @@ namespace cs {
         sv = FSYS;
         sv.set(static_cast<int>(Symbol::RPARENT), true);
         basic_expression(bx->block_local, sv, X);
-        if (symbol == Symbol::RPARENT) {
+        if (symbol == Symbol::RPARENT)
           in_symbol();
-        } else {
+        else
           error(4);
-        }
       }
     } else if (symbol == Symbol::NOTSY) {
       in_symbol();
       FACTOR(bx, FSYS, X);
-      if (X.is_address) {
+      if (X.is_address)
         LOADVAL(X);
-      }
-      if (X.types == Types::BOOLS) {
-        EMIT(35);
-      } else if (X.types != Types::NOTYP) {
+      if (X.types == Types::BOOLS)
+        emit(35);
+      else if (X.types != Types::NOTYP)
         error(32);
-      }
     } else if (symbol == Symbol::TIMES) {
       in_symbol();
       FACTOR(bx, FSYS, X);
-      if (X.is_address) {
+      if (X.is_address)
         LOADVAL(X);
-      }
       if (X.types == Types::PNTS) {
         int A = X.reference;
         X.types = CTAB[A].ELTYP;
         X.reference = CTAB[A].ELREF;
         X.size = CTAB[A].ELSIZE;
         X.is_address = true;
-      } else if (X.types != Types::NOTYP) {
+      } else if (X.types != Types::NOTYP)
         error(13);
-      }
     } else if (symbol == Symbol::PLUS || symbol == Symbol::MINUS) {
       int OP = static_cast<int>(symbol);
       in_symbol();
       FACTOR(bx, FSYS, X);
-      if (X.is_address) {
+      if (X.is_address)
         LOADVAL(X);
-      }
       if (X.types == Types::INTS || X.types == Types::REALS ||
           X.types == Types::CHARS || X.types == Types::PNTS) {
-        if (OP == static_cast<int>(Symbol::MINUS)) {
-          EMIT(36);
-        }
-      } else {
+        if (OP == static_cast<int>(Symbol::MINUS))
+          emit(36);
+      } else
         error(33);
-      }
     } else if (symbol == Symbol::INCREMENT) {
       in_symbol();
       FACTOR(bx, FSYS, X);
       if (X.types != Types::NOTYP && X.types != Types::INTS &&
           X.types != Types::REALS && X.types != Types::CHARS &&
-          X.types != Types::PNTS) {
+          X.types != Types::PNTS)
         error(110);
-      } else {
+      else {
         if ((X.types == Types::NOTYP || X.types == Types::INTS ||
              X.types == Types::REALS || X.types == Types::CHARS) &&
-            !X.is_address) {
+            !X.is_address)
           error(110);
-        }
         int A = 1;
-        if (X.types == Types::PNTS) {
+        if (X.types == Types::PNTS)
           A = CTAB[X.reference].ELSIZE;
-        }
-        if (X.types != Types::NOTYP) {
-          EMIT2(108, A, 0);
-        }
+        if (X.types != Types::NOTYP)
+          emit(108, A, 0);
         X.is_address = false;
       }
     } else if (symbol == Symbol::DECREMENT) {
@@ -608,21 +560,18 @@ namespace cs {
       FACTOR(bx, FSYS, X);
       if (X.types != Types::NOTYP && X.types != Types::INTS &&
           X.types != Types::REALS && X.types != Types::CHARS &&
-          X.types != Types::PNTS) {
+          X.types != Types::PNTS)
         error(111);
-      } else {
+      else {
         if ((X.types == Types::NOTYP || X.types == Types::INTS ||
              X.types == Types::REALS || X.types == Types::CHARS) &&
-            !X.is_address) {
+            !X.is_address)
           error(111);
-        }
         A = 1;
-        if (X.types == Types::PNTS) {
+        if (X.types == Types::PNTS)
           A = CTAB[X.reference].ELSIZE;
-        }
-        if (X.types != Types::NOTYP) {
-          EMIT2(109, A, 0);
-        }
+        if (X.types != Types::NOTYP)
+          emit(109, A, 0);
         X.is_address = false;
       }
     }
@@ -634,7 +583,7 @@ namespace cs {
     switch (symbol) {
       case Symbol::DBLQUEST: if (X.types == Types::CHANS) {
           in_symbol();
-          EMIT(94);
+          emit(94);
           X.types = Types::BOOLS;
           X.is_address = false;
         } else
@@ -643,9 +592,9 @@ namespace cs {
       case Symbol::INCREMENT: if (
           X.types != Types::NOTYP && X.types != Types::INTS &&
           X.types != Types::REALS && X.types != Types::CHARS &&
-          X.types != Types::PNTS) {
+          X.types != Types::PNTS)
           error(110);
-        } else {
+        else {
           if (X.types != Types::NOTYP && X.types != Types::INTS &&
               X.types != Types::REALS && X.types != Types::CHARS && !X.
               is_address)
@@ -654,7 +603,7 @@ namespace cs {
           if (X.types == Types::PNTS)
             A = CTAB[X.reference].ELSIZE;
           if (X.types != Types::NOTYP)
-            EMIT2(108, A, 1);
+            emit(108, A, 1);
           X.is_address = false;
         }
         in_symbol();
@@ -662,9 +611,9 @@ namespace cs {
       case Symbol::DECREMENT: if (
           X.types != Types::NOTYP && X.types != Types::INTS &&
           X.types != Types::REALS && X.types != Types::CHARS &&
-          X.types != Types::PNTS) {
+          X.types != Types::PNTS)
           error(111);
-        } else {
+        else {
           if (X.types != Types::NOTYP && X.types != Types::INTS &&
               X.types != Types::REALS && X.types != Types::CHARS && !X.
               is_address)
@@ -673,7 +622,7 @@ namespace cs {
           if (X.types == Types::PNTS)
             A = CTAB[X.reference].ELSIZE;
           if (X.types != Types::NOTYP)
-            EMIT2(109, A, 1);
+            emit(109, A, 1);
           X.is_address = false;
         }
         in_symbol();
@@ -696,9 +645,8 @@ namespace cs {
     if (symbol == Symbol::ADDRSY) {
       ADDR_REQUIRED = true;
       in_symbol();
-    } else {
+    } else
       ADDR_REQUIRED = false;
-    }
     su = FSYS;
     su.set(static_cast<int>(Symbol::TIMES), true);
     su.set(static_cast<int>(Symbol::CHANSY), true);
@@ -714,13 +662,13 @@ namespace cs {
       X.types = Types::PNTS;
       X.size = 1;
       X.reference = ctab_index;
-      EMIT1(99, SZ);
+      emit(99, SZ);
     } else {
       basic_expression(bl, FSYS, X);
       if (ADDR_REQUIRED) {
-        if (!X.is_address) {
+        if (!X.is_address)
           error(115);
-        } else {
+        else {
           enter_channel();
           CTAB[ctab_index].ELTYP = X.types;
           CTAB[ctab_index].ELREF = X.reference;
@@ -730,9 +678,8 @@ namespace cs {
           X.reference = ctab_index;
         }
       } else {
-        if (X.is_address) {
+        if (X.is_address)
           LOADVAL(X);
-        }
       }
     }
     X.is_address = false;
@@ -753,14 +700,14 @@ namespace cs {
     Types TP;
     SymbolSet su;
 
-    if ((symbol == Symbol::RBRACK) && FIRSTINDEX) {
+    if (symbol == Symbol::RBRACK && FIRSTINDEX) {
       HIGH.TP = Types::INTS;
       HIGH.I = 0;
     } else {
       su = block_local->FSYS;
       su.set(static_cast<int>(Symbol::RBRACK), true);
       constant(block_local, su, HIGH);
-      if ((HIGH.TP != Types::INTS) || (HIGH.I < 1)) {
+      if (HIGH.TP != Types::INTS || HIGH.I < 1) {
         error(27);
         HIGH.TP = Types::INTS;
         HIGH.I = 0;
@@ -769,11 +716,10 @@ namespace cs {
 
     enter_array(Types::INTS, 0, HIGH.I - 1);
     AREF = atab_index;
-    if (symbol == Symbol::RBRACK) {
+    if (symbol == Symbol::RBRACK)
       in_symbol();
-    } else {
+    else
       error(12);
-    }
 
     if (symbol == Symbol::LBRACK) {
       in_symbol();
@@ -812,14 +758,12 @@ namespace cs {
           CTAB[ctab_index].ELSIZE = SZ;
           SZ = 1;
           RF = ctab_index;
-          if (symbol == Symbol::TIMES) {
+          if (symbol == Symbol::TIMES)
             TP = Types::PNTS;
-          }
           if (symbol == Symbol::CHANSY) {
             TP = Types::CHANS;
-            if (CHANFOUND) {
+            if (CHANFOUND)
               error(11);
-            }
             CHANFOUND = true;
           }
           in_symbol();
@@ -864,7 +808,7 @@ namespace cs {
           ID = "              ";
         }
         T0 = tab_index;
-        ENTERVARIABLE(block_local, OBJECTS::COMPONENT);
+        ENTERVARIABLE(block_local, Objects::COMPONENT);
 
         if (symbol == Symbol::LBRACK) {
           in_symbol();
@@ -884,22 +828,20 @@ namespace cs {
         TAB[T0].size = SZ;
         TAB[T0].PNTPARAM = false;
 
-        if (symbol == Symbol::COMMA) {
+        if (symbol == Symbol::COMMA)
           in_symbol();
-        } else {
+        else
           DONE = true;
-        }
 
         TP = OTP;
         RF = ORF;
         SZ = OSZ;
       } while (!DONE);
 
-      if (symbol == Symbol::SEMICOLON) {
+      if (symbol == Symbol::SEMICOLON)
         in_symbol();
-      } else {
+      else
         error(14);
-      }
       su = type_set;
       su.set(static_cast<int>(Symbol::RSETBRACK), true);
       test(su, tl->FSYS, 108);
@@ -909,11 +851,10 @@ namespace cs {
   void STRUCTTYP(TypLocal* type_local, int64_t &RREF, int64_t &RSZ) {
     SymbolSet su;
     BlockLocal* block_local = type_local->bl;
-    if (symbol == Symbol::LSETBRACK) {
+    if (symbol == Symbol::LSETBRACK)
       in_symbol();
-    } else {
+    else
       error(106);
-    }
 
     int64_t SAVEDX = block_local->RDX;
     block_local->RDX = 0;
@@ -921,11 +862,10 @@ namespace cs {
     block_local->RLAST = 0;
     C_COMPONENTDECLARATION(type_local);
 
-    if (symbol == Symbol::RSETBRACK) {
+    if (symbol == Symbol::RSETBRACK)
       in_symbol();
-    } else {
+    else
       error(104);
-    }
     su = 0;
     su.set(static_cast<int>(Symbol::IDENT), true);
     su.set(static_cast<int>(Symbol::SEMICOLON), true);
@@ -958,46 +898,42 @@ namespace cs {
     tl.SZ = 0;
     test(type_set, FSYS, 10);
 
-    if (symbol == Symbol::CONSTSY) {
+    if (symbol == Symbol::CONSTSY)
       in_symbol();
-    }
 
     if (type_set.test(static_cast<int>(symbol))) {
       if (symbol == Symbol::SHORTSY || symbol == Symbol::LONGSY ||
           symbol == Symbol::UNSIGNEDSY) {
         in_symbol();
         if (symbol == Symbol::SHORTSY || symbol == Symbol::LONGSY ||
-            symbol == Symbol::UNSIGNEDSY) {
+            symbol == Symbol::UNSIGNEDSY)
           in_symbol();
-        }
         test(type_set, FSYS, 10);
       }
 
       if (symbol == Symbol::IDENT) {
         tl.X = loc(bl, ID);
         if (tl.X != 0) {
-          if (TAB[tl.X].object != OBJECTS::TYPE1) {
+          if (TAB[tl.X].object != Objects::Type1)
             error(29);
-          } else {
+          else {
             tl.TP = TAB[tl.X].types;
             tl.RF = TAB[tl.X].reference;
             tl.SZ = TAB[tl.X].address;
-            if (tl.TP == Types::NOTYP) {
+            if (tl.TP == Types::NOTYP)
               error(30);
-            }
           }
         }
         in_symbol();
-        if (symbol == Symbol::CONSTSY) {
+        if (symbol == Symbol::CONSTSY)
           in_symbol();
-        }
       } else if (symbol == Symbol::STRUCTSY) {
         in_symbol();
         if (symbol == Symbol::IDENT) {
           tl.TID = ID;
           in_symbol();
           if (symbol == Symbol::LSETBRACK) {
-            enter(bl, tl.TID, OBJECTS::STRUCTAG);
+            enter(bl, tl.TID, Objects::STRUCTAG);
             tl.TS = tab_index;
             TAB[tl.TS].types = Types::RECS;
             tl.TP = Types::RECS;
@@ -1014,9 +950,9 @@ namespace cs {
           } else {
             tl.X = loc(bl, tl.TID);
             if (tl.X != 0) {
-              if (TAB[tl.X].object != OBJECTS::STRUCTAG) {
+              if (TAB[tl.X].object != Objects::STRUCTAG)
                 error(108);
-              } else {
+              else {
                 tl.TP = Types::RECS;
                 tl.RF = TAB[tl.X].reference;
                 tl.SZ = TAB[tl.X].address;
@@ -1054,9 +990,8 @@ namespace cs {
       if (symbol == Symbol::VALUESY) {
         VALUEFOUND = true;
         in_symbol();
-      } else {
+      } else
         VALUEFOUND = false;
-      }
 
       Types TP;
       int64_t RF, SZ;
@@ -1070,25 +1005,22 @@ namespace cs {
       su.set(static_cast<int>(Symbol::RPARENT), true);
       TYPF(bl, su, TP, RF, SZ);
 
-      if ((TP == Types::VOIDS) && (symbol == Symbol::RPARENT) && NOPARAMS) {
+      if (TP == Types::VOIDS && symbol == Symbol::RPARENT && NOPARAMS)
         goto L56;
-      }
 
-      if ((TP == Types::VOIDS) && (symbol != Symbol::TIMES)) {
+      if (TP == Types::VOIDS && symbol != Symbol::TIMES)
         error(151);
-      }
 
       C_PNTCHANTYP(bl, TP, RF, SZ);
 
-      if (symbol == Symbol::IDENT) {
-        ENTERVARIABLE(bl, OBJECTS::VARIABLE);
-      } else if ((symbol == Symbol::COMMA) || (symbol == Symbol::RPARENT)) {
+      if (symbol == Symbol::IDENT)
+        ENTERVARIABLE(bl, Objects::VARIABLE);
+      else if (symbol == Symbol::COMMA || symbol == Symbol::RPARENT) {
         ID = dummy_name;
         dummy_name[13] = static_cast<char>(dummy_name[13] + 1);
-        if (dummy_name[13] == '0') {
+        if (dummy_name[13] == '0')
           dummy_name[12] = static_cast<char>(dummy_name[12] + 1);
-        }
-        enter(bl, ID, OBJECTS::VARIABLE);
+        enter(bl, ID, Objects::VARIABLE);
       } else {
         error(2);
         ID = "              ";
@@ -1114,9 +1046,8 @@ namespace cs {
       //            ELSE NORMAL := TRUE;
       //          IF TP = PNTS THEN PNTPARAM := TRUE ELSE PNTPARAM := FALSE;
       if (TP == Types::ARRAYS && VALUEFOUND) {
-        if (ATAB[RF].HIGH == 0) {
+        if (ATAB[RF].HIGH == 0)
           error(117);
-        }
       }
 
       TAB[tab_index].normal =
@@ -1128,15 +1059,14 @@ namespace cs {
       TAB[tab_index].address = bl->DX;
       TAB[tab_index].size = SZ;
 
-      if (TAB[tab_index].normal) {
+      if (TAB[tab_index].normal)
         bl->DX = bl->DX + static_cast<int>(SZ);
-      } else {
+      else
         bl->DX = bl->DX + 1;
-      }
 
-      if (symbol == Symbol::COMMA) {
+      if (symbol == Symbol::COMMA)
         in_symbol();
-      } else {
+      else {
         su = 0;
         su.set(static_cast<int>(Symbol::RPARENT), true);
         test(su, bl->FSYS, 105);
@@ -1144,9 +1074,9 @@ namespace cs {
     }
 
   L56:
-    if (symbol == Symbol::RPARENT) {
+    if (symbol == Symbol::RPARENT)
       in_symbol();
-    } else {
+    else {
       su = 0;
       su.set(static_cast<int>(Symbol::RPARENT), true);
       sv = bl->FSYS;
@@ -1159,10 +1089,9 @@ namespace cs {
         OK_BREAK = true;
         in_symbol();
         if (proto_index >= 0) {
-          if ((bl->PCNT != BTAB[proto_ref].PARCNT) ||
-              (bl->DX != BTAB[proto_ref].PSIZE)) {
+          if (bl->PCNT != BTAB[proto_ref].PARCNT ||
+              bl->DX != BTAB[proto_ref].PSIZE)
             error(152);
-          }
         }
       } else {
         sv = 0;
@@ -1170,18 +1099,16 @@ namespace cs {
         test(sv, bl->FSYS, 106);
       }
       OK_BREAK = true;
-    } else if (proto_index >= 0) {
+    } else if (proto_index >= 0)
       error(153);
-    }
 
     proto_index = -1;
   }
 
   auto GETFUNCID(const ALFA &FUNCNAME) -> int {
     for (int K = 1; K <= LIBMAX; K++) {
-      if (FUNCNAME == LIBFUNC[K].NAME) {
+      if (FUNCNAME == LIBFUNC[K].NAME)
         return LIBFUNC[K].IDNUM;
-      }
     }
     return 0;
   }
@@ -1192,9 +1119,8 @@ namespace cs {
     if (TP == Types::CHANS) {
       error(119);
       return_type.types = Types::NOTYP;
-    } else {
+    } else
       return_type.types = TP;
-    }
     return_type.reference = RF;
     return_type.size = SZ;
     return_type.is_address = false;
@@ -1207,14 +1133,13 @@ namespace cs {
       PRORET.reference = TAB[T0].FREF;
       PRORET.size = TAB[T0].size;
       PRORET.is_address = false;
-      if ((!type_compatible(return_type, PRORET)) ||
-          (return_type.types != PRORET.types)) {
+      if (!type_compatible(return_type, PRORET) ||
+          return_type.types != PRORET.types)
         error(152);
-      }
       proto_ref = TAB[T0].reference;
     }
 
-    TAB[T0].object = OBJECTS::FUNKTION;
+    TAB[T0].object = Objects::FUNKTION;
     TAB[T0].types = TP;
     TAB[T0].FREF = RF;
     TAB[T0].LEV = bl->LEVEL;
@@ -1224,28 +1149,26 @@ namespace cs {
     if (strcmp(TAB[T0].name.c_str(), "MAIN          ") == 0)
       MAINFUNC = T0;
     int LCSAV = line_count;
-    EMIT(10);
+    emit(10);
     su = bl->FSYS | keyword_set | assigners_set | declaration_set;
     su.set(static_cast<int>(Symbol::LSETBRACK), true);
     BLOCK(bl->blkil, su, ISFUN, bl->LEVEL + 1, T0);
-    EMIT(32 + ISFUN);
+    emit(32 + ISFUN);
     if (line_count - LCSAV == 2) {
       // no need to generate code for a prototype declaration DE
       line_count = LCSAV;
       execution_count = 0; // no executable content , avoids 6 (noop) for breaks
     } else
-      code[LCSAV].Y = line_count;
+      CODE[LCSAV].Y = line_count;
     OK_BREAK = false;
 
-    if (HasIncludeFlag() && (TAB[T0].address == 0)) {
+    if (HasIncludeFlag() && TAB[T0].address == 0)
       TAB[T0].address = -GETFUNCID(TAB[T0].name);
-    }
 
-    if (symbol == Symbol::SEMICOLON || symbol == Symbol::RSETBRACK) {
+    if (symbol == Symbol::SEMICOLON || symbol == Symbol::RSETBRACK)
       in_symbol();
-    } else {
+    else
       error(104);
-    }
     su = declaration_set;
     su.set(static_cast<int>(Symbol::INCLUDESY), true);
     su.set(static_cast<int>(Symbol::EOFSY), true);
@@ -1260,7 +1183,7 @@ namespace cs {
     test(su, bl->FSYS, 2);
 
     if (symbol == Symbol::IDENT) {
-      enter(bl, ID, OBJECTS::KONSTANT);
+      enter(bl, ID, Objects::KONSTANT);
       in_symbol();
       CONREC C;
       su = bl->FSYS;
@@ -1272,9 +1195,8 @@ namespace cs {
       TAB[tab_index].reference = 0;
       TAB[tab_index].address = C.I;
 
-      if (symbol == Symbol::SEMICOLON) {
+      if (symbol == Symbol::SEMICOLON)
         in_symbol();
-      }
     }
   }
 
@@ -1299,7 +1221,7 @@ namespace cs {
       strcpy(ID.data(), "              ");
     }
 
-    enter(bl, ID, OBJECTS::TYPE1);
+    enter(bl, ID, Objects::Type1);
     T1 = tab_index;
     in_symbol();
 
@@ -1324,7 +1246,7 @@ namespace cs {
       int LBCNT = 1;
       in_symbol();
 
-      while ((LBCNT > 0) && (symbol != Symbol::SEMICOLON)) {
+      while (LBCNT > 0 && symbol != Symbol::SEMICOLON) {
         while (symbol == Symbol::LSETBRACK) {
           LBCNT = LBCNT + 1;
           in_symbol();
@@ -1345,28 +1267,24 @@ namespace cs {
             } else if (LISTVAL.TP == Types::REALS) {
               INITABLE[ITPNT].IVAL = RTAG;
               INITABLE[ITPNT].RVAL = CONTABLE[LISTVAL.I];
-            } else {
+            } else
               error(138);
-            }
             break;
-          case Types::INTS: if ((LISTVAL.TP == Types::INTS) || (
-                                  LISTVAL.TP == Types::CHARS)) {
+          case Types::INTS: if (LISTVAL.TP == Types::INTS || LISTVAL.TP ==
+                                Types::CHARS)
               INITABLE[ITPNT].IVAL = LISTVAL.I;
-            } else {
+            else
               error(138);
-            }
             break;
-          case Types::CHARS: if (LISTVAL.TP == Types::CHARS) {
+          case Types::CHARS: if (LISTVAL.TP == Types::CHARS)
               INITABLE[ITPNT].IVAL = LISTVAL.I;
-            } else {
+            else
               error(138);
-            }
             break;
-          case Types::BOOLS: if (LISTVAL.TP == Types::BOOLS) {
+          case Types::BOOLS: if (LISTVAL.TP == Types::BOOLS)
               INITABLE[ITPNT].IVAL = LISTVAL.I;
-            } else {
+            else
               error(138);
-            }
             break;
           default: break;
         }
@@ -1379,17 +1297,16 @@ namespace cs {
         }
 
         if (LBCNT > 0) {
-          if (symbol == Symbol::COMMA) {
+          if (symbol == Symbol::COMMA)
             in_symbol();
-          } else {
+          else
             error(135);
-          }
         }
       }
     } else if (symbol == Symbol::STRNG) {
-      if (TP != Types::CHARS) {
+      if (TP != Types::CHARS)
         error(138);
-      } else {
+      else {
         for (int CI = 1; CI <= STRING_LENGTH; CI++) {
           INITABLE[ITPNT].IVAL = STAB[INUM + CI - 1];
           ITPNT = ITPNT + 1;
@@ -1416,14 +1333,13 @@ namespace cs {
       strcpy(ID.data(), "              ");
     }
 
-    enter(bl, ID, OBJECTS::PROZEDURE);
+    enter(bl, ID, Objects::PROZEDURE);
     int T0 = tab_index;
 
     if (proto_index >= 0) {
       T0 = proto_index;
-      if (TAB[T0].object != OBJECTS::PROZEDURE) {
+      if (TAB[T0].object != Objects::PROZEDURE)
         error(152);
-      }
       proto_ref = TAB[T0].reference;
     }
 
@@ -1431,29 +1347,26 @@ namespace cs {
     in_symbol();
 
     int LCSAV = line_count;
-    EMIT(10);
+    emit(10);
     su = bl->FSYS | keyword_set | assigners_set | declaration_set;
     su.set(static_cast<int>(Symbol::RSETBRACK), true);
     BLOCK(bl->blkil, su, ISFUN, bl->LEVEL + 1, T0);
-    EMIT(32 + ISFUN);
+    emit(32 + ISFUN);
     if (line_count - LCSAV == 2) {
       line_count =
         LCSAV; // no need to generate code for a prototype declaration DE
       execution_count = 0; // no executable content , avoids 6 (noop) for breaks
-    } else {
-      code.at(LCSAV).Y = line_count;
-    }
+    } else
+      CODE.at(LCSAV).Y = line_count;
     OK_BREAK = false;
 
-    if (HasIncludeFlag() && (TAB[T0].address == 0)) {
+    if (HasIncludeFlag() && TAB[T0].address == 0)
       TAB[T0].address = -GETFUNCID(TAB[T0].name);
-    }
 
-    if (symbol == Symbol::SEMICOLON || symbol == Symbol::RSETBRACK) {
+    if (symbol == Symbol::SEMICOLON || symbol == Symbol::RSETBRACK)
       in_symbol();
-    } else {
+    else
       error(104);
-    }
     su = declaration_set;
     su.set(static_cast<int>(Symbol::INCLUDESY), true);
     su.set(static_cast<int>(Symbol::EOFSY), true);
@@ -1504,7 +1417,7 @@ namespace cs {
       TYPF(bl, su, TP, RF, SZ);
     }
 
-    if ((TP == Types::VOIDS) && (symbol != Symbol::TIMES)) {
+    if (TP == Types::VOIDS && symbol != Symbol::TIMES) {
       PROCDECLARATION(bl);
       PROCDEFN = true;
     }
@@ -1523,9 +1436,9 @@ namespace cs {
           strcpy(ID.data(), "              ");
         }
         T0 = tab_index;
-        ENTERVARIABLE(bl, OBJECTS::VARIABLE);
+        ENTERVARIABLE(bl, Objects::Variable);
 
-        if (!TYPCALL && (symbol != Symbol::LPARENT)) {
+        if (!TYPCALL && symbol != Symbol::LPARENT) {
           TP = Types::NOTYP;
           SZ = 0;
           TYPCALL = true;
@@ -1560,17 +1473,16 @@ namespace cs {
           TAB[T0].PNTPARAM = false;
 
           if (symbol == Symbol::BECOMES) {
-            if ((TP == Types::CHANS) || (TP == Types::LOCKS) ||
-                (TP == Types::RECS)) {
+            if (TP == Types::CHANS || TP == Types::LOCKS ||
+                TP == Types::RECS)
               error(136);
-            } else if (TP == Types::ARRAYS) {
+            else if (TP == Types::ARRAYS) {
               while (TP == Types::ARRAYS) {
                 TP = ATAB[RF].ELTYP;
                 RF = ATAB[RF].ELREF;
               }
-              if (!standard_set.test(static_cast<int>(TP))) {
+              if (!standard_set.test(static_cast<int>(TP)))
                 error(137);
-              }
               in_symbol();
               LSTART = ITPNT;
               GETLIST(bl, TP);
@@ -1580,43 +1492,41 @@ namespace cs {
                 TAB[T0].size = LEND - LSTART;
                 bl->DX = bl->DX + TAB[T0].size;
               }
-              if (TAB[T0].size < LEND - LSTART) {
+              if (TAB[T0].size < LEND - LSTART)
                 error(139);
-              } else {
-                EMIT2(0, TAB[T0].LEV, TAB[T0].address);
-                EMIT2(82, LSTART, LEND);
-                RI = (TP == Types::REALS) ? 2 : 1;
-                EMIT2(83, TAB[T0].size - (LEND - LSTART), RI);
+              else {
+                emit(0, TAB[T0].LEV, TAB[T0].address);
+                emit(82, LSTART, LEND);
+                RI = TP == Types::REALS ? 2 : 1;
+                emit(83, TAB[T0].size - (LEND - LSTART), RI);
               }
             } else {
               X.types = TP;
               X.reference = RF;
               X.size = SZ;
               X.is_address = true;
-              EMIT2(0, bl->LEVEL, TAB[T0].address);
+              emit(0, bl->LEVEL, TAB[T0].address);
               in_symbol();
               su = bl->FSYS;
               su.set(static_cast<int>(Symbol::COMMA), true);
               su.set(static_cast<int>(Symbol::SEMICOLON), true);
               expression(bl, su, Y);
-              if (!type_compatible(X, Y)) {
+              if (!type_compatible(X, Y))
                 error(46);
-              } else {
-                if ((X.types == Types::REALS) && (Y.types == Types::INTS)) {
-                  EMIT(91);
-                } else {
-                  EMIT(38);
-                }
-                EMIT(111); // added in V2.2
+              else {
+                if (X.types == Types::REALS && Y.types == Types::INTS)
+                  emit(91);
+                else
+                  emit(38);
+                emit(111); // added in V2.2
               }
             }
           }
 
-          if (symbol == Symbol::COMMA) {
+          if (symbol == Symbol::COMMA)
             in_symbol();
-          } else {
+          else
             DONE = true;
-          }
 
           TP = OTP;
           RF = ORF;
@@ -1624,8 +1534,7 @@ namespace cs {
         }
       } while (!DONE && !FUNCDEC);
     }
-    if (!FUNCDEC && !PROCDEFN) {
+    if (!FUNCDEC && !PROCDEFN)
       TESTSEMICOLON(bl);
-    }
   }
 } // namespace Cstar

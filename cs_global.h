@@ -3,16 +3,9 @@
 //
 #ifndef CSTAR_CS_GLOBAL_H
 #define CSTAR_CS_GLOBAL_H
-#include <cstdio>
-#ifdef EXPORT_CS_GLOBAL
-#define GLOBAL_CS_EXPORT
-#else
-#define GLOBAL_CS_EXPORT extern
-#endif
 
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <vector>
 
 #include "cs_defines.h"
@@ -20,7 +13,12 @@
 namespace fs = std::filesystem;
 
 namespace cs {
-#define ArraySize(A) ((sizeof(A)) / (sizeof(A)[0]))
+
+  template <typename T>
+  consteval auto array_size(T A) -> size_t {
+    return sizeof(A) / sizeof(A[0]);
+  }
+
   inline std::ifstream SOURCE;
   inline std::ofstream LISTFILE;
   inline std::ifstream INPUT;
@@ -60,51 +58,31 @@ namespace cs {
   //        LOCKS, VOIDS
   //    };
 
-  GLOBAL_CS_EXPORT inline std::array<int, LMAX + 1> DISPLAY;
+  inline std::array<int, LMAX + 1> DISPLAY;
 
   using ALFA = std::string;
   using OLDALFA = std::string;
   using MESSAGEALFA = std::string;
   using Index = int;
 
-#ifdef EXPORT_CS_GLOBAL
-  GLOBAL_CS_EXPORT inline std::vector<int> LOCATION;
-#else
-  GLOBAL_CS_EXPORT std::vector<int> LOCATION;
-#endif
-#ifdef EXPORT_CS_GLOBAL
-  GLOBAL_CS_EXPORT inline std::vector<bool> BREAK_ALLOW;
-#else
-  GLOBAL_CS_EXPORT std::vector<bool> BREAK_ALLOW;
-#endif
-#ifdef EXPORT_CS_GLOBAL
-  GLOBAL_CS_EXPORT inline std::vector<int> BREAK_LOCATION;
-#else
-  GLOBAL_CS_EXPORT std::vector<int> BREAK_LOCATION;
-#endif
-  GLOBAL_CS_EXPORT inline int BREAK_POINT;
+  inline std::vector<int> LOCATION;
+  inline std::vector<bool> BREAK_ALLOW;
+  inline std::vector<int> BREAK_LOCATION;
+  inline int BREAK_POINT;
 
   // char *KEY[NKW];
 
   // std::vector<char> STAB(SMAX + 1);
-#ifdef EXPORT_CS_GLOBAL
-  GLOBAL_CS_EXPORT inline std::array<Order, CMAX + 1> code;
-#else
-  GLOBAL_CS_EXPORT std::array<Order, CMAX + 1> code;
-#endif
-#ifdef EXPORT_CS_GLOBAL
-  GLOBAL_CS_EXPORT inline std::vector<Index> WITH_TAB;
-#else
-  GLOBAL_CS_EXPORT std::vector<Index> WITH_TAB;
-#endif
-  GLOBAL_CS_EXPORT inline bool INCLUDE_FLAG;
-  GLOBAL_CS_EXPORT inline bool OK_BREAK;
-  GLOBAL_CS_EXPORT inline ALFA ID;
-  GLOBAL_CS_EXPORT inline int INUM;
-  GLOBAL_CS_EXPORT inline double RNUM;
-  GLOBAL_CS_EXPORT inline int STRING_LENGTH;
-  GLOBAL_CS_EXPORT inline char CH;
-  GLOBAL_CS_EXPORT inline std::array<double, RCMAX + 1> CONTABLE;
+  inline std::array<Order, CMAX + 1> CODE;
+  inline std::vector<Index> WITH_TAB;
+  inline bool INCLUDE_FLAG;
+  inline bool OK_BREAK;
+  inline ALFA ID;
+  inline int INUM;
+  inline double RNUM;
+  inline int STRING_LENGTH;
+  inline char CH;
+  inline std::array<double, RCMAX + 1> CONTABLE;
   /**
     * @brief Emit a the following variables
     * @param FCT

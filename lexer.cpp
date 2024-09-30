@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <iostream>
 #include <print>
 #include <string>
 
@@ -113,7 +114,7 @@ namespace cs {
   void emit(const int FCT, const int lA, const int lB) {
     if (line_count == CMAX) fatal(6);
     else {
-      auto [F, X, Y] = code.at(line_count);
+      auto [F, X, Y] = CODE.at(line_count);
       F = FCT;
       X = lA;
       Y = lB;

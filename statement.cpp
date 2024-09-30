@@ -188,8 +188,8 @@ namespace cs {
   void fix_breaks(int64_t LC1) {
     int64_t LC2;
     while (BREAK_LOCATION[BREAK_POINT] > 0) {
-      LC2 = code[BREAK_LOCATION[BREAK_POINT]].Y;
-      code[BREAK_LOCATION[BREAK_POINT]].Y = LC1;
+      LC2 = CODE[BREAK_LOCATION[BREAK_POINT]].Y;
+      CODE[BREAK_LOCATION[BREAK_POINT]].Y = LC1;
       BREAK_LOCATION[BREAK_POINT] = LC2;
     }
     BREAK_POINT = BREAK_POINT - 1;
@@ -198,8 +198,8 @@ namespace cs {
   void fix_conts(int64_t LC1) {
     int64_t LC2;
     while (CONTLOC[CONTPNT] > 0) {
-      LC2 = code[CONTLOC[CONTPNT]].Y;
-      code[CONTLOC[CONTPNT]].Y = LC1;
+      LC2 = CODE[CONTLOC[CONTPNT]].Y;
+      CODE[CONTLOC[CONTPNT]].Y = LC1;
       CONTLOC[CONTPNT] = LC2;
     }
     CONTPNT = CONTPNT - 1;
@@ -234,12 +234,12 @@ namespace cs {
         EMIT(10);
         if (symbol_count == 1)
           LOCATION[LINE_NUMBER] = line_count;
-        code[LC1].Y = line_count;
+        CODE[LC1].Y = line_count;
         in_symbol();
         statement(bl, bl->FSYS);
-        code[LC2].Y = line_count;
+        CODE[LC2].Y = line_count;
       } else
-        code[LC1].Y = line_count;
+        CODE[LC1].Y = line_count;
     } else
       error(9);
   }
@@ -313,7 +313,7 @@ namespace cs {
       error(4);
     statement(bl, bl->FSYS);
     EMIT1(10, LC1);
-    code[LC2].Y = line_count;
+    CODE[LC2].Y = line_count;
     if (symbol_count == 1)
       LOCATION[LINE_NUMBER] = line_count;
     fix_breaks(line_count);
@@ -383,10 +383,10 @@ namespace cs {
       in_symbol();
     else
       error(4);
-    code[LC2 + 1].Y = line_count;
+    CODE[LC2 + 1].Y = line_count;
     statement(bl, bl->FSYS);
     EMIT1(10, LC3);
-    code[LC2].Y = line_count;
+    CODE[LC2].Y = line_count;
     if (symbol_count == 1)
       LOCATION[LINE_NUMBER] = line_count;
     fix_breaks(line_count);
@@ -613,9 +613,9 @@ namespace cs {
     else
       EMIT2(104, LC3 + 1, 0);
     EMIT(70);
-    code.at(LC3).Y = line_count;
+    CODE.at(LC3).Y = line_count;
     EMIT1(76, LC2);
-    code.at(LC1).Y = line_count;
+    CODE.at(LC1).Y = line_count;
     EMIT(5);
     bl->FLEVEL = bl->FLEVEL - 1;
     if (symbol_count == 1)
@@ -662,7 +662,7 @@ namespace cs {
     EMIT1(7, 0);
     statement(bl, bl->FSYS);
     EMIT(69);
-    code.at(JUMPLC).Y = line_count;
+    CODE.at(JUMPLC).Y = line_count;
     if (symbol_count == 1)
       LOCATION[LINE_NUMBER] = line_count;
   }
@@ -1011,7 +1011,7 @@ namespace cs {
 
     switch_local.LC2 = line_count;
     EMIT(10);
-    code.at(switch_local.LC1).Y = line_count;
+    CODE.at(switch_local.LC1).Y = line_count;
 
     for (switch_local.K = 1; switch_local.K <= switch_local.I; switch_local.K
          ++) {
@@ -1025,7 +1025,7 @@ namespace cs {
     }
 
     EMIT1(10, 0);
-    code.at(switch_local.LC2).Y = line_count;
+    CODE.at(switch_local.LC2).Y = line_count;
     if (symbol_count == 1)
       LOCATION[line_count] = line_count;
 

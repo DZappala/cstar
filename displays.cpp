@@ -235,9 +235,9 @@ namespace cs {
     int X = 0;
     int Y = 0;
 
-    F = code.at(i).F;
-    X = code.at(i).X;
-    Y = code.at(i).Y;
+    F = CODE.at(i).F;
+    X = CODE.at(i).X;
+    Y = CODE.at(i).Y;
     const string &parse_op = opcodes.at(F);
     string op = parse_op.empty() ? "..." : parse_op;
 
