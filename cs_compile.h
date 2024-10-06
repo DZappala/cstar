@@ -3,11 +3,6 @@
 //
 #ifndef CSTAR_CS_COMPILE_H
 #define CSTAR_CS_COMPILE_H
-#ifdef EXPORT_CS_COMPILE
-#define COMPILE_CS_EXPORT
-#else
-#define COMPILE_CS_EXPORT extern
-#endif
 
 #include <bitset>
 #include <sstream>
@@ -15,31 +10,38 @@
 #include "cs_global.h"
 
 namespace cs {
-  COMPILE_CS_EXPORT int symbol_count;
-  COMPILE_CS_EXPORT int execution_count;
-  COMPILE_CS_EXPORT int eof_count;
-  COMPILE_CS_EXPORT int save_symbol_count, save_execution_count,
-    save_line_count;
+  inline int symbol_count;
+  inline int execution_count;
+  inline int eof_count;
+  inline int SAVE_SYMBOL_COUNT;
+  inline int save_execution_count;
+  inline int save_line_count;
 
   // nb: Message Passing Interface, see https://www.mpi-forum.org
-  COMPILE_CS_EXPORT bool mpi_mode; // global ?
+  inline bool mpi_mode; // global ?
 
-  COMPILE_CS_EXPORT std::vector<char> line, line2;
-  COMPILE_CS_EXPORT int SX, CC, C1, C2, CC2;
-  COMPILE_CS_EXPORT int line_count;
-  COMPILE_CS_EXPORT int LL, LL2;
-  COMPILE_CS_EXPORT int atab_index; // index to ATAB source local?
-  COMPILE_CS_EXPORT int btab_index; // index to BTAB source local?
-  COMPILE_CS_EXPORT int ctab_index; // index to CTAB source local?
-  COMPILE_CS_EXPORT int tab_index; // index to TAB source local?
-  COMPILE_CS_EXPORT int error_position;
-  COMPILE_CS_EXPORT int error_count;
-  COMPILE_CS_EXPORT int CPNT;
-  COMPILE_CS_EXPORT char STAB[SMAX];
+  inline std::vector<char> LINE;
+  inline std::vector<char> LINE2;
+  inline int SX;
+  inline int CC;
+  inline int C1;
+  inline int C2;
+  inline int CC2;
+  inline int line_count;
+  inline int LL;
+  inline int LL2;
+  inline int atab_index; // index to ATAB source local?
+  inline int btab_index; // index to BTAB source local?
+  inline int ctab_index; // index to CTAB source local?
+  inline int tab_index; // index to TAB source local?
+  inline int error_position;
+  inline int error_count;
+  inline int CPNT;
+  char STAB[SMAX];
 
   // COMPILE_CS_EXPORT int ERRS;   // range 0..ERMAX
-  COMPILE_CS_EXPORT int ITPNT; // range 0 ..INITMAX
-  COMPILE_CS_EXPORT void in_symbol();
+  int ITPNT; // range 0 ..INITMAX
+  void in_symbol();
 
   using SymbolSet = std::bitset<95>;
   using Index = int; // range from -XMAX to +XMAX
@@ -173,44 +175,44 @@ namespace cs {
     Index FREF;
     int FORLEV;
     bool PNTPARAM;
-  } ;
+  };
 
   struct INITPAIR {
     int IVAL;
     double RVAL;
-  } ;
+  };
 
   struct ATABREC {
     Types INXTYP;
     Types ELTYP;
     int ELREF, LOW, HIGH, ELSIZE, SIZE;
-  } ;
+  };
 
   struct BTABREC {
     int LAST, LASTPAR, PSIZE, VSIZE, PARCNT;
-  } ;
+  };
 
   struct CTABREC {
     Types ELTYP;
     int ELREF, ELSIZE;
-  } ;
+  };
 
   struct Item {
     Types types;
     int reference;
     int64_t size;
     bool is_address;
-  } ;
+  };
 
   struct LIBREC {
     ALFA NAME;
     int IDNUM;
-  } ;
+  };
 
   struct CONREC {
     Types TP;
     int64_t I;
-  } ;
+  };
 
   // typedef SYMBOL SYMSET[EMAX];
   //    std::string KEY[] = {
@@ -251,95 +253,37 @@ namespace cs {
   //            "WHILE",
   //    } ;
   //    KEY: ARRAY[1..NKW] OF ALFA;
-  COMPILE_CS_EXPORT Symbol symbol;
-#ifdef EXPORT_CS_COMPILE
-  COMPILE_CS_EXPORT char key[][NKW + 1] = {
-    "              ",
-    "#DEFINE       ",
-    "#INCLUDE      ",
-    "BREAK         ",
-    "CASE          ",
-    "CIN           ",
-    "CONST         ",
-    "CONTINUE      ",
-    "COUT          ",
-    "DEFAULT       ",
-    "DO            ",
-    "ELSE          ",
-    "ENDL          ",
-    "ENUM          ",
-    "FOR           ",
-    "FORALL        ",
-    "FORK          ",
-    "FUNCTION      ",
-    "GROUPING      ",
-    "IF            ",
-    "JOIN          ",
-    "LONG          ",
-    "MOVE          ",
-    "NEW           ",
-    "RETURN        ",
-    "SHORT         ",
-    "STREAM        ",
-    "STRUCT        ",
-    "SWITCH        ",
-    "THEN          ",
-    "TO            ",
-    "TYPEDEF       ",
-    "UNION         ",
-    "UNSIGNED      ",
-    "VALUE         ",
-    "WHILE         ",
-  };
-#else
-  COMPILE_CS_EXPORT char key[][NKW + 1];
-#endif
-  COMPILE_CS_EXPORT enum Symbol ksy[NKW + 1];
-  COMPILE_CS_EXPORT ALFA dummy_name;
-  COMPILE_CS_EXPORT Index proto_index;
+  inline Symbol symbol;
+  inline std::vector<char> key;
+  inline std::vector<Symbol> ksy;
+  inline ALFA dummy_name;
+  inline Index proto_index;
   //  SPS: ARRAY [CHAR] OF SYMBOL;
-  COMPILE_CS_EXPORT enum Symbol SPS[128];
-  COMPILE_CS_EXPORT SymbolSet base_set, type_set, block_set
-    ,
-    FACBEGSYS,
-    declaration_set, keyword_set, assigners_set, execution_set,
-    selection_set,
-    non_mpi_set,
-    comparators_set;
-  COMPILE_CS_EXPORT TypeSet standard_set;
-  COMPILE_CS_EXPORT struct LIBREC LIBFUNC[LIBMAX + 1];
-#ifdef EXPORT_CS_COMPILE
-  COMPILE_CS_EXPORT std::vector<TABREC> TAB(TMAX + 1);
-#else
-  COMPILE_CS_EXPORT std::vector<TABREC> TAB;
-#endif
-#ifdef EXPORT_CS_COMPILE
-  COMPILE_CS_EXPORT std::vector<ATABREC> ATAB(AMAX + 1);
-#else
-  COMPILE_CS_EXPORT std::vector<ATABREC> ATAB;
-#endif
-
-#ifdef EXPORT_CS_COMPILE
-  COMPILE_CS_EXPORT std::vector<BTABREC> BTAB(BMAX + 1);
-#else
-  COMPILE_CS_EXPORT std::vector<BTABREC> BTAB;
-#endif
-#ifdef EXPORT_CS_COMPILE
-  COMPILE_CS_EXPORT std::vector<CTABREC> CTAB(CHMAX + 1);
-#else
-  COMPILE_CS_EXPORT std::vector<CTABREC> CTAB;
-#endif
-#ifdef EXPORT_CS_COMPILE
-  COMPILE_CS_EXPORT std::vector<INITPAIR> INITABLE(INITMAX + 1);
-#else
-  COMPILE_CS_EXPORT std::vector<INITPAIR> INITABLE;
-#endif
-  COMPILE_CS_EXPORT void initialize_compiler();
-  COMPILE_CS_EXPORT int write_block;
-  COMPILE_CS_EXPORT int highest_processor;
-  COMPILE_CS_EXPORT Symbol topology;
-  COMPILE_CS_EXPORT Index TOPDIM;
-  COMPILE_CS_EXPORT Index proto_ref;
-  COMPILE_CS_EXPORT Item return_type;
-} // namespace Cstar
+  inline std::vector<Symbol> SPS;
+  inline SymbolSet base_set;
+  inline SymbolSet type_set;
+  inline SymbolSet block_set;
+  inline SymbolSet FACBEGSYS;
+  inline SymbolSet declaration_set;
+  inline SymbolSet keyword_set;
+  inline SymbolSet assigners_set;
+  inline SymbolSet execution_set;
+  inline SymbolSet selection_set;
+  inline SymbolSet non_mpi_set;
+  inline SymbolSet COMPARATORS_SET;
+  inline TypeSet standard_set;
+  inline std::vector<LIBREC> LIBFUNC;
+  inline std::vector<TABREC> TAB;
+  inline std::vector<ATABREC> ATAB;
+  inline std::vector<BTABREC> BTAB;
+  inline std::vector<CTABREC> CTAB;
+  inline std::vector<INITPAIR> INITABLE;
+  void initialize_compiler();
+  inline int write_block;
+  inline int highest_processor;
+  inline Symbol topology;
+  inline Index TOPDIM;
+  inline Index proto_ref;
+  inline Item return_type;
+} // namespace cs
 #endif // CSTAR_CS_COMPILE_H

@@ -103,15 +103,15 @@ namespace cs {
           } else {
             expression(block, FSYS, X);
             if (X.size > 1)
-              EMIT1(112, X.size);
-            EMIT(111);
+              emit(112, X.size);
+            emit(111);
           }
         } else
           in_symbol();
       } else if (symbol == Symbol::LPARENT || symbol == Symbol::INCREMENT ||
                  symbol == Symbol::DECREMENT || symbol == Symbol::TIMES) {
         expression(block, FSYS, X);
-        EMIT(111);
+        emit(111);
       }
     }
     if (assigners_set.test(static_cast<int>(SYMSAV)) ||
@@ -219,7 +219,7 @@ namespace cs {
             X.types == Types::NOTYP))
         error(17);
       LC1 = line_count;
-      EMIT(11);
+      emit(11);
       if (LOCATION[LINE_NUMBER] == line_count - 1)
         LOCATION[LINE_NUMBER] = line_count;
       if (symbol == Symbol::RPARENT)
@@ -231,7 +231,7 @@ namespace cs {
       statement(bl, su);
       if (symbol == Symbol::ELSESY) {
         LC2 = line_count;
-        EMIT(10);
+        emit(10);
         if (symbol_count == 1)
           LOCATION[LINE_NUMBER] = line_count;
         CODE[LC1].Y = line_count;
@@ -277,8 +277,8 @@ namespace cs {
         in_symbol();
       else
         error(4);
-      EMIT1(11, line_count + 2);
-      EMIT1(10, LC1);
+      emit(11, line_count + 2);
+      emit(10, LC1);
     } else
       error(53);
     fix_breaks(line_count);
@@ -306,13 +306,13 @@ namespace cs {
           X.types == Types::NOTYP))
       error(17);
     LC2 = line_count;
-    EMIT(11);
+    emit(11);
     if (symbol == Symbol::RPARENT)
       in_symbol();
     else
       error(4);
     statement(bl, bl->FSYS);
-    EMIT1(10, LC1);
+    emit(10, LC1);
     CODE[LC2].Y = line_count;
     if (symbol_count == 1)
       LOCATION[LINE_NUMBER] = line_count;
@@ -328,14 +328,14 @@ namespace cs {
     su.set(static_cast<int>(TESTSY), true);
     expression(bl, su, X);
     if (X.size > 1)
-      EMIT1(112, X.size);
-    EMIT(111);
+      emit(112, X.size);
+    emit(111);
     while (symbol == Symbol::COMMA) {
       in_symbol();
       expression(bl, su, X);
       if (X.size > 1)
-        EMIT1(112, X.size);
-      EMIT(111);
+        emit(112, X.size);
+      emit(111);
     }
   }
 
@@ -367,25 +367,25 @@ namespace cs {
             X.types == Types::NOTYP))
         error(17);
     } else
-      EMIT1(24, 1);
+      emit(24, 1);
     if (symbol == Symbol::SEMICOLON)
       in_symbol();
     else
       error(14);
     LC2 = line_count;
-    EMIT(11);
-    EMIT(10);
+    emit(11);
+    emit(10);
     LC3 = line_count;
     if (symbol != Symbol::RPARENT)
       comma_expression(bl, Symbol::RPARENT);
-    EMIT1(10, LC1);
+    emit(10, LC1);
     if (symbol == Symbol::RPARENT)
       in_symbol();
     else
       error(4);
     CODE[LC2 + 1].Y = line_count;
     statement(bl, bl->FSYS);
-    EMIT1(10, LC3);
+    emit(10, LC3);
     CODE[LC2].Y = line_count;
     if (symbol_count == 1)
       LOCATION[LINE_NUMBER] = line_count;
@@ -401,7 +401,7 @@ namespace cs {
     bool TCRFLAG;
     // INSYMBOL();
     ID = dummy_name;
-    enter(bl, ID, OBJECTS::PROZEDURE);
+    enter(bl, ID, Objects::Procedure);
     dummy_name[13] = static_cast<char>(dummy_name[13] + 1);
     if (dummy_name[13] == '0')
       dummy_name[12] = static_cast<char>(dummy_name[12] + 1);
@@ -428,8 +428,8 @@ namespace cs {
     sv = declaration_set | keyword_set | assigners_set;
     test(su, sv, 3);
     in_symbol();
-    EMIT1(18, PRT);
-    EMIT1(19, BTAB[PRB].PSIZE - 1);
+    emit(18, PRT);
+    emit(19, BTAB[PRB].PSIZE - 1);
     TAB[PRT].address = line_count;
     su = bl->FSYS;
     su.set(static_cast<int>(Symbol::RSETBRACK), true);
@@ -446,7 +446,7 @@ namespace cs {
       else if (symbol == Symbol::IDENT) {
         I = loc(bl, ID);
         if (I != 0) {
-          if (TAB[I].object == OBJECTS::TYPE1)
+          if (TAB[I].object == Objects::Type1)
             var_declaration(bl);
           else {
             su = bl->FSYS;
@@ -479,7 +479,7 @@ namespace cs {
     su.set(static_cast<int>(Symbol::PERIOD), true);
     sv = 0;
     test(su, sv, 6);
-    EMIT(105);
+    emit(105);
     bl->DX = SAVEDX;
     bl->NUMWITH = SAVENUMWITH;
     bl->MAXNUMWITH = SAVEMAXNUMWITH;
@@ -502,12 +502,12 @@ namespace cs {
       if (I == 0)
         CVT = Types::INTS;
       else {
-        if (TAB[I].object == OBJECTS::VARIABLE) {
+        if (TAB[I].object == Objects::Variable) {
           CVT = TAB[I].types;
           if (!TAB[I].normal)
             error(26);
           else
-            EMIT2(0, TAB[I].LEV, TAB[I].address);
+            emit(0, TAB[I].LEV, TAB[I].address);
           if (!(CVT == Types::NOTYP || CVT == Types::INTS ||
                 CVT == Types::BOOLS || CVT == Types::CHARS))
             error(18);
@@ -566,10 +566,10 @@ namespace cs {
       if (X.types != Types::INTS)
         error(45);
     } else
-      EMIT1(24, 1);
-    EMIT(4);
+      emit(24, 1);
+    emit(4);
     LC1 = line_count;
-    EMIT(75);
+    emit(75);
     LC2 = line_count;
     TAB[I].FORLEV = -TAB[I].FORLEV;
     if (symbol == Symbol::ATSY) {
@@ -580,7 +580,7 @@ namespace cs {
       if (!(X.types == Types::INTS || X.types == Types::NOTYP))
         error(126);
     } else
-      EMIT(79);
+      emit(79);
     if (symbol == Symbol::DOSY)
       in_symbol();
     else
@@ -590,17 +590,17 @@ namespace cs {
     if (symbol == Symbol::IDENT) {
       J = loc(bl, ID);
       if (J != 0) {
-        if (TAB[J].object == OBJECTS::PROZEDURE && TAB[J].LEV != 0)
+        if (TAB[J].object == Objects::Procedure && TAB[J].LEV != 0)
           bl->CREATEFLAG = true;
       }
     }
     if (bl->CREATEFLAG)
-      EMIT1(74, 1);
+      emit(74, 1);
     else
-      EMIT1(74, 0);
+      emit(74, 0);
     TCRFLAG = bl->CREATEFLAG;
     LC3 = line_count;
-    EMIT1(10, 0);
+    emit(10, 0);
     if (symbol == Symbol::LSETBRACK)
       block_statement(bl);
     else {
@@ -609,14 +609,14 @@ namespace cs {
     }
     TAB[I].FORLEV = 0;
     if (TCRFLAG)
-      EMIT2(104, LC3 + 1, 1);
+      emit(104, LC3 + 1, 1);
     else
-      EMIT2(104, LC3 + 1, 0);
-    EMIT(70);
+      emit(104, LC3 + 1, 0);
+    emit(70);
     CODE.at(LC3).Y = line_count;
-    EMIT1(76, LC2);
+    emit(76, LC2);
     CODE.at(LC1).Y = line_count;
-    EMIT(5);
+    emit(5);
     bl->FLEVEL = bl->FLEVEL - 1;
     if (symbol_count == 1)
       LOCATION[LINE_NUMBER] = line_count;
@@ -628,7 +628,7 @@ namespace cs {
     int JUMPLC;
     SymbolSet su;
     bl->CREATEFLAG = false;
-    EMIT(106);
+    emit(106);
     in_symbol();
     if (symbol == Symbol::LPARENT) {
       in_symbol();
@@ -646,7 +646,7 @@ namespace cs {
       else
         error(4);
     } else
-      EMIT(79);
+      emit(79);
     if (symbol == Symbol::IDENT) {
       I = loc(bl, ID);
       if (I != 0) {
@@ -655,20 +655,20 @@ namespace cs {
       }
     }
     if (bl->CREATEFLAG)
-      EMIT1(67, 1);
+      emit(67, 1);
     else
-      EMIT1(67, 0);
+      emit(67, 0);
     JUMPLC = line_count;
-    EMIT1(7, 0);
+    emit(7, 0);
     statement(bl, bl->FSYS);
-    EMIT(69);
+    emit(69);
     CODE.at(JUMPLC).Y = line_count;
     if (symbol_count == 1)
       LOCATION[LINE_NUMBER] = line_count;
   }
 
   void join_statement(BlockLocal* bl) {
-    EMIT(85);
+    emit(85);
     in_symbol();
   }
 
@@ -678,26 +678,26 @@ namespace cs {
     if (return_type.types != Types::VOIDS) {
       expression(bl, bl->FSYS, X);
       if (X.types == Types::RECS || X.types == Types::ARRAYS)
-        EMIT1(113, X.size);
+        emit(113, X.size);
       if (!type_compatible(return_type, X))
         error(118);
       else {
         if (return_type.types == Types::REALS && X.types == Types::INTS)
-          EMIT(26);
-        EMIT(33);
+          emit(26);
+        emit(33);
       }
     } else
-      EMIT(32);
+      emit(32);
   }
 
   void break_statement(BlockLocal* bl) {
-    EMIT1(10, BREAK_LOCATION[BREAK_POINT]);
+    emit(10, BREAK_LOCATION[BREAK_POINT]);
     BREAK_LOCATION[BREAK_POINT] = line_count - 1;
     in_symbol();
   }
 
   void continue_statement() {
-    EMIT1(10, CONTLOC[CONTPNT]);
+    emit(10, CONTLOC[CONTPNT]);
     CONTLOC[CONTPNT] = line_count - 1;
     in_symbol();
   }
@@ -719,8 +719,8 @@ namespace cs {
       if (!(X.types == Types::INTS || X.types == Types::NOTYP))
         error(126);
     } else
-      EMIT1(8, 19);
-    EMIT(115);
+      emit(8, 19);
+    emit(115);
   }
 
   //    void INPUTSTATEMENT(BlockLocal *bl)
@@ -735,12 +735,12 @@ namespace cs {
   //                INSYMBOL();
   //                if (symbol == ENDLSY)
   //                {
-  //                    EMIT(63);
+  //                    emit(63);
   //                    INSYMBOL();
   //                } else if (symbol == STRNG)
   //                {
-  //                    EMIT1(24, STRING_LENGTH);
-  //                    EMIT1(28, INUM);
+  //                    emit(24, STRING_LENGTH);
+  //                    emit(28, INUM);
   //                    INSYMBOL();
   //                } else
   //                {
@@ -756,7 +756,7 @@ namespace cs {
   //                        if (X.TYP == INTS || X.TYP == REALS || X.TYP == CHARS
   //                        || X.TYP == NOTYP)
   //                        {
-  //                            EMIT1(27, (int)X.TYP);
+  //                            emit(27, (int)X.TYP);
   //                        } else
   //                        {
   //                            error(40);
@@ -785,7 +785,7 @@ namespace cs {
         else {
           if (X.types == Types::INTS || X.types == Types::REALS ||
               X.types == Types::CHARS || X.types == Types::NOTYP)
-            EMIT1(27, (int)X.types);
+            emit(27, (int)X.types);
           else
             error(40);
         }
@@ -820,9 +820,9 @@ namespace cs {
       if (symbol != Symbol::RPARENT)
         error(4);
       if (strcmp(METHOD.c_str(), "WIDTH         ") == 0)
-        EMIT1(30, 1);
+        emit(30, 1);
       else
-        EMIT1(30, 2);
+        emit(30, 2);
     }
     in_symbol();
   }
@@ -834,16 +834,16 @@ namespace cs {
     if (symbol == Symbol::PERIOD)
       cout_methods(bl);
     else {
-      EMIT(89);
+      emit(89);
       if (symbol == Symbol::OUTSTR) {
         do {
           in_symbol();
           if (symbol == Symbol::ENDLSY) {
-            EMIT(63);
+            emit(63);
             in_symbol();
           } else if (symbol == Symbol::STRNG) {
-            EMIT1(24, STRING_LENGTH);
-            EMIT1(28, INUM);
+            emit(24, STRING_LENGTH);
+            emit(28, INUM);
             in_symbol();
           } else {
             su = bl->FSYS;
@@ -853,14 +853,14 @@ namespace cs {
             if (!(standard_set.test(static_cast<int>(X.types))))
               error(41);
             if (X.types == Types::REALS)
-              EMIT(37);
+              emit(37);
             else
-              EMIT1(29, static_cast<int>(X.types));
+              emit(29, static_cast<int>(X.types));
           }
         } while (symbol == Symbol::OUTSTR);
       } else
         error(128);
-      EMIT(90);
+      emit(90);
     }
   }
 
@@ -970,7 +970,7 @@ namespace cs {
       error(4);
 
     switch_local.LC1 = line_count;
-    EMIT(12);
+    emit(12);
 
     if (symbol == Symbol::LSETBRACK)
       in_symbol();
@@ -1010,21 +1010,21 @@ namespace cs {
     }
 
     switch_local.LC2 = line_count;
-    EMIT(10);
+    emit(10);
     CODE.at(switch_local.LC1).Y = line_count;
 
     for (switch_local.K = 1; switch_local.K <= switch_local.I; switch_local.K
          ++) {
-      EMIT1(13, switch_local.case_table[switch_local.K].VAL);
-      EMIT1(13, switch_local.case_table[switch_local.K].line_count);
+      emit(13, switch_local.case_table.at(switch_local.K).VAL);
+      emit(13, switch_local.case_table.at(switch_local.K).line_count);
     }
 
     if (switch_local.DEFOUND) {
-      EMIT2(13, -1, 0);
-      EMIT1(13, switch_local.LC3);
+      emit(13, -1, 0);
+      emit(13, switch_local.LC3);
     }
 
-    EMIT1(10, 0);
+    emit(10, 0);
     CODE.at(switch_local.LC2).Y = line_count;
     if (symbol_count == 1)
       LOCATION[line_count] = line_count;

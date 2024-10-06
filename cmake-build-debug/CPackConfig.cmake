@@ -11,7 +11,7 @@
 
 
 set(CPACK_BUILD_SOURCE_DIRS "/home/dom/projects/pace/parallel/cstar-dev;/home/dom/projects/pace/parallel/cstar-dev/cmake-build-debug")
-set(CPACK_CMAKE_GENERATOR "Ninja")
+set(CPACK_CMAKE_GENERATOR "Unix Makefiles")
 set(CPACK_COMPONENT_UNSPECIFIED_HIDDEN "TRUE")
 set(CPACK_COMPONENT_UNSPECIFIED_REQUIRED "TRUE")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS " ")

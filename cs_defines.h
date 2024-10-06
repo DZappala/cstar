@@ -1,23 +1,26 @@
 #pragma once
 /* define s are preferred to const for global compile-time definitions */
+
 /*-----THE FOLLOWING CONSTANTS USED BY THE COMPILER MAY BE MODIFIED------*/
 
 // note from Dom: this was originally written in c++11, as of c++14, constexpr
 // is preferred for comptime values.
 
-constexpr uint32_t TMAX = 600;  /*SIZE OF TABLE*/
-constexpr uint32_t BMAX = 150;  /*SIZE OF BLOCK-TABLE*/
-constexpr uint32_t AMAX = 150;  /*SIZE OF ARRAY TABLE*/
+#include <cstdint>
+
+constexpr uint32_t TMAX = 600; /*SIZE OF TABLE*/
+constexpr uint32_t BMAX = 150; /*SIZE OF BLOCK-TABLE*/
+constexpr uint32_t AMAX = 150; /*SIZE OF ARRAY TABLE*/
 constexpr uint32_t CHMAX = 150; /*SIZE OF CHANNEL AND POINTER TABLE*/
-constexpr uint32_t CSMAX = 60;  /*MAXIMUM NO. OF CASES*/
+constexpr uint32_t CSMAX = 60; /*MAXIMUM NO. OF CASES*/
 constexpr uint32_t CMAX = 6000; /*SIZE OF CODE*/
 constexpr uint32_t RCMAX = 200; /*MAX NUMBER OF REAL CONSTS AND LITS*/
 
 /*-----THE FOLLOWING CONSTANTS USED BY THE INTERPRETER MAY BE MODIFIED----*/
 
-constexpr uint32_t STMAX = 4000000;  /*TOTAL STACKSIZE*/
-constexpr uint32_t PMAX = 1024;      /*MAX PROCESSORS*/
-constexpr uint32_t OPCHMAX = 30000;  /*MAXIMUM NUMBER OF OPEN CHANNELS*/
+constexpr uint32_t STMAX = 4000000; /*TOTAL STACKSIZE*/
+constexpr uint32_t PMAX = 1024; /*MAX PROCESSORS*/
+constexpr uint32_t OPCHMAX = 30000; /*MAXIMUM NUMBER OF OPEN CHANNELS*/
 constexpr uint32_t BUFMAX = 1000000; /*BUFFER CELLS FOR CHANNEL STORAGE*/
 
 /*------THIS COMMENT MARKS THE END OF THE MODIFIABLE CONSTANTS--------------*/
@@ -71,3 +74,4 @@ constexpr uint32_t REALSIZE = 8;
 
 /* added */
 constexpr uint32_t SYMBOLCNT = 95;
+constexpr uint32_t MAXINT = 32767;

@@ -1,15 +1,14 @@
 //
 // Created by Dan Evans on 1/17/24.
 //
+#pragma once
 
-#ifndef CSTAR_CS_BLOCK_H
-#define CSTAR_CS_BLOCK_H
 #include "cs_compile.h"
 #include "cs_global.h"
 #include "cs_interpret.h"
 
 namespace cs {
-  using BlockLocal = struct BlockLocal {
+using BlockLocal = struct BlockLocal {
     SymbolSet FSYS;
     bool ISFUN{};
     int LEVEL{};
@@ -26,7 +25,6 @@ namespace cs {
     bool CREATEFLAG{};
     bool ISDECLARATION{};
     bool UNDEFMSGFLAG{};
-    Interpreter* blkil{};
-  };
-} // namespace Cstar
-#endif // CSTAR_CS_BLOCK_H
+    Interpreter *blkil{};
+};
+} // namespace cs

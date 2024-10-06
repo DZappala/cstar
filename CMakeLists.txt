@@ -12,7 +12,9 @@ set(HEADERS cs_global.h
         cs_errors.h
         cs_interpret.h
         cs_exec.h
-        cs_PreBuffer.h)
+        cs_PreBuffer.h
+        interpret.hpp
+        displays.hpp)
 
 set(SOURCE_FILES lexer.cpp
         errors.cpp

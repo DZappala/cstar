@@ -352,7 +352,7 @@ namespace cs {
         println("");
         print("{:5} ", LINE_NUMBER);
         for (I = 1; I <= LL; ++I)
-          print("{}", line.at(I));
+          print("{}", LINE.at(I));
 
         print("\n");
         println(" ****                   ^150");
@@ -364,7 +364,7 @@ namespace cs {
         print("\n");
         print("{:5} ", LINE_NUMBER);
         for (I = 1; I <= LL; ++I)
-          print("{}", line.at(I));
+          print("{}", LINE.at(I));
         print("\n");
       }
       if (error_position == 0) {

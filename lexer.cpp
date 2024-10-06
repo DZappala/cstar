@@ -162,7 +162,7 @@ namespace cs {
             include_stack.at(istack_index).inc.swap(INPUT_SOURCE);
             INCLUDE_FLAG = true;
             if (istack_index == 0) {
-              save_symbol_count = symbol_count;
+              SAVE_SYMBOL_COUNT = symbol_count;
               save_execution_count = execution_count;
               // SAVELC = LC;  // DE
             }
@@ -209,17 +209,17 @@ namespace cs {
         if (console_list) print("{}", CH);
         LISTFILE.put(CH);
         if (CH == 9) CH = ' ';
-        line.at(LL) = CH;
+        LINE.at(LL) = CH;
       }
 
       if (console_list) print("\n");
       LISTFILE.put('\n');
       LL++;
-      line.at(LL) = ' ';
+      LINE.at(LL) = ' ';
     }
 
     CC++;
-    CH = line.at(CC);
+    CH = LINE.at(CC);
   }
 
   auto alt_next_char() -> void {
@@ -231,7 +231,7 @@ namespace cs {
           INCLUDE_FLAG = false;
           INPUT_SOURCE.close();
           execution_count = save_execution_count;
-          symbol_count = save_symbol_count;
+          symbol_count = SAVE_SYMBOL_COUNT;
           // line_count = SAVELC;  // DE
           main_next_char();
           return;
@@ -247,14 +247,14 @@ namespace cs {
         CH = INPUT_SOURCE.get();
         if (CH == '\x09')
           CH = ' ';
-        line2.at(LL2) = CH;
+        LINE2.at(LL2) = CH;
       }
       LL2++;
       //(*INPUT_SOURCE).ignore();
-      line2.at(LL2) = ' ';
+      LINE2.at(LL2) = ' ';
     }
     CC2++;
-    CH = line2.at(CC2);
+    CH = LINE2.at(CC2);
   }
 
   void next_char() {
@@ -383,25 +383,23 @@ namespace cs {
 
     if (isalpha(CH) != 0 || CH == '#') {
       sym.K = -1;
-      strcpy(ID.data(), "              ");
+      ID = "              ";
       do {
         if (sym.K < ALNG - 1) {
           sym.K++;
-          if (islower(CH) != 0) CH = toupper(CH);
+          if (islower(CH) != 0) CH = toupper(static_cast<int>(CH));
           ID[sym.K] = CH;
         } else {
           // fprintf(STANDARD_OUTPUT, "long symbol %s\n", ID);
         }
         next_char();
-      } while (isalnum(CH) || CH == '_');
+      } while (isalnum(CH) != 0 || CH == '_');
       sym.I = 1;
       sym.J = NKW;
       do {
         sym.K = (sym.I + sym.J) / 2;
-        if (strcmp(ID.data(), key[sym.K]) <= 0)
-          sym.J = sym.K - 1;
-        if (strcmp(ID.data(), key[sym.K]) >= 0)
-          sym.I = sym.K + 1;
+        if (ID == std::string{key.at(sym.K)}) sym.J = sym.K - 1;
+        if (ID.data() == std::string{key.at(sym.K)}) sym.I = sym.K + 1;
       } while (sym.I <= sym.J);
       if (sym.I - 1 > sym.J) symbol = ksy[sym.K];
       else symbol = Symbol::IDENT;

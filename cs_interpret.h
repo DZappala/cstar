@@ -12,6 +12,7 @@
 #endif
 #include "cs_compile.h"
 #include "cs_defines.h"
+
 constexpr uint32_t NAMELEN = 20;
 constexpr uint32_t CHANTIME = 3;
 constexpr uint32_t SWITCHLIMIT = 50;
@@ -27,86 +28,88 @@ constexpr uint32_t VARMAX = 10;
 constexpr uint32_t COMMAX = 30;
 
 namespace cs {
-  using VARTYP = std::string;
-  using BLKPNT = struct BLOCKR*;
-  using ACTPNT = struct ActiveProcess*;
-  using PROCPNT = struct ProcessDescriptor*; // from interpret
-  using BUSYPNT = struct BUSYTYPE*;
-  using BLOCKR = struct BLOCKR {
-    int START; // range 0..STMAX
-    int SIZE; // range 0..STMAX
+using VARTYP = std::string;
+using BLKPNT = struct BLOCKR *;
+using ACTPNT = struct ActiveProcess *;
+using PROCPNT = struct ProcessDescriptor *; // from interpret
+using BUSYPNT = struct BUSYTYPE *;
+using BLOCKR = struct BLOCKR {
+    uint32_t START; // range 0..STMAX
+    uint32_t SIZE; // range 0..STMAX
     BLKPNT NEXT;
-  };
+};
 
-  struct ActiveProcess;
-  struct ActiveProcess {
+struct ActiveProcess;
+
+struct ActiveProcess {
     PROCPNT PDES;
     ACTPNT NEXT;
-  };
+};
 
-  struct BUSYTYPE {
+struct BUSYTYPE {
     double FIRST;
     double LAST;
     BUSYPNT NEXT;
-  };
+};
 
-  using STYPE = int;
-  using RSTYPE = double;
-  using BUFINTTYPE = int;
-  using BUFREALTYPE = double;
+using STYPE = int;
+using RSTYPE = double;
+using BUFINTTYPE = int;
+using BUFREALTYPE = double;
 
-  enum class COMTYP : std::uint8_t {
-    RUNP,
-    CONT,
-    EXIT2,
-    BREAKP,
-    CLEAR,
-    STEP,
-    PSTATUS,
-    WRVAR,
-    TRACE,
-    HELP,
-    UTIL,
-    PTIME,
-    DISPLAYP,
-    ALARM,
-    WRCODE,
-    STACK,
-    CONGEST,
-    PROFILE,
-    ERRC,
-    LIST,
-    RESETP,
-    SHORT,
-    VIEW,
-    CDELAY,
-    VARY,
-    OPENF,
-    CLOSEF,
-    INPUTF,
-    OUTPUTF,
-    MPI,
-    VERSION
-  };
+enum class COMTYP : std::uint8_t {
+  RUNP,
+  CONT,
+  EXIT2,
+  BREAKP,
+  CLEAR,
+  STEP,
+  PSTATUS,
+  WRVAR,
+  TRACE,
+  HELP,
+  UTIL,
+  PTIME,
+  DISPLAYP,
+  ALARM,
+  WRCODE,
+  STACK,
+  CONGEST,
+  PROFILE,
+  ERRC,
+  LIST,
+  RESETP,
+  SHORT,
+  VIEW,
+  CDELAY,
+  VARY,
+  OPENF,
+  CLOSEF,
+  INPUTF,
+  OUTPUTF,
+  MPI,
+  VERSION
+};
 
-  enum class State : std::uint8_t {
-    READY,
-    RUNNING,
-    BLOCKED,
-    DELAYED,
-    TERMINATED,
-    SPINNING
-  };
+enum class State : std::uint8_t {
+  READY,
+  RUNNING,
+  BLOCKED,
+  DELAYED,
+  TERMINATED,
+  SPINNING
+};
 
-  enum class ReadStatus : std::uint8_t { NONE, ATCHANNEL, HASTICKET };
-  enum class PRIORITY : std::uint8_t { LOW, HIGH };
+enum class ReadStatus : std::uint8_t { NONE, ATCHANNEL, HASTICKET };
 
-  struct ProcessDescriptor {
+enum class PRIORITY : std::uint8_t { LOW, HIGH };
+
+struct ProcessDescriptor {
     // from interpret
     int T; // process's stack top index
     int B;
     int PC; // process's program counter (index into ORDER type CODE array)
-    int STACKSIZE; // process's stack size
+    uint32_t STACKSIZE; // process's stack size
     std::array<int, LMAX + 1> DISPLAY;
     PROCPNT PARENT;
     int NUMCHILDREN;
@@ -128,58 +131,53 @@ namespace cs {
     PRIORITY PRIORITY;
     bool SEQON;
     bool GROUPREP;
-  };
+};
 
-  struct TraceTab {
+struct TraceTab {
     VARTYP NAME;
     int MEMLOC; // range -1..STMAX
-  };
+};
 
-  enum class PS : std::uint8_t {
-    RUN,
-    FIN,
-    DIVCHK,
-    INXCHK,
-    STKCHK,
-    LINCHK,
-    LNGCHK,
-    REDCHK,
-    DEAD,
-    CHRCHK,
-    STORCHK,
-    GRPCHK,
-    REFCHK,
-    LOCKCHK,
-    MPICNTCHK,
-    MPIGRPCHK,
-    MPIINITCHK,
-    MPIFINCHK,
-    MPIPARCHK,
-    FUNCCHK,
-    MPITYPECHK,
-    INTCHK,
-    CASCHK,
-    CHANCHK,
-    BUFCHK,
-    PROCCHK,
-    CPUCHK,
-    BREAK,
-    REMCHK,
-    CARTOVR,
-    STRCHK,
-    USERSTOP,
-    DATACHK,
-    OVRCHK
-  }; // from interpret
+enum class PS : std::uint8_t {
+  RUN,
+  FIN,
+  DIVCHK,
+  INXCHK,
+  STKCHK,
+  LINCHK,
+  LNGCHK,
+  REDCHK,
+  DEAD,
+  CHRCHK,
+  STORCHK,
+  GRPCHK,
+  REFCHK,
+  LOCKCHK,
+  MPICNTCHK,
+  MPIGRPCHK,
+  MPIINITCHK,
+  MPIFINCHK,
+  MPIPARCHK,
+  FUNCCHK,
+  MPITYPECHK,
+  INTCHK,
+  CASCHK,
+  CHANCHK,
+  BUFCHK,
+  PROCCHK,
+  CPUCHK,
+  BREAK,
+  REMCHK,
+  CARTOVR,
+  STRCHK,
+  USERSTOP,
+  DATACHK,
+  OVRCHK
+}; // from interpret
 
-  enum class Status : std::uint8_t {
-    NEVERUSED,
-    EMPTY,
-    RESERVED,
-    FULL
-  };
+enum class Status : std::uint8_t { NEVERUSED, EMPTY, RESERVED, FULL };
 
-  struct ProcessTable {
+struct ProcessTable {
     Status STATUS;
     double VIRTIME;
     double BRKTIME;
@@ -189,18 +187,18 @@ namespace cs {
     double STARTTIME;
     BUSYPNT BUSYLIST;
     float SPEED;
-  };
+};
 
-  struct Channel {
+struct Channel {
     int HEAD;
     int SEM;
     ACTPNT WAIT;
     double READTIME;
     bool MOVED;
     int READER;
-  };
+};
 
-  struct Interpreter {
+struct Interpreter {
     PROCPNT CURPR;
     PS PS;
 
@@ -208,8 +206,8 @@ namespace cs {
     int CHRCNT;
     std::array<int, 4 + 1> FLD;
     STYPE *S, *SLOCATION;
-    STYPE* STARTMEM;
-    RSTYPE* RS;
+    STYPE *STARTMEM;
+    RSTYPE *RS;
     PROCPNT MAINPROC;
     std::array<ProcessTable, PMAX + 1> PROCTAB;
 
@@ -228,10 +226,10 @@ namespace cs {
     int TOPDELAY;
     int COUTWIDTH;
     int COUTPREC;
-    std::string LISTDEFNAME;
-    std::string INPUTFNAME;
-    std::string OUTPUTFNAME;
-    std::string LISTFNAME;
+    fs::path LISTDEFNAME;
+    fs::path INPUTFNAME;
+    fs::path OUTPUTFNAME;
+    fs::path LISTFNAME;
     std::string MPIINIT, MPIFIN;
     int MPICODE;
     int MPISEM;
@@ -278,15 +276,15 @@ namespace cs {
     bool VARIATION;
     PROCPNT CURPNT;
     int NEXTID;
-    int STKMAIN;
+    uint32_t STKMAIN;
     int LEVEL; // range 1..LMAX
     std::array<ALFA, COMMAX + 1> COMTAB;
     std::array<ALFA, COMMAX + 1> ABBREVTAB;
     std::array<COMTYP, COMMAX + 1> COMJMP;
     COMTYP COMMLABEL;
     int LINECNT;
-  };
+};
 
-  // int HIGHESTPROCESSOR;
+// int HIGHESTPROCESSOR;
 } // namespace cs
 #endif // CSTAR_CS_INTERPRET_H
