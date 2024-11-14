@@ -2057,9 +2057,9 @@ void INTERPRET() {
       if (il->TYP == ARRAYS) {
         fprintf(stdout, "Index Range: ");
         READLINE();
-        if (ENDFLAG) {
-          goto L200;
-        }
+        // if (ENDFLAG) {
+        //   goto L200;
+        // }
         il->FIRST = ATAB[il->REF].LOW;
         il->LAST = ATAB[il->REF].HIGH;
         GETRANGE(il->FIRST, il->LAST, il->ERR);

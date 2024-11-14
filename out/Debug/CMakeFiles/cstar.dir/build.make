@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/dom/projects/pace/paralell/cstar
+CMAKE_SOURCE_DIR = /home/dom/projects/pace/parallel/cstar
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/dom/projects/pace/paralell/cstar/out/Debug
+CMAKE_BINARY_DIR = /home/dom/projects/pace/parallel/cstar/out/Debug
 
 # Include any dependencies generated for this target.
 include CMakeFiles/cstar.dir/depend.make
@@ -70,144 +70,144 @@ include CMakeFiles/cstar.dir/progress.make
 include CMakeFiles/cstar.dir/flags.make
 
 CMakeFiles/cstar.dir/lexer.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/lexer.cpp.o: /home/dom/projects/pace/paralell/cstar/lexer.cpp
+CMakeFiles/cstar.dir/lexer.cpp.o: /home/dom/projects/pace/parallel/cstar/lexer.cpp
 CMakeFiles/cstar.dir/lexer.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/cstar.dir/lexer.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/lexer.cpp.o -MF CMakeFiles/cstar.dir/lexer.cpp.o.d -o CMakeFiles/cstar.dir/lexer.cpp.o -c /home/dom/projects/pace/paralell/cstar/lexer.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/cstar.dir/lexer.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/lexer.cpp.o -MF CMakeFiles/cstar.dir/lexer.cpp.o.d -o CMakeFiles/cstar.dir/lexer.cpp.o -c /home/dom/projects/pace/parallel/cstar/lexer.cpp
 
 CMakeFiles/cstar.dir/lexer.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/lexer.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/lexer.cpp > CMakeFiles/cstar.dir/lexer.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/lexer.cpp > CMakeFiles/cstar.dir/lexer.cpp.i
 
 CMakeFiles/cstar.dir/lexer.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/lexer.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/lexer.cpp -o CMakeFiles/cstar.dir/lexer.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/lexer.cpp -o CMakeFiles/cstar.dir/lexer.cpp.s
 
 CMakeFiles/cstar.dir/errors.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/errors.cpp.o: /home/dom/projects/pace/paralell/cstar/errors.cpp
+CMakeFiles/cstar.dir/errors.cpp.o: /home/dom/projects/pace/parallel/cstar/errors.cpp
 CMakeFiles/cstar.dir/errors.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/cstar.dir/errors.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/errors.cpp.o -MF CMakeFiles/cstar.dir/errors.cpp.o.d -o CMakeFiles/cstar.dir/errors.cpp.o -c /home/dom/projects/pace/paralell/cstar/errors.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/cstar.dir/errors.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/errors.cpp.o -MF CMakeFiles/cstar.dir/errors.cpp.o.d -o CMakeFiles/cstar.dir/errors.cpp.o -c /home/dom/projects/pace/parallel/cstar/errors.cpp
 
 CMakeFiles/cstar.dir/errors.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/errors.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/errors.cpp > CMakeFiles/cstar.dir/errors.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/errors.cpp > CMakeFiles/cstar.dir/errors.cpp.i
 
 CMakeFiles/cstar.dir/errors.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/errors.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/errors.cpp -o CMakeFiles/cstar.dir/errors.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/errors.cpp -o CMakeFiles/cstar.dir/errors.cpp.s
 
 CMakeFiles/cstar.dir/interpret.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/interpret.cpp.o: /home/dom/projects/pace/paralell/cstar/interpret.cpp
+CMakeFiles/cstar.dir/interpret.cpp.o: /home/dom/projects/pace/parallel/cstar/interpret.cpp
 CMakeFiles/cstar.dir/interpret.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/cstar.dir/interpret.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/interpret.cpp.o -MF CMakeFiles/cstar.dir/interpret.cpp.o.d -o CMakeFiles/cstar.dir/interpret.cpp.o -c /home/dom/projects/pace/paralell/cstar/interpret.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/cstar.dir/interpret.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/interpret.cpp.o -MF CMakeFiles/cstar.dir/interpret.cpp.o.d -o CMakeFiles/cstar.dir/interpret.cpp.o -c /home/dom/projects/pace/parallel/cstar/interpret.cpp
 
 CMakeFiles/cstar.dir/interpret.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/interpret.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/interpret.cpp > CMakeFiles/cstar.dir/interpret.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/interpret.cpp > CMakeFiles/cstar.dir/interpret.cpp.i
 
 CMakeFiles/cstar.dir/interpret.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/interpret.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/interpret.cpp -o CMakeFiles/cstar.dir/interpret.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/interpret.cpp -o CMakeFiles/cstar.dir/interpret.cpp.s
 
 CMakeFiles/cstar.dir/expression.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/expression.cpp.o: /home/dom/projects/pace/paralell/cstar/expression.cpp
+CMakeFiles/cstar.dir/expression.cpp.o: /home/dom/projects/pace/parallel/cstar/expression.cpp
 CMakeFiles/cstar.dir/expression.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/cstar.dir/expression.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/expression.cpp.o -MF CMakeFiles/cstar.dir/expression.cpp.o.d -o CMakeFiles/cstar.dir/expression.cpp.o -c /home/dom/projects/pace/paralell/cstar/expression.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/cstar.dir/expression.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/expression.cpp.o -MF CMakeFiles/cstar.dir/expression.cpp.o.d -o CMakeFiles/cstar.dir/expression.cpp.o -c /home/dom/projects/pace/parallel/cstar/expression.cpp
 
 CMakeFiles/cstar.dir/expression.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/expression.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/expression.cpp > CMakeFiles/cstar.dir/expression.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/expression.cpp > CMakeFiles/cstar.dir/expression.cpp.i
 
 CMakeFiles/cstar.dir/expression.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/expression.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/expression.cpp -o CMakeFiles/cstar.dir/expression.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/expression.cpp -o CMakeFiles/cstar.dir/expression.cpp.s
 
 CMakeFiles/cstar.dir/block.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/block.cpp.o: /home/dom/projects/pace/paralell/cstar/block.cpp
+CMakeFiles/cstar.dir/block.cpp.o: /home/dom/projects/pace/parallel/cstar/block.cpp
 CMakeFiles/cstar.dir/block.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/cstar.dir/block.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/block.cpp.o -MF CMakeFiles/cstar.dir/block.cpp.o.d -o CMakeFiles/cstar.dir/block.cpp.o -c /home/dom/projects/pace/paralell/cstar/block.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/cstar.dir/block.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/block.cpp.o -MF CMakeFiles/cstar.dir/block.cpp.o.d -o CMakeFiles/cstar.dir/block.cpp.o -c /home/dom/projects/pace/parallel/cstar/block.cpp
 
 CMakeFiles/cstar.dir/block.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/block.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/block.cpp > CMakeFiles/cstar.dir/block.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/block.cpp > CMakeFiles/cstar.dir/block.cpp.i
 
 CMakeFiles/cstar.dir/block.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/block.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/block.cpp -o CMakeFiles/cstar.dir/block.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/block.cpp -o CMakeFiles/cstar.dir/block.cpp.s
 
 CMakeFiles/cstar.dir/statement.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/statement.cpp.o: /home/dom/projects/pace/paralell/cstar/statement.cpp
+CMakeFiles/cstar.dir/statement.cpp.o: /home/dom/projects/pace/parallel/cstar/statement.cpp
 CMakeFiles/cstar.dir/statement.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/cstar.dir/statement.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/statement.cpp.o -MF CMakeFiles/cstar.dir/statement.cpp.o.d -o CMakeFiles/cstar.dir/statement.cpp.o -c /home/dom/projects/pace/paralell/cstar/statement.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/cstar.dir/statement.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/statement.cpp.o -MF CMakeFiles/cstar.dir/statement.cpp.o.d -o CMakeFiles/cstar.dir/statement.cpp.o -c /home/dom/projects/pace/parallel/cstar/statement.cpp
 
 CMakeFiles/cstar.dir/statement.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/statement.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/statement.cpp > CMakeFiles/cstar.dir/statement.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/statement.cpp > CMakeFiles/cstar.dir/statement.cpp.i
 
 CMakeFiles/cstar.dir/statement.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/statement.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/statement.cpp -o CMakeFiles/cstar.dir/statement.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/statement.cpp -o CMakeFiles/cstar.dir/statement.cpp.s
 
 CMakeFiles/cstar.dir/program.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/program.cpp.o: /home/dom/projects/pace/paralell/cstar/program.cpp
+CMakeFiles/cstar.dir/program.cpp.o: /home/dom/projects/pace/parallel/cstar/program.cpp
 CMakeFiles/cstar.dir/program.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/cstar.dir/program.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/program.cpp.o -MF CMakeFiles/cstar.dir/program.cpp.o.d -o CMakeFiles/cstar.dir/program.cpp.o -c /home/dom/projects/pace/paralell/cstar/program.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/cstar.dir/program.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/program.cpp.o -MF CMakeFiles/cstar.dir/program.cpp.o.d -o CMakeFiles/cstar.dir/program.cpp.o -c /home/dom/projects/pace/parallel/cstar/program.cpp
 
 CMakeFiles/cstar.dir/program.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/program.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/program.cpp > CMakeFiles/cstar.dir/program.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/program.cpp > CMakeFiles/cstar.dir/program.cpp.i
 
 CMakeFiles/cstar.dir/program.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/program.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/program.cpp -o CMakeFiles/cstar.dir/program.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/program.cpp -o CMakeFiles/cstar.dir/program.cpp.s
 
 CMakeFiles/cstar.dir/exec.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/exec.cpp.o: /home/dom/projects/pace/paralell/cstar/exec.cpp
+CMakeFiles/cstar.dir/exec.cpp.o: /home/dom/projects/pace/parallel/cstar/exec.cpp
 CMakeFiles/cstar.dir/exec.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/cstar.dir/exec.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/exec.cpp.o -MF CMakeFiles/cstar.dir/exec.cpp.o.d -o CMakeFiles/cstar.dir/exec.cpp.o -c /home/dom/projects/pace/paralell/cstar/exec.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/cstar.dir/exec.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/exec.cpp.o -MF CMakeFiles/cstar.dir/exec.cpp.o.d -o CMakeFiles/cstar.dir/exec.cpp.o -c /home/dom/projects/pace/parallel/cstar/exec.cpp
 
 CMakeFiles/cstar.dir/exec.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/exec.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/exec.cpp > CMakeFiles/cstar.dir/exec.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/exec.cpp > CMakeFiles/cstar.dir/exec.cpp.i
 
 CMakeFiles/cstar.dir/exec.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/exec.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/exec.cpp -o CMakeFiles/cstar.dir/exec.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/exec.cpp -o CMakeFiles/cstar.dir/exec.cpp.s
 
 CMakeFiles/cstar.dir/execlib.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/execlib.cpp.o: /home/dom/projects/pace/paralell/cstar/execlib.cpp
+CMakeFiles/cstar.dir/execlib.cpp.o: /home/dom/projects/pace/parallel/cstar/execlib.cpp
 CMakeFiles/cstar.dir/execlib.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/cstar.dir/execlib.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/execlib.cpp.o -MF CMakeFiles/cstar.dir/execlib.cpp.o.d -o CMakeFiles/cstar.dir/execlib.cpp.o -c /home/dom/projects/pace/paralell/cstar/execlib.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/cstar.dir/execlib.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/execlib.cpp.o -MF CMakeFiles/cstar.dir/execlib.cpp.o.d -o CMakeFiles/cstar.dir/execlib.cpp.o -c /home/dom/projects/pace/parallel/cstar/execlib.cpp
 
 CMakeFiles/cstar.dir/execlib.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/execlib.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/execlib.cpp > CMakeFiles/cstar.dir/execlib.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/execlib.cpp > CMakeFiles/cstar.dir/execlib.cpp.i
 
 CMakeFiles/cstar.dir/execlib.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/execlib.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/execlib.cpp -o CMakeFiles/cstar.dir/execlib.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/execlib.cpp -o CMakeFiles/cstar.dir/execlib.cpp.s
 
 CMakeFiles/cstar.dir/displays.cpp.o: CMakeFiles/cstar.dir/flags.make
-CMakeFiles/cstar.dir/displays.cpp.o: /home/dom/projects/pace/paralell/cstar/displays.cpp
+CMakeFiles/cstar.dir/displays.cpp.o: /home/dom/projects/pace/parallel/cstar/displays.cpp
 CMakeFiles/cstar.dir/displays.cpp.o: CMakeFiles/cstar.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/cstar.dir/displays.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/displays.cpp.o -MF CMakeFiles/cstar.dir/displays.cpp.o.d -o CMakeFiles/cstar.dir/displays.cpp.o -c /home/dom/projects/pace/paralell/cstar/displays.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/cstar.dir/displays.cpp.o"
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/cstar.dir/displays.cpp.o -MF CMakeFiles/cstar.dir/displays.cpp.o.d -o CMakeFiles/cstar.dir/displays.cpp.o -c /home/dom/projects/pace/parallel/cstar/displays.cpp
 
 CMakeFiles/cstar.dir/displays.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/cstar.dir/displays.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/paralell/cstar/displays.cpp > CMakeFiles/cstar.dir/displays.cpp.i
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/dom/projects/pace/parallel/cstar/displays.cpp > CMakeFiles/cstar.dir/displays.cpp.i
 
 CMakeFiles/cstar.dir/displays.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/cstar.dir/displays.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/paralell/cstar/displays.cpp -o CMakeFiles/cstar.dir/displays.cpp.s
+	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/dom/projects/pace/parallel/cstar/displays.cpp -o CMakeFiles/cstar.dir/displays.cpp.s
 
 # Object files for target cstar
 cstar_OBJECTS = \
@@ -237,7 +237,7 @@ cstar: CMakeFiles/cstar.dir/execlib.cpp.o
 cstar: CMakeFiles/cstar.dir/displays.cpp.o
 cstar: CMakeFiles/cstar.dir/build.make
 cstar: CMakeFiles/cstar.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking CXX executable cstar"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Linking CXX executable cstar"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/cstar.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -249,6 +249,6 @@ CMakeFiles/cstar.dir/clean:
 .PHONY : CMakeFiles/cstar.dir/clean
 
 CMakeFiles/cstar.dir/depend:
-	cd /home/dom/projects/pace/paralell/cstar/out/Debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dom/projects/pace/paralell/cstar /home/dom/projects/pace/paralell/cstar /home/dom/projects/pace/paralell/cstar/out/Debug /home/dom/projects/pace/paralell/cstar/out/Debug /home/dom/projects/pace/paralell/cstar/out/Debug/CMakeFiles/cstar.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/dom/projects/pace/parallel/cstar/out/Debug && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/dom/projects/pace/parallel/cstar /home/dom/projects/pace/parallel/cstar /home/dom/projects/pace/parallel/cstar/out/Debug /home/dom/projects/pace/parallel/cstar/out/Debug /home/dom/projects/pace/parallel/cstar/out/Debug/CMakeFiles/cstar.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/cstar.dir/depend
 

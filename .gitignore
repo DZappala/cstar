@@ -1,6 +1,8 @@
 CMakeFiles
 _deps
 out
+cstar
 /CMakeCache.txt
 .cache
 .idea
+compile_commands.json
